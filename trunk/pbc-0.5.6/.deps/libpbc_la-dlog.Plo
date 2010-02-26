@@ -1,0 +1,34 @@
+libpbc_la-dlog.lo libpbc_la-dlog.o: arith/dlog.c \
+  /usr/lib/gcc/i686-apple-darwin9/4.0.1/include/stdarg.h \
+  /usr/include/stdio.h /usr/include/_types.h /usr/include/sys/_types.h \
+  /usr/include/sys/cdefs.h /usr/include/machine/_types.h \
+  /usr/include/i386/_types.h gmp.h \
+  /usr/lib/gcc/i686-apple-darwin9/4.0.1/include/stddef.h \
+  include/pbc_utils.h include/pbc_field.h include/pbc_memory.h \
+  misc/darray.h
+
+/usr/lib/gcc/i686-apple-darwin9/4.0.1/include/stdarg.h:
+
+/usr/include/stdio.h:
+
+/usr/include/_types.h:
+
+/usr/include/sys/_types.h:
+
+/usr/include/sys/cdefs.h:
+
+/usr/include/machine/_types.h:
+
+/usr/include/i386/_types.h:
+
+gmp.h:
+
+/usr/lib/gcc/i686-apple-darwin9/4.0.1/include/stddef.h:
+
+include/pbc_utils.h:
+
+include/pbc_field.h:
+
+include/pbc_memory.h:
+
+misc/darray.h:

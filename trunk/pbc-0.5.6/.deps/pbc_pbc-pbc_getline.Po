@@ -1,0 +1,20 @@
+pbc_pbc-pbc_getline.o pbc_pbc-pbc_getline.o: pbc/pbc_getline.c \
+  /usr/include/stdio.h /usr/include/_types.h /usr/include/sys/_types.h \
+  /usr/include/sys/cdefs.h /usr/include/machine/_types.h \
+  /usr/include/i386/_types.h /usr/include/string.h include/pbc_memory.h
+
+/usr/include/stdio.h:
+
+/usr/include/_types.h:
+
+/usr/include/sys/_types.h:
+
+/usr/include/sys/cdefs.h:
+
+/usr/include/machine/_types.h:
+
+/usr/include/i386/_types.h:
+
+/usr/include/string.h:
+
+include/pbc_memory.h:
