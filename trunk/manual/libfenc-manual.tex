@@ -1,0 +1,35 @@
+\documentclass[11pt]{book}
+\usepackage{fullpage,url,amsmath,mdwlist,amssymb}
+\begin{document}
+
+\include{localdefs}
+
+\newcommand{\libraryname}{Functional Encryption Library}
+\newcommand{\libraryshort}{{\sf libfenc}}
+\newcommand{\version}{0.1a}
+\newcommand{\libraryunixlib}{{\tt libfenc.la}}
+\newcommand{\librarylicensename}{Internal Distribution Only}
+\newcommand{\librarylicenseurl}{http://nowhere.nowhere}
+
+
+\title{\libraryshort: The {\libraryname} (v\version) \\ ~\\ Reference Manual}
+\author{Matthew Green}
+%\date{}
+\maketitle
+\bibliographystyle{alpha}
+
+\tableofcontents
+
+\include{introduction}
+\include{usage}
+\include{api}
+
+\bibliography{main}
+
+\appendix
+\chapter{Scheme Details}
+\input{lsw09_details.tex}
+
+\input{licenseattribution}
+
+\end{document}

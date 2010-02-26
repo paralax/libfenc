@@ -1,0 +1,1809 @@
+\documentclass[a4paper, 11pt]{article}
+\usepackage{amsmath, amssymb,amscd}
+\usepackage[mathscr]{eucal}
+\usepackage{graphics}
+\usepackage{fullpage}
+\newcommand\cyr{%
+ \renewcommand\rmdefault{wncyr}%
+ \renewcommand\sfdefault{wncyss}%
+ \renewcommand\encodingdefault{OT2}%
+\normalfont\selectfont} \DeclareTextFontCommand{\textcyr}{\cyr}
+\newtheorem{theorem}{Theorem}
+\newtheorem{lemma}[theorem]{Lemma}
+\newtheorem{corollary}[theorem]{Corollary}
+\newtheorem{proposition}[theorem]{Proposition}
+\newtheorem{remark}[theorem]{Remark}
+\newtheorem{conjecture}[theorem]{Conjecture}
+\newtheorem{definition}[theorem]{Definition}
+\newtheorem{problem}[theorem]{Problem}
+\newtheorem{claim}[theorem]{Claim}
+
+\newenvironment{proof}{\par\noindent{\bf Proof.}}{$\square$\par\bigskip}
+\newenvironment{solution}{\par\noindent{\bf Solution.}}{$\square$\par\bigskip}
+
+
+\def\mod{\operatorname{mod}}
+
+%%% TEXEXPAND: INCLUDED FILE MARKER ./preamble.tex
+
+\newcommand{\comment}[1]{}
+
+\newcommand{\squish}{
+      \setlength{\topsep}{0pt}
+      \setlength{\itemsep}{0ex}
+      \vspace{-1ex}
+      \setlength{\parskip}{0pt}}
+\newcommand{\squishend}{\vskip -1ex\relax}
+
+\newenvironment{gamequote}
+               {\list{}{\rightmargin0pt\relax}\item\relax}
+               {\endlist}
+
+\newcommand{\Advx}[2]{\mathsf{{#1}\,Adv}_{#2}}
+\newcommand{\Adv}[1] {\Advx{#1}{\AlgA}}
+
+\newcommand{\Z}{\ensuremath{\mathbb{Z}}}
+\newcommand{\F}{\ensuremath{\mathbb{F}}}
+\newcommand{\R}{\ensuremath{\mathbb{R}}}
+\newcommand{\C}{\ensuremath{\mathbb{C}}}
+\newcommand{\Q}{\ensuremath{\mathbb{Q}}}
+\newcommand{\G}{\ensuremath{\mathbb{G}}}
+
+\newcommand{\rmax}{\ensuremath{r_{\mathrm{max}}}}
+
+\comment{
+\newtheorem{theorem}{Theorem}[section]
+\newtheorem{lemma}[theorem]{Lemma}
+\newtheorem{cor}[theorem]{Corollary}
+\newtheorem{fact}[theorem]{Fact}
+\theoremstyle{definition}
+\newtheorem{definition}[theorem]{Definition}
+}
+
+\newcommand{\half}{{\frac{1}{2}}}
+\newcommand{\Zp}{\ensuremath{{\Z_p}}}
+\newcommand{\Zps}{\ensuremath{{\Z_p^*}}}
+\newcommand{\rgets}{\ensuremath{\stackrel{\mathrm{R}}{\gets}}}
+\newcommand{\qs}[1]{q_{\scriptscriptstyle{#1}}}
+\newcommand{\gs}[1]{g_{\scriptscriptstyle{#1}}}
+\newcommand{\vs}[1]{v_{\scriptscriptstyle{#1}}}
+\newcommand{\s}[1]{{\scriptscriptstyle{#1}}}
+\newcommand{\gammas}[1]{\gamma_{\scriptscriptstyle{#1}}}
+\newcommand{\weil}{\ensuremath{e}}
+\newcommand{\tuple}[1]{(#1)}
+\newcommand{\e}{\epsilon}
+\newcommand{\st}{\;\;\mbox{s.t.}\;\;}
+
+\newcommand{\AlgSetup}{\ensuremath{\textit{Setup}}}
+\newcommand{\AlgKeyGen}{\ensuremath{\textit{KeyGen}}}
+\newcommand{\AlgEncrypt}{\ensuremath{\textit{Encrypt}}}
+\newcommand{\AlgDecrypt}{\ensuremath{\textit{Decrypt}}}
+\newcommand{\AlgSigKeyGen}{\ensuremath{\textit{SigKeyGen}}}
+\newcommand{\AlgSign}{\ensuremath{\textit{Sign}}}
+\newcommand{\AlgVerify}{\ensuremath{\textit{Verify}}}
+\newcommand{\AlgA}{\ensuremath{{\cal A}}}
+\newcommand{\AlgB}{\ensuremath{{\cal B}}}
+\newcommand{\Pdist}[1]{{\cal P}_{#1}}
+\newcommand{\Rdist}[1]{{\cal R}_{#1}}
+\newcommand{\AdvBr}[1]{\mathsf{AdvBr}_{\scriptscriptstyle{#1}}}
+\newcommand{\Hdr}{\mathrm{Hdr}}
+\newcommand{\sigkey}{K_{\scriptscriptstyle{\mathrm{SIG}}}}
+\newcommand{\sigverkey}{V_{\scriptscriptstyle{\mathrm{SIG}}}}
+\newcommand{\MB}{{\sc mb} }
+\newcommand{\abort}{\ensuremath{\mathsf{abort}}}
+
+\newcommand{\SK}{\ensuremath{\textrm{SK}}}
+\newcommand{\MSK}{\ensuremath{\textrm{MSK}}}
+\newcommand{\PK}{\ensuremath{\textrm{PK}}}
+\newcommand{\ID}{\ensuremath{\textrm{ID}}}
+\newcommand{\CT}{\ensuremath{\textrm{CT}}}
+
+
+%%% TEXEXPAND: END FILE ./preamble.tex
+
+\begin{document}
+
+
+
+
+
+
+\newcommand{\brent}[1]{\texttt{[brent: #1]}}
+\newcommand{\anote}[1]{\texttt{[Amit: #1]}}
+
+\title{Revocation Systems with Very Small Private Keys}
+
+
+
+\author{Allison B. Lewko %\thanks{Supported by the National Defense Science and Engineering Graduate Fellowship.}
+\\ \texttt{UT-Austin, abishop@math.utexas.edu}
+\and Amit Sahai %\thanks{
+%This research was supported in part by an Alfred P. Sloan Foundation
+%Research Fellowship, an Intel equipment grant, a Cyber-TA Army grant, and NSF
+%ITR/Cybertrust grants 0205594, 0456717 and 0627781.}
+\\ \texttt{UCLA, sahai@cs.ucla.edu}
+\and Brent Waters
+%\thanks{
+%Supported by NSF CNS-0749931, CNS-0524252, CNS-0716199; the U.S. Army
+%Research Office under the CyberTA Grant No. W911NF-06-1-0316; and the
+%U.S. Department of Homeland Security under Grant Award Number
+%2006-CS-001-000001.
+%}
+\\ \texttt{UT-Austin, bwaters@cs.utexas.edu}
+}
+
+
+
+\date{}
+\maketitle
+
+\begin{abstract}
+
+In this work, we design a method for creating  public key broadcast
+encryption systems. Our main technical innovation is based
+on a new ``two equation'' technique for revoking users. This technique
+results in two key contributions:
+
+First, our new scheme has ciphertext size overhead $O(r)$,
+where $r$ is the number of revoked users, and the size of public and
+private keys is only a \emph{constant} number of group elements from
+an elliptic-curve group of prime order. In addition, the public key allows
+us to encrypt to an unbounded number of users. Our system is the first to
+achieve such parameters. We give two versions of our scheme: a simpler version which we prove to be secure in the standard model under a new, but non-interactive assumption, and another version that employs the new dual system encryption technique of Waters to obtain security under the d-BDH and decisional Linear assumptions.
+
+Second, we show that our techniques can be used to realize
+Attribute-Based Encryption (ABE) systems with non-monotonic access
+formulas, where our key storage is significantly more efficient than
+previous solutions.
+This result is also proven in the standard model under our new non-interactive assumption.
+
+We believe that our new technique will be of use elsewhere as well.
+\end{abstract}
+
+\thispagestyle{empty}
+\newpage
+\setcounter{page}{1}
+
+\section{Introduction}
+
+In a broadcast encryption system~\cite{fn93}, a broadcaster encrypts a
+message such that a particular set $S$ of devices can decrypt the
+message sent over a broadcast channel. Broadcast systems have a wide
+range of applications including file systems, group communication, DVD
+content distribution, and satellite subscription services.  In many of
+these applications, the notion of revocation is important. For
+example, if a DVD-player's key material is leaked on the Internet, one
+might want to revoke it from decrypting future disks.  In another
+example, consider a group of nodes communicating sensitive control and
+sensor information over a wireless network; if any of these nodes
+becomes compromised, we'd like to revoke them from all future
+broadcasts.
+
+%I removed this for space
+\comment{
+Over the years, this problem has received a great deal of attention,
+and a number of important variants of the problem have been
+identified.  One important restriction is that of \emph{stateless}
+receivers - where the secret keys stored in the receivers do not need
+to be updated over time.  In such stateless systems there is no need
+for a user's device to continuously remain on-line to receive key
+updates. The stateless feature is extremely useful for many
+applications, such as DVD players which only receive input from the
+DVD's that are seen by the user (and therefore cannot be relied on to
+receive all key updates).  Another important variant of the broadcast
+problem is one where a single system can support multiple
+broadcasters: In the example of a DVD system, we would not want the
+DVD encryption system designer to be an active participant in the
+creation of every valid DVD, and also we would not want to trust a
+large number of broadcasting entities with the master keys of the
+system.  For such systems, symmetric-key cryptography is not
+sufficient, and we need \emph{public-key} broadcast encryption
+schemes.  These concerns arise in many applications beyond DVD
+systems, and therefore it important to address these issues if
+possible.
+}
+
+
+%\paragraph{Our results.}
+In this work, we design new broadcast encryption schemes,
+and we focus on two important contributions.
+
+\paragraph{Revocation Systems with Small Key Sizes.}
+We create public key revocation encryption systems with small
+cryptographic private and public keys. Our systems have two important
+features relating respectively to public and private key size.
+
+First, public keys in our two systems are short (just $5$ group elements and $12$ group elements respectively)
+and enable a user to create a ciphertext that revokes an \emph{unbounded}
+number of users. This is in contrast to other systems~\cite{BGW05,NP01,DPP07}
+where the public parameters bound the number of users in the system and
+must be updated to allow more users.
+
+Second, the cryptographic key material that must be stored securely on
+the receiving devices is small. Keeping the size of private key
+storage as low as possible is important as cryptographic keys will
+often be stored in tamper-resistant memory, which is more costly. This
+can be especially critical in small devices such as sensor nodes,
+where maintaining low device cost is particularly crucial. Device keys
+in our systems are only a small \emph{constant} number of group
+elements (in fact, just $3$ group elements and $5$ group elements respectively) from an elliptic-curve
+group of prime order.   Furthermore, our
+schemes are public-key stateless broadcast encryption
+schemes\footnote{And in fact, our schemes are identity-based: each
+device's private key can be based on the device's natural
+``identity,'' which could be an arbitrary string like a serial number
+or even an email address.  In most previous schemes, every device had
+to be assigned a specific number between $1$ and $n$.}, and we work
+with stateless receivers.
+
+We achieve this small device key size
+without compromising on other critical parameters such as ciphertext
+length -- our ciphertexts will consist of just $O(r)$ group elements,
+where $r$ is the number of revoked users.  This is the same behavior
+as the previously best-known schemes for revocation. We also do not compromise on security: we obtain our results in the standard model under the well-established d-BDH and decisional Linear assumptions.
+
+\paragraph{Attribute-Based Encryption with Non-Monotonic Formulas.}
+Our second key contribution is that we show how our techniques can be
+applied to achieving efficient Attribute-Based Encryption
+(ABE)~\cite{sw05} schemes with \emph{non-monotonic} access
+formulas. Ostrovsky, Sahai, and Waters~\cite{OSW07} showed a
+connection between revocation schemes and achieving
+non-monotonic access formulas in ABE; to negate an attribute in an
+access formula one applies a revocation scheme using the attribute as
+an identity to be revoked. Ostrovsky, Sahai, and Waters give a
+particular instance by adapting the revocation scheme of Naor and
+Pinkas~\cite{NP01} to the ABE scheme of Goyal
+et. al~\cite{GPSW06}. The primary drawback of their scheme is that the
+private key size of their scheme blows up by a \emph{multiplicative}
+factor of $\log n$, where $n$ is the maximum number of
+attributes. More precisely, once the DeMorgan's law transformation is
+made, each negated attribute in the private key will have $O(\log n)$
+group elements. By adapting our new revocation techniques to the Goyal
+et. al ABE scheme, we get that each negated attribute will only take two group
+elements. In practice, for many applications the private key storage
+will decrease by an order of magnitude.
+
+
+\paragraph{Our Techniques.}
+The primary challenge in constructing broadcast encryption schemes is
+to achieve full collusion resilience -- to make sure that if all the
+revoked users combine their key material, they still cannot
+decrypt ciphertexts.
+
+In order to understand our techniques it is useful to review the
+Naor-Pinkas~\cite{NP01} revocation scheme. In their system in order to
+revoke $r$ users\footnote{To revoke less than $r$ users, they simply
+revoke some ``dummy'' users.} a degree $r$ polynomial $q(x)$ is chosen
+and $O(r)$ group elements are published allowing anyone to compute
+$g^{q(x)}$ for generator $g$ in group $\G$ of order $p$. A private key
+for user $i$ consists of $q(i)$. To encrypt, a user selects a revoked
+set of users $S$ and a secret exponent $s \in \Z_P$. The ciphertext
+consists of $g^s$ along with $g^{s q(j)}$ for each revoked user $j$ in the
+set $S$. If an attacker consists of just users from the set $S$, he will
+be unable to produce any new points of the polynomial $s\cdot q(x)$. From a high level view, this system revokes by giving
+revoked users \emph{redundant} information. The system provides collusion
+resistance by defining a ``global'' polynomial across the whole system.
+Unfortunately, this structure inherently locks the system to a predetermined
+maximum number of revoked users and a long public key.
+
+In order to avoid these limitations, we propose a new methodology for
+building revocation systems. Like the Naor-Pinkas system, we use the
+idea of revocation by redundant equations. However, instead of using
+a system that defines a global polynomial, we let the encryption algorithm
+define several ``local'' revocation equations.
+Our techniques have two major components:
+
+
+First, we use a ``two equation'' method for decryption. A ciphertext
+will be encrypted such that a certain set $S=\{\ID_1,\ldots,\ID_r \}$
+will be revoked from decrypting it. Since the ciphertext consists of
+$O(r)$ group elements, there will be a ciphertext component for each
+$\ID_i$.  Intuitively, when decrypting, a user $\ID$ will apply his
+secret key to each component. If $\ID \neq \ID_i$, he will get two
+\emph{independent} equations and be able to extract the $i$th
+decryption share. However, if $\ID=\ID_i$ (\emph{i.e.} he is revoked), then he
+will only get two \emph{dependent} equations of a two variable formula and thus
+be unable to extract the decryption share. Alternatively, we can view each
+ciphertext component as \emph{locally} defining a different degree one polynomial.
+For component $i$, a user $\ID$ will get two points on a fresh degree one polynomial
+$q_i(x)$ iff $\ID \neq \ID_i$ (and otherwise the user will essentially only get one point on the polynomial, which is not enough to solve). We can view this as a local
+revocation of each user to a component of the ciphertext.
+
+
+One large challenge of our ``local'' revocation approach is that we
+need to make sure that multiple users cannot collude to decrypt the
+message. For example, if there is a ciphertext that revokes $S= \{
+\ID_1,\ID_2 \}$, these users might try to decrypt by letting user
+$\ID_2$ get the first share and user $\ID_1$ obtain the second share.
+To prevent this attack, our key shares are randomized or
+``personalized'' to each user to prevent combination of decryption
+shares. To achieve this, we devise a new technique for achieving
+collusion resilience using novel cancellation techniques based on the
+power of a bilinear map.
+
+
+\comment{
+Our techniques are in contrast to all previous revocation schemes with
+small key sizes that we are aware of, which used either combinatorial
+approaches (either with set systems or tree-based approaches) or
+polynomial interpolation based approaches (see the related work
+section for more details on previous work).
+  Instead, we devise a new
+technique for achieving collusion resilience using novel cancellation
+techniques based on the power of a bilinear map.  A bilinear map of
+the kind we need can be built, for example, from the Weil pairing on
+elliptic curve groups.  Our new collusion-resilience technique allows
+us to break the bottlenecks that existed in previous systems.
+}
+
+Our first (simpler) system clearly demonstrates our techniques and is shown to be secure under a new non-interactive
+assumption that we call the decisional $q$-Multi Exponent Bilinear
+Diffie-Hellman ($q$-MEBDH) assumption. We formally define this assumption in Appendix~\ref{sec:complexity}. We show the assumption to hold
+in the generic bilinear group model in
+Appendix~\ref{sec:generic-proof}\footnote{One might wonder if the
+security proof of our assumption in the generic group model suggests
+the need for much larger security parameters, thereby negating the
+efficiency advantages claimed here; indeed we show that this is
+\emph{not} the case.  See Section~\ref{sec:security-remark} and
+Appendix~\ref{sec:generic-proof} for more details.}. We prove security
+in the standard model, showing that a ciphertext that revokes up to
+$r$ users is secure if the decisional $r$-MEBDH assumption holds.
+
+Our second system combines the techniques of our first system with the recent dual system encryption technique of Waters ~\cite{W09}. This technique was used to give a fully secure IBE system under the d-BDH and decisional Linear Assumptions which we will adapt to form our revocation system. In a dual system, keys and ciphertext can take on two forms: they can either be normal (as used in the real system) or semi-functional. (Semi-functional keys and ciphertexts are not used in the real system, they are only used in proving its security.) When a normal key is used to decrypt a semi-functional ciphertext or a semi-functional key is used to decrypt a normal ciphertext, decryption will still work. When a semi-functional key is used to decrypt a semi-functional ciphertext, decryption will fail. Security for dual systems is proved using a sequence of indistinguishable games. In the first game, all keys and ciphertexts are normal as in the real system. Next, the ciphertext is  changed to be semi-functional. Then, the keys are changed to be semi-functional one by one. Once all the keys given to the attacker are semi-functional, none are useful for decrypting the challenge ciphertext, so proving security becomes much easier.
+
+In the intermediate games where the keys switch to semi-functional, the simulator is prepared to create a semi-functional key for any identity and a challenge ciphertext for any allowed subset of revoked identities. This may seem problematic, since the simulator might try to test semi-functionality of the key in question for itself by creating a semi-functional challenge ciphertext where that user is not revoked. We will avoid this issue by making sure the simulator can only form the semi-functional ciphertext properly when the key in question is a revoked user. This is similar to the technique used in the Broadcast Encryption scheme in ~\cite{W09}, but this system had key sizes which were linear in the number of users while our system achieves constant key sizes.
+
+We prove our system to be secure in the standard model under the well-established d-BDH and decisional Linear assumptions. The clear advantage of this system is its reliance on simpler, more standard assumptions. Its only (relatively) disadvantage is that the constant public and private key sizes are slightly higher than in our first system.
+
+We believe that our technique will be of use in other cryptographic
+applications, as well.
+%Recently, ~\cite{lossynew} have made use of
+%our technique in the context of constructing lossy trapdoor
+%functions~\cite{lossy} with short public keys.
+%Xavier was very nervous about the citation.
+Recently, Waters ~\cite{W09} applied the revocation techniques of a prior version of this paper to construct new fully
+secure HIBE schemes based on simple assumptions, and fully secure IBE
+schemes with very short public parameters.
+
+
+\subsection{Related Work}
+
+Fiat and Naor~\cite{fn93} first introduced the problem of broadcast
+encryption.  In their system they proposed a scheme that is secure
+against a collusion of $t$ users, where the ciphertext size was
+$O(t\log^2 t \log n)$. This system and other following
+work~\cite{S97,ST98,SW98,KRS,GSY99,GSW00}, used a combinatorial approach.
+For this type of approach, there is an inherent tradeoff
+between the efficiency of the system and the number, $t$, of colluders
+that the system is resistant to. An attacker in the system that
+compromises more than $t$ users can compromise the security of the
+scheme.
+
+For systems without a bound on the number of revoked users at setup, there have been two general classes of revocation broadcast
+schemes.  The first stateless tree-based revocation schemes were
+proposed by Naor, Naor and Lopspeich~\cite{NNL} where they introduced
+the ``subset cover'' framework. In their framework users were assigned
+to leaves in a tree and belonged to different subsets.  An encryptor
+encrypts to the minimum number of subsets that covers all the
+non-revoked users and none of the revoked ones. The primary challenge
+is to structure the subsets so that they are expressive enough to allow
+for small ciphertext overhead, yet don't impose large private key
+overhead on the user. The NNL paper proposed two systems with
+ciphertext sizes of $O(r \lg n)$ and $O(2r)$ and private key sizes of
+$O(\lg n)$ and $O(\lg^2 n)$ respectively.  These methods were
+subsequently improved upon in future works by Halvey and
+Shamir~\cite{HS} and by Goodrich, Sun, and Tamassia~\cite{G}, where
+the GST system gives $O(r)$ size ciphertexts and $O(\lg n)$ size
+private keys.  Dodis and Fazio~\cite{DF02} show how to make the the
+NNL and Halevy and Shamir systems public key by employing hierarchical
+identity-based encryption methods. It is unknown how to realize the
+more efficient GST scheme in the public key setting.
+
+The second class of methods is based on polynomial interpolation in
+the exponents of group elements and was given by Kurosawa and
+Desmedt~\cite{KD98} and Naor and Pinkas~\cite{NP01}. In these systems
+the setup algorithm picks a polynomial of degree $d$, where $d$ is the
+maximum number of users that can be revoked.  Both the public key and
+ciphertexts are of size $d$. Yoo et. al.~\cite{parallel} observe that
+$\lg(n)$ parallel systems can be used to handle $n$ users with $O(r)$
+size private keys, $O(n)$ size public keys and $O(r)$ size
+ciphertexts.
+
+We note that there are a class of \emph{stateful} encryption
+schemes known as logical-tree-hierarchy schemes independently
+discovered by Wallner et al.~\cite{wallner} and Wong~\cite{wong},
+which are improved in further work~\cite{CGIMNP99,CMN99,SM03}. The
+drawback of stateful schemes is that if a receiver misses an update it
+won't be able to decrypt future messages (or this must be corrected
+somehow). Even so, our stateless solution actually provides a more
+efficient way to revoke users in the stateful setting than previous
+schemes.
+
+We remark that two equation techniques are somewhat
+reminiscent of of those used for knowledge extraction in discrete log
+proof of knowledge settings~\cite{S91}. In addition, different types
+of two equation techniques have been applied in ecash applications
+(see e.g.,~\cite{CHL05} and the references therein).
+
+We also note that~\cite{BGW05} proposed the first non-trivial
+\emph{fully collusion resistant} broadcast encryption scheme;
+broadcasts to a set of uncompromised users remain secure no matter how
+many other keys the adversary obtained. (In contrast, our approach and those referenced above would lead to very long ciphertexts if the number of revoked users were very large.) Their scheme allows for
+broadcasts to an arbitrary set of users where the ciphertexts and
+private key material are both a constant number of group elements,
+however, the public key material is linear in the number of users in
+the system and, moreover, the public key must be accessible by any
+decryptor in the system.  This makes their solution unusable for small
+devices that cannot store the public key.  In comparison, our solution
+is appropriate for applications, like group encryption, where we
+expect relatively few devices will be compromised and revoked from the
+encryption and where we need very small storage.
+
+Finally, Delerabl{\'e}e, Paillier and Pointcheval~\cite{DPP07} use a
+type of inversion technique to achieve a system with %unconditionally
+small private keys, but public parameters still require a linear number of group elements in the
+number of users.\footnote{ The authors additionally describe a secret
+key version of the scheme where the broadcaster is the same as the
+authority. In this case the trusted broadcaster can contain a short
+secret for encryption (e.g., the seed used for system setup).}  Unlike
+our system, the published public parameters will establish an upper
+bound on the number of users that may be encrypted to (without
+``appending'' to the public key), although private keys need not be
+modified. In addition, they rely on a non-standard assumption with a number of terms that grows polynomially. 
+
+Attribute-Based Encryption was introduced by Sahai and
+Waters~\cite{sw05}; subsequent
+works~\cite{GPSW06,BSW07,chase07,OSW07,GJPS08} have proposed
+ABE systems with different properties.
+Different authors ~\cite{S03,MS03,BMC06,BHS04,AMS06,BF06} have considered
+similar problems without considering collusion resistance.
+
+\paragraph{Key Sizes.}  We stress that, as summarized above, all previous public key and identity-based revocation schemes required\footnote{We also stress that this is an ``apples to apples'' comparison, since in all these \emph{public-key} schemes, the underlying group size would be comparable for a given security level (or favor our setting of elliptic curve groups).} either (1) larger private key size by at least a factor of $\log n$, where $n$ is the number of users, or (2) much larger public parameter size, by a factor of $n$.
+
+\subsection{Organization}
+The rest of the paper is organized as follows. In
+Section~\ref{sec:background} we provide the relevant definitions for
+revocation systems. We then give the construction of
+our simple revocation system in Section~\ref{sec:construction} and our second system in Section~\ref{sec:newconstruction}. We prove security of our system in Section~\ref{sec:security}.  Finally, we show how to realize
+a non-monotonic Attribute-Based Encryption system with small private
+key sizes in Section~\ref{sec:ABE}.
+%Finally, we conclude in Section~\ref{sec:conclusion}.
+
+
+\section{Background}
+\label{sec:background}
+
+We begin by providing a security definition for a revocation system,
+in the identity-based framework. We use definitions that are similar,
+for example, to the definitions for broadcast encryption used by
+Boneh, Gentry, and Waters~\cite{BGW05}; however we adapt our
+definition to the Identity-Based setting. Later, we state our
+complexity assumptions.
+
+
+\subsection{Identity-Based Revocation Systems}
+
+An  encryption system is made up of three randomized algorithms:
+For simplicity of notation, we assume an implicit security parameter
+of $\lambda$.
+\begin{description}
+\item[$\AlgSetup$.] An authority will run the setup algorithm.
+The algorithm outputs a  public key $\PK$ and master secret key $\MSK$.
+
+\item[$\AlgKeyGen(\MSK,\ID)$.] The key generation algorithm takes in the
+master secret key $\MSK$ and an identity, $\ID$. It generates a private
+key $\SK_{\ID}$ for the identity.
+
+
+\item[$\AlgEncrypt(S,\PK,M)$.]
+The encryption algorithm takes as input a revocation set $S$ of identities
+along with the public key and a message $M$ to encrypt. It outputs a
+ciphertext $\CT$ such that any user with a key for an identity $\ID \notin S$
+can decrypt.
+
+
+\item[$\AlgDecrypt(S,\CT,\ID,D_{\ID})$]
+The decryption algorithm takes as input a ciphertext $\CT$ that was generated for the revocation
+set $S$, as well as an identity $\ID$ and a private key for it. If $\ID \notin S$ the
+algorithm will be able to decrypt and recover the message $M$ encrypted in the ciphertext.
+\end{description}
+
+
+We now define (chosen plaintext) security of an ID-based revocation encryption system
+against a static adversary. Security is defined using the following
+``Revocation Game'' between an attack algorithm $\AlgA$ and a challenger, for a revocation set $S$ of identities.
+
+\begin{gamequote}
+\begin{description}
+
+%\item[Init.]
+%Algorithm $\AlgA$ begins by providing a revocation set
+%$S$ of identities.
+
+\item[Setup.]  The challenger runs $\AlgSetup$ to obtain a public
+key $\PK$ and master secret key $\MSK$.  It gives $\AlgA$ the
+public key $\PK$.  In addition, it gives $\AlgA$ the decryption keys $d_{ID}$ for all $ID \in S$.
+
+\item[Challenge.] The attacker gives the challenger two messages $M_0,M_1$.
+Next, the challenger picks a random $b \in \{0,1\}$.
+The challenger runs algorithm \AlgEncrypt\ to obtain
+$\CT \rgets \AlgEncrypt(S,PK,M_b)$.
+It then gives $\CT$ to algorithm $\AlgA$.
+
+\item[Guess.] Algorithm $\AlgA$ outputs its guess $b' \in \{0,1\}$ for $b$ and wins the game if $b=b'$.
+
+\end{description}
+\end{gamequote}
+
+
+\begin{definition}
+We say that a revocation system is (chosen-plaintext) secure if,
+for all revocations sets $S$ of size polynomial in the security parameter, no polynomial-time adversary can win the ``Revocation Game'' (defined above) with non-negligible advantage over $1/2$.
+\end{definition}
+
+Our attack models the game where all users in the revoked set $S$ get together and collude (this is because the adversary gets all private keys from the revoked set).
+%We note that our game is static in the sense that we have the adversary commit to the revoked identity set before seeing the plaintexts.
+
+
+\paragraph{Chosen-Ciphertext Security.} We will also consider  chosen-ciphertext (CCA) security, where the adversary can also issue decryption queries for ciphertexts that it constructs (as long as the challenge ciphertexts are not equal to the challenge ciphertext). The game is identical to the game above, except decryption queries (for arbitrary revocation sets) are allowed. Our main construction will be chosen-plaintext secure; however it can be made CCA-secure using the techniques of Cannetti, Halevi,
+and Katz~\cite{CHK2}.
+
+
+
+
+
+\section{Our Simple Revocation System}
+\label{sec:construction}
+We now present our simpler revocation system. Our system has the following
+features: both public and private keys are of size independent of the
+number of users (\emph{i.e.} only a constant number of group
+elements\footnote{Indeed, since we are using elliptic curves of prime
+  order, these elements can be quite short.}); the ciphertext only
+contains $O(r)$ group elements, where $r$ is the number of revoked
+users.
+
+\paragraph{Intuition} Our construction uses a novel application of a
+secret sharing in the exponent.  Suppose an encryption algorithm needs
+to create an encryption with a revocation set $S=\ID_1,\ldots,\ID_r$
+of $r$ identities. The algorithm will create an exponent $s \in \Zp$
+and split it into $r$ random shares $s_1, \ldots, s_r$ such that $\sum
+s_i=s$. It will then create a ciphertext such that any user key with
+$\ID=\ID_i$ will not be able to incorporate the $i-th$ share and thus
+not decrypt the message.
+
+Our approach presents us with two challenges. First, we need to make
+sure that a user with revoked identity $\ID=\ID_i$ cannot do anything
+useful with share $i$. Second, we need to worry about collusion
+attacks between multiple revoked users. Suppose a user with
+$\ID=\ID_i$ and a user with $\ID=\ID_j$ collude to attack a
+ciphertext.  The attack we need to worry about is where user $j$
+processes ciphertext share $i$, while user $i$ processes share $j$,
+and then they combine their results.
+
+The first problem is addressed by the method of decryption. For each
+share, the ciphertext will have two components. A user with $\ID \neq
+\ID_i$ can use these two components to obtain two linearly independent
+equations (in the exponent) involving the share $s_i$ ( and another
+variable), which he will use to solve for the share $s_i$.  However,
+if $\ID=\ID_i$ he will get two linearly dependent equations and not be
+able to solve the system. We remark that these techniques are somewhat
+reminiscent of of those used for knowledge extraction in discrete log
+proof of knowledge settings~\cite{S91}. In addition, different types
+of two equation techniques have been applied in ecash applications
+(see e.g.,~\cite{CHL05} and the references therein).
+
+To address the second challenge, we randomize each user's private key
+by an exponent $t$ such that in decryption each user recovers shares
+$t\cdot s_i$ in the exponent.  Thus, we disallow useful collusions in
+a similar manner to some Identity-Based~\cite{chk03,bb04} and
+Attribute-Based~\cite{sw05,GPSW06,BSW07} encryption systems. Our
+construction follows.
+
+
+\subsection{Simple Construction}
+ In the description of our construction we will
+use a bilinear group $\G$ of prime order $p$. We will assume that
+identities are taken from the set $\Zp$; in practice, of course, we
+can perform a collision resistant hash from identity strings to $\Zp$.
+We now give our construction as a set of four algorithms.
+
+\paragraph{Setup}
+The setup algorithm chooses a group $\G$ of prime order $p$.
+It then picks random generators $g,h \in \G$ and picks random
+exponents $\alpha, b \in \Zp$. The public key is published as:
+\[
+\PK=( g,
+g^{b},
+g^{b^{2}},
+h^{b},
+e(g,g)^{\alpha} ).
+\]
+The authority keeps $\alpha, b$ as secrets.
+
+\paragraph{Key Gen($\MSK,\ID$)}
+The key generation algorithm first chooses a random $t \in \Zp$ and
+publishes the private key as:
+\[ D_0= g^{\alpha}g^{ b^2 t},
+   D_1= (g^{b \cdot \ID}h)^{ t},
+   D_2=  g^{-t}.
+\]
+
+\paragraph{Encrypt($\PK,M,S$)}
+The encryption algorithm first picks a random $s \in \Zp$.
+Then it lets $r=|S|$ and chooses random $s_1,\ldots, s_r$
+such that $s=s_1+\ldots +s_r$.
+We let $\ID_i$ denote the $i$-th identity in $S$.
+It then creates the ciphertext $\CT$ as:
+
+\[
+C'=e(g,g)^{\alpha s}M, C_0= g^{s}
+\]
+together with, for each $i=1, 2, \dots, r$:
+
+\[\left( C_{i,1}= g^{b \cdot s_i},
+C_{i,2}= \left(g^{b^2 \cdot \ID_i}h^b\right)^{s_i} \right)
+\]
+
+
+\paragraph{Decrypt($S,\CT,\ID,D_{\ID}$)}
+If there exists $\ID' \in S$ such that $\ID = \ID'$ then the algorithm aborts; otherwise,
+the decryption algorithm computes:
+\[
+\frac{e(C_0,D_0)}
+{
+e\left(D_1, \prod_{i=1}^{r}C_{i,1}^{1/(\ID-\ID_i)}\right)
+\cdot
+e\left(D_2, \prod_{i=1}^{r}C_{i,2}^{1/(\ID-\ID_i)}\right)
+}
+\]
+which gives us $e(g,g)^{\alpha s}$; this can immediately be used to recover the message $M$ from $C'$.
+Note that this computation is only defined
+if $\forall i \quad \ID \neq \ID_i$.
+
+We can verify the correctness of the decryption computation.
+
+\begin{eqnarray*}
+& &
+e(C_0,D_0)/ \left(
+e\left(D_1, \prod_{i=1}^{r}C_{i,1}^{1/(\ID-\ID_i)}\right)
+\cdot
+e\left(D_2, \prod_{i=1}^{r}C_{i,2}^{1/(\ID-\ID_i)}\right)
+\right)\\
+&=&
+e(C_0,D_0)/ \left(
+\prod_{i=1}^{r}
+\left(
+   e\left(D_1, C_{i,1}\right)
+  \cdot
+    e\left(D_2, C_{i,2}\right)
+\right)^{\ID-\ID_i}
+\right)\\
+&=&
+e(g^s,g^{\alpha}g^{b^2 t})/ \left(
+\prod_{i=1}^{r}
+\left(
+   e\left( (g^{b \ID}h)^t, g^{b s_i}\right)
+  \cdot
+    e\left(g^{-t}, (g^{b^2\ID_i }h^b )^{s_i}\right)
+\right)^{\ID-\ID_i}
+\right)\\
+&=&
+e(g,g)^{s \alpha} e(g,g)^{s b^2 t})/ \left(
+\prod_{i=1}^{r}
+  e(g,g)^{s_i b^2 t})
+\right)\\
+&=&
+e(g,g)^{s \alpha}
+\end{eqnarray*}
+
+We obtain the following theorem. (The proof appears in Appendix B.)
+
+\begin{theorem}
+Suppose the decisional $q$-MEBDH assumption holds. Then no poly-time adversary
+can selectively break our system with a ciphertext encrypted to $r^* \leq q$
+revoked users.
+\end{theorem}
+
+
+\section{Our Second Revocation System}
+\label{sec:newconstruction}
+This system retains the desirable properties of our simpler system: public and private keys still require only a constant number of group elements, and the ciphertext requires $O(r)$ group elements, where $r$ is the number of revoked users. The primary advantage of this system is that we obtain security from simple assumptions, namely the decisional Linear assumption and $d-BDH$.
+
+
+\paragraph{Intuition} We combine the techniques of our simple construction with the dual system encryption technique of Waters ~\cite{W09}. Essentially, we append a version of our simple construction onto the core IBE construction of Waters.
+
+\subsection{Construction}
+We will again use a bilinear group $G$ of order $p$ and assume that identities are taken from $\Z_p$.
+
+\paragraph{Setup} The setup algorithm chooses a bilinear group $G$ of prime order $p$. It then chooses random generators $g, v, v_1, v_2, w, h \in G$ and random exponents $a_1, a_2, b, \alpha \in \Z_p$. It lets $\tau_{1} = v v_1^{a_1}, \tau_2 = v v_2^{a_2}$. The public key is published as:
+\[ PK = (g^b, g^{a_1}, g^{a_2}, g^{ba_1}, g^{ba_2}, \tau_1, \tau_2, \tau_1^b, \tau_2^b, w, h, e(g,g)^{\alpha a_1 b}).\]
+The master secret key is:
+\[ MSK  = (g, g^\alpha, g^{\alpha a_1}, v, v_1, v_2, PK).\]
+
+\paragraph{KeyGen($MSK,ID$)} The key generation algorithm chooses random exponents $d_1, d_2, z_1, z_2 \in \Z_p$ and sets $d = d_1+d_2$. The private key $D_{ID}$ is:
+\[D_1 = g^{\alpha a_1}v^d, D_2 = g^{-\alpha}v_1^d g^{z_1}, D_3 = (g^b)^{-z_1}, D_4 = v_2^dg^{z_2}, D_5 = (g^b)^{-z_2}, D_6 = g^{d_2 b},\]
+\[D_7 = g^{d_1}, K = (w^{ID}h)^{d_1}.\]
+
+\paragraph{Encrypt($PK, M, S$)} The encryption algorithm chooses random exponents $s_1, s_2, t_1, \ldots, t_r$ and sets $s = s_1 + s_2$, $t = t_1 + \cdots + t_r$ (where $r = |S|$, the number of revoked users). We let $ID_i$ denote the $i$-th identity in $S$. The ciphertext $CT$ is constructed as:
+\[ C_0 = M \left(e(g,g)^{\alpha a_1 b}\right)^{s_2}, C_1 = (g^{b})^{s}, C_2 = (g^{b a_1})^{s_1}, C_3 = (g^{a_1})^{s_1}, \]
+\[ C_4 = (g^{ba_2})^{s_2}, C_5 = (g^{a_2})^{s_2}, C_6 = \tau_1^{s_1}\tau_2^{s_2}, C_7 = (\tau_1^b)^{s_1}(\tau_2^b)^{s_2} w^{-t},\]
+along with, for each $i = 1, 2, \ldots, r$:
+\[ C_{i,1} = g^{t_i}, C_{i,2} = (w^{ID_i}h)^{t_i}.\]
+
+\paragraph{Decrypt($S, CT, ID, D_{ID}$)} If $ID = ID_i$ for some $ID_i \in S$, then the algorithm aborts. Otherwise, the decryption algorithm begins by computing:
+\begin{eqnarray}
+ \nonumber
+  A_1 &=& e(C_1, D_1) e(C_2,D_2) e(C_3,D_3) e(C_4, D_4) e(C_5, D_5) \\
+  \nonumber
+   &=& e(g,g)^{\alpha a_1 b s_2} e(v,g)^{bsd}e(v_1,g)^{a_1bs_1d}e(v_2,g)^{a_2bs_2 d}.
+\end{eqnarray}
+
+Next, the algorithm computes:
+\begin{eqnarray}
+\nonumber
+A_2 & = & e(C_6,D_6) e(C_7, D_7) \\ \nonumber
+ & = & e(v,g)^{bsd}e(v_1,g)^{a_1bs_1 d}e(v_2,g)^{a_2 b s_2 d} e(g,w)^{-d_1 t}.
+\end{eqnarray}
+
+Now,
+\[A_3 = A_1/A_2 = e(g,g)^{\alpha a_1 b s_2} e(g,w)^{d_1 t},\]  so if we separately compute $e(g,w)^{d_1 t}$, we can cancel this term and compute the blinding factor and hence recover the message. We compute $e(g,w)^{d_1 t}$ as follows:
+\begin{eqnarray}
+\nonumber
+A_4 & = & \prod_{i=1}^r \left(\frac{e(C_{i,1},K)}{e(C_{i,2},D_7)}\right)^{\frac{1}{ID-ID_i}} \\
+\nonumber
+ & = & \prod_{i=1}^r \left( e(g,w)^{d_1 t_i (ID-ID_i)}\right)^{\frac{1}{ID-ID_i}} \\
+ \nonumber
+ & = & \prod_{i=1}^r e(g,w)^{d_1 t_i} = e(g,w)^{d_1 t}.
+ \end{eqnarray}
+
+Thus, the message can be computed as:
+\[C_0 / (A_3/A_4) = M.\]
+
+\section{Security}
+\label{sec:security}
+We will prove the following theorem.
+
+\begin{theorem} If the decisional Linear and decisional BDH assumptions hold, then our revocation system above is secure.
+\end{theorem}
+
+To prove this, we first define semi-functional keys and ciphertexts. These are not used in the real system, but they will be used in our proof of security. These objects have the following functionality: a semi-functional key can decrypt a normal ciphertext and a normal key can decrypt a semi-functional ciphertext. However, a semi-functional key cannot decrypt a semi-functional ciphertext. We define these as in the Waters IBE system:
+
+\paragraph{Semi-Functional Ciphertexts}
+We generate a semi-functional ciphertext by first running the encryption algorithm to produce a normal ciphertext for message $M$ and set $S$:
+\[C'_0, C'_1, C'_2, C'_3, C'_4, C'_5, C'_6, C'_7, C'_{i,1}, C'_{i,2} \forall i \in S.\] Then we set $C_1 = C'_1, C_2 = C'_2, C_3 = C'_3, C_{i,1} = C'_{i,1}, C_{i,2} = C'_{i,2} \forall i \in S$ (these values are left unchanged). We choose a random $x \in \Z_p$, and set the rest of the ciphertext as:
+\[C_4 = C'_4\cdot g^{ba_2x}, C_5 = C'_5 \cdot g^{a_2x}, C_6 = C'_6\cdot v_2^{a_2 x}, C_7 = C'_7\cdot v_2^{a_2bx}.\]
+
+\paragraph{Semi-Functional Keys}
+We generate a semi-functional key by first running the key generation algorithm to produce a normal private key for identity $ID$:
+\[D'_1, D'_2, D'_3, D'_4, D'_5, D'_6, D'_7, K'.\]
+Then we set $D_3 = D'_3, D_5 = D'_5, D_6 = D'_6, D_7 = D'_7, K = K'$ (these values are left unchanged). We choose a random $\gamma \in \Z_p$. We set the rest of the key as:
+\[D_1 = D'_1\cdot g^{-a_1 a_2 \gamma}, D_2 = D'_2 \cdot g^{a_2 \gamma}, D_4 = D'_4 \cdot g^{a_1 \gamma}.\]
+
+We will prove selective security of our system under the decisional Linear and d-BDH assumptions through a hybrid argument. We use the following sequence of games.
+
+\paragraph{Game$_{Real}$:} This denotes the real security game. We let Game$_{Real}Adv_{\mathcal{A}}$ denote the advantage of an algorithm $\mathcal{A}$ in the real security game.
+
+\paragraph{Game$_0$:} This is the same as Game$_{Real}$, except that the ciphertext given to the attacker is semi-functional.
+
+\paragraph{Game$_k$:} In this game, the ciphertext is semi-functional, and the keys given out for the first $k$ users in the revoked set $S$ are semi-functional, while the rest of the keys are normal. For an adversary that submits a revocation set $S$ of size $r$, we will let $k$ range from 0 to $r$. Note that in Game$_r$, the ciphertext and all the keys are semi-functional.
+
+\paragraph{Game$_{Final}$:} This is the same as Game$_r$, except that the ciphertext is a semi-functional encryption of a random message instead of $M_b$.
+
+We show these games are indistinguishable in the following lemmas (the proofs can be found in Appendix~\ref{sec:system2proof}).
+
+\begin{lemma}Suppose there exists an algorithm $\mathcal{A}$ such that Game$_{Real}Adv_{\mathcal{A}} - Game_0 Adv_{\mathcal{A}} = \epsilon$. Then we can build an algorithm $\mathcal{B}$ with advantage $\epsilon$ in the decision Linear game.
+\end{lemma}
+
+
+\begin{lemma} Suppose there exists an algorithm $\mathcal{A}$ that submits a revoked set of $r$ users and $Game_{k-1}Adv_{\mathcal{A}} - Game_k Adv_{\mathcal{A}} = \epsilon$ for some $k$ with $1 \leq k \leq r$. Then we can build an algorithm $B$ with advantage $\epsilon$ in the decision Linear game.
+\end{lemma}
+
+\begin{lemma} Suppose there exists an algorithm $\mathcal{A}$ that submits a revoked set of $r$ users and $Game_{r}Adv_{\mathcal{A}} - Game_{Final} Adv_{\mathcal{A}} = \epsilon$. Then we can build an algorithm $B$ with advantage $\epsilon$ in the decision BDH game.
+\end{lemma}
+
+
+
+\section{Attribute-Based Encryption}
+\label{sec:ABE}
+
+Our simple revocation scheme also
+gives rise to a new efficient Attribute-Based Encryption (ABE) scheme
+that allows access policies to be expressed in terms of \emph{any}
+access formula over attributes. Until the recent work of Ostrovsky,
+Sahai, and Waters~\cite{OSW07}, all previous ABE schemes were limited to expressing
+only monotonic access structures.  Our new ABE scheme, however,
+achieves significantly superior parameters in terms of key size.  In
+the random oracle model, our new scheme will have the following key
+sizes: public parameters will be only $O(1)$ group elements, and
+private keys for access structures involving $t$ leaf attributes will
+be of size $O(t)$.  This is a significant improvement over previous
+work, which needed public parameters consisting of $O(n)$ group
+elements, and private keys consisting of $O(t \log(n))$ group
+elements, where $n$ is a bound on the maximum number of attributes
+that any ciphertext could have.  In our scheme, we do not need any
+such bound.
+
+For brevity, we only describe
+at a high level what makes our revocation scheme so amenable to
+incorporation into ABE schemes.  The essential property of our
+revocation scheme is that successful decryption (if a non-revoked user
+tries to decrypt) allows the user to recover $e(g,g)^{\alpha s}$,
+where $\alpha$ is a system parameter, while $s$ is a random choice
+made at the time of encryption.  This idea can be applied with
+$\alpha$ replaced by a linear secret share of $\alpha$ that
+corresponds to a negated leaf node in an access formula.  By the
+properties of linear secret sharing schemes, and the randomization
+provided by $s$, this allows for a secure ABE system to be built using
+our revocation scheme as a building block.
+
+Taken altogether, our revocation scheme gives a new and much more
+efficient instiantion of the OSW framework for non-monotonic ABE.  We
+now describe our construction. We refer the reader to ~\cite{OSW07}
+for definitions. Our proofs appear in Appendix~\ref{sec:ABE-proof}.
+
+
+\subsection{Description of ABE construction}
+
+
+\newcommand{\zkip}{{\textsc{zkip}}}
+\newcommand{\vci}{{\textsc{vci}}}
+\newcommand{\fip}{{\textsc{fip}}}
+\newcommand{\start}{{\small{START}}}
+\newcommand{\transcript}{{\small{TRANSCRIPT}}}
+\newcommand{\adv}{{\textbf{Adv}}}
+\newcommand{\expe}{{\textbf{Exp}}}
+\newcommand{\hash}{$\mathcal{H}$}
+\newcommand{\pe}{$\mathcal{PE}$}
+%\newcommand{\s}{$\mathcal{SS}$}
+\newcommand{\enc}{$\mathcal{E}$}
+\newcommand{\dec}{$\mathcal{D}$}
+\newcommand{\key}{$\mathcal{K}$}
+%\newcommand{\G}{\ensuremath{\mathbb{G}}}
+\newcommand{\GT}{\ensuremath{\mathbb{G}_T}}
+%\newcommand{\Zp}{\ensuremath{\mathbb{Z}_p}}
+%\newcommand{\G}{$\mathcal{G}$}
+%\newcommand{\GT}{$\mathcal{G}_T$}
+\newcommand{\univ}{\mathcal{U}}
+\newcommand{\zz}{\mathbb{Z}}
+\newcommand{\parent}{\mathrm{parent}}
+\newcommand{\sons}{\mathrm{CHILD}}
+\newcommand{\ind}{\mathrm{index}}
+\newcommand{\att}{\mathrm{att}}
+\newcommand{\ghat}{e(g,g)}
+%\newcommand{\egg12}{$e(g_1,g_2)}
+%\newcommand{\egg2}{e(g,g_2)}
+\newcommand{\msp}{\mathrm{MSP}}
+
+%\newcommand{\brent}[1]{\texttt{[brent: #1]}}
+%\newcommand{\anote}[1]{\texttt{[Amit: #1]}}
+%\newcommand{\comment}[1]{}
+\newcommand{\MK}{\ensuremath{\textrm{MK}}}
+%\newcommand{\PK}{\ensuremath{\textrm{PK}}}
+
+
+\newcommand{\Decnode}{\ensuremath{\mathrm{DecryptNode}}}
+\newcommand{\PolySat}{\ensuremath{\mathrm{PolySat}}}
+\newcommand{\PolyUnsat}{\ensuremath{\mathrm{PolyUnsat}}}
+
+We follow the notation of~\cite{OSW07} here, and describe our construction in the random oracle model to highlight the most efficient form of our construction.
+
+\paragraph{Setup.}
+The setup algorithm chooses generators $g,h$ and picks random exponents
+$\alpha', \alpha'', b \in \Zp$. We define $\alpha = \alpha' \cdot \alpha''$, $g_1 = g^{\alpha'}$ and $g_2 = g^{\alpha''}$.) The public parameters are published as the following, where $H$ is a random oracle that outputs elements of the elliptic curve group:
+\[
+\PK=( g,
+g^{b},
+g^{b^{2}},
+h^{b},
+e(g,g)^{\alpha}, H(\cdot) ).
+\]
+The authority keeps $(\alpha', \alpha'', b)$ as the master key $\MK$.
+
+
+%Two secrets $\alpha, \beta$ are chosen uniformly at random from $\zz_p$,
+%and we denote $g_1 = g^\alpha$ and $g_2 = g^\beta$.
+%In addition, two polynomials $h(x)$ and $q(x)$ of degree $d$ are chosen
+% at random subject to the constraint that $q(0)=\beta$. (There is no constraint on $h(x)$.)
+%The public parameters $\PK$ are $(g, g_1;\mbox{  } g_2=g^{q(0)}, g^{q(1)}, g^{q(2)}, \dots, g^{q(d)};\mbox{  }$
+%$g^{h(0)}, g^{h(1)}, \dots, g^{h(d)})$.  The master key $\MK$ is $\alpha$.
+%
+%These public parameters define two publicly computable functions $T, V : \zz_p \rightarrow \G$.
+%The function $T(x)$
+%maps to $g_2^{x^d}\cdot g^{h(x)}$, and the function $V(x)$ maps to $g^{q(x)}$.
+% Note that both $g^{h(x)}$ and $g^{q(x)}$ can be
+%evaluated from the public parameters by interpolation in the exponent. (For further details on how to do this using
+%Lagrange coefficients, see, e.g.,~\cite{sw05,GPSW06}.)
+
+\paragraph{Encryption} ($M,\gamma,\PK$).
+To encrypt a
+message $M \in \GT$ under a set of $d$ attributes $\gamma \subset \zz_p^*$,
+choose a random value $s\in\zz_p$, and choose a random set of $d$ values $\{s_x\}_{x \in \gamma}$
+such that $s= \sum_{x \in \gamma} s_x$. Output the ciphertext
+as
+\begin{eqnarray*}
+E = (
+\gamma, E^{(1)} = M e(g, g)^{\alpha \cdot s},
+E^{(2)} = g^s,
+\{E^{(3)}_x = H(x)^s\}_{x\in\gamma}, \\
+\{E^{(4)}_x = g^{b\cdot s_x}\}_{x\in\gamma},
+\{E^{(5)}_x = g^{b^2\cdot s_x x} h^{b \cdot s_x}\}_{x\in\gamma}
+)
+\end{eqnarray*}
+%Note that
+%$g^{q(i)}$ can be computed through interpolation in the exponent using the public parameters, and then $g^{sq(i)}$ can be computed by raising $g^{q(i)}$ to the $s$ power.
+
+\paragraph{Key Generation} ($\mathbb{\tilde{A}},\MK,\PK$).
+This
+algorithm outputs a key that enables the user to decrypt an encrypted message \emph{only}
+ if the attributes of that ciphertext
+satisfy the access structure $\mathbb{\tilde{A}}$.  We require that the
+access structure $\mathbb{\tilde{A}}$ is $NM(\mathbb{A})$ for some monotonic access structure $\mathbb{A}$, (see~\cite{OSW07} for a definition of the $NM(\cdot)$ operator)
+over a set $\mathcal{P}$ of attributes, associated with a linear secret-sharing scheme $\Pi$.
+First, we apply the linear secret-sharing mechanism $\Pi$ to obtain shares $\{\lambda_i\}$ of the
+secret $\alpha'$.  We denote the
+party corresponding to the share $\lambda_i$ as $\breve{x}_i \in \mathcal{P}$,
+where $x_i$
+is the attribute underlying $\breve{x}_i$.  Note that $\breve{x}_i$
+can be primed (negated) or unprimed (non negated).
+For each $i$, we also choose a random value $r_i\in\zz_p$.
+
+The private key $D$ will consist of the following group elements:
+For every $i$ such that $\breve{x}_i$ is \emph{not} primed (i.e., is a non-negated
+attribute), we have $$D_i =
+(D^{(1)}_i = g_2^{\lambda_i} \cdot H(x_i)^{r_i},
+D^{(2)}_i = g^{r_i})$$
+For every $i$ such that $\breve{x}_i$ is primed (i.e., is a negated attribute), we have
+$$D_i = (
+D^{(3)}_i = g_2^{\lambda_i}g^{b^2r_i},
+D^{(4)}_i = g^{r_ibx_i}h^{r_i},
+D^{(5)}_i = g^{-r_i})$$  The key $D$ consists of $D_i$ for all shares $i$.
+
+
+\paragraph{Decryption} ($E,D$).
+Given a ciphertext $E$ and a decryption key $D$, the following procedure is executed:
+ (All notation here is taken from the above descriptions of $E$ and $D$, unless the
+notation is introduced below.)
+First, the key holder checks if $\gamma \in \mathbb{\tilde{A}}$ (we assume that
+ this can be checked efficiently).
+If not, the output is $\bot$.
+If $\gamma \in \mathbb{\tilde{A}}$, then we recall that $\mathbb{\tilde{A}} = NM(\mathbb{A})$,
+where $\mathbb{A}$ is an access structure, over a
+set of parties $\mathcal{P}$, for a
+linear secret sharing-scheme $\Pi$.
+Denote $\gamma' = N(\gamma) \in \mathbb{A}$,
+and let $I = \{i: \breve{x}_i \in \gamma' \}$.
+Since $\gamma'$ is authorized, an efficient procedure associated with the
+linear secret-sharing scheme yields a set of coefficients
+$\Omega = \{\omega_i\}_{i \in I}$ such that
+$\sum_{i \in I} \omega_i \lambda_i = \alpha$.
+(Note, however, that these $\lambda_i$ are not known to the decryption procedure, so neither is $\alpha$.)
+
+For every positive (non negated) attribute $\breve{x}_i \in \gamma'$
+(so $x_i \in \gamma$), the decryption procedure computes the following:
+\begin{eqnarray*}
+Z_i &=& e\left(D^{(1)}_i, E^{(2)}\right) / e\left(D^{(2)}_i, E^{(3)}_i\right)\\
+&=& e\left(g_2^{\lambda_i} \cdot H(x_i)^{r_i}, g^s\right) /
+e\left(g^{r_i}, H(x)^s\right) \\
+&=& e\left(g,g_2\right)^{s \lambda_i}
+\end{eqnarray*}
+
+For every negated attribute $\breve{x}_i \in \gamma'$
+(so $x_i \notin \gamma$), the decryption procedure computes the following, following a simple analogy to the basic revocation scheme:
+%
+%The decryption algorithm computes:
+%\[
+%\frac{e(C_0,D_0)}
+%{
+%e\left(D_1, \prod_{i=1}^{n}C_{i,1}^{1/(\ID-\ID_i)}\right)
+%\cdot
+%e\left(D_2, \prod_{i=1}^{n}C_{i,2}^{1/(\ID-\ID_i)}\right)
+%}
+%\]
+%which gives us $e(g,g)^{\alpha s}$; this can immediately be used to recover the message $M$ from $C'$.
+%Note that this computation is only defined
+%if $\forall i \quad \ID \neq \ID_i$.
+%
+%We consider the set $\gamma_i = \gamma \cup \{x_i\}$.
+%Note that $|\gamma_i| = d+1$ and recall that the degree of the polynomial
+% $q$ underlying the function $V$ is $d$.  Using the points in $\gamma_i$
+%as an interpolation set, compute Lagrangian coefficients
+%$\{\sigma_x\}_{x \in \gamma_i}$ such that
+%$\sum_{x \in \gamma_i} \sigma_x q(x) = q(0) = \beta$.
+%Now, perform the following computation:
+\begin{eqnarray*}
+Z_i &=&
+\frac{e\left(D^{(3)}_i, E^{(2)}\right)}
+{
+e\left(D^{(4)}_i,
+\prod_{x \in \gamma} \left(E^{(4)}_x\right)^{1/(x_i-x)}\right)
+\cdot
+e\left(D^{(5)}_i,
+\prod_{x \in \gamma} \left(E^{(5)}_x\right)^{1/(x_i-x)}\right)
+} \\
+&=&
+%\frac{e\left(g_2^{\lambda_i + r_i}, g^s\right)}
+%{
+%e\left(
+%g^{r_i},
+%\prod_{x \in \gamma} \left( V(x)^s \right)^{\sigma_x}\right)
+%\cdot
+%e\left(V(x_i)^{r_i}, g^s\right)^{\sigma_{x_i}}
+%}
+%\\
+%&=&
+%\frac{
+%e\left(g_2^{\lambda_i}, g^s\right)
+%\cdot
+%e\left(g_2^{r_i}, g^s\right)
+%}
+%{
+%e\left(
+%g^{r_i},
+%g^{s \sum_{x \in \gamma} \sigma_x q(x)}
+%\right)
+%\cdot
+%e\left(
+%g^{r_i \sigma_{x_i} q(x_i)},
+%g^s\right)
+%}
+%\\
+%&=&
+%\frac{
+%e\left(g_2,g\right)^{s \lambda_i}
+%\cdot
+%e\left(g, g\right)^{r_i s \beta}
+%}
+%{
+%e(g,g)^
+%{r_i s \sum_{x \in \gamma'} \sigma_x q(x)}
+%}
+%\\
+%&=&
+e\left(g,g_2\right)^{s \lambda_i}
+\end{eqnarray*}
+
+
+Finally, the decryption is obtained by computing
+
+$$
+\frac{E^{(1)}}{\prod_{i \in I} Z_i^{\omega_i}}
+=
+\frac{M e(g,g)^{s \alpha}}{e(g,g_2)^{s \alpha'}} = M$$
+
+
+\paragraph{Note on Efficiency and Use of Random Oracle Model.}
+We note that encryption requires only a single pairing, which may be pre-computed,
+ regardless of the number of attributes associated with a ciphertext.
+We also note that decryption requires two or three pairings per share utilized in decryption,
+ depending on whether the share corresponds to a non-negated attribute or
+a negated attribute, respectively.
+
+We also note that we use a random oracle for description simiplicity
+and efficiency of the system. We can, alternatively, realize our hash
+function concretely as in other previous ABE
+systems~\cite{sw05,GPSW06,OSW07}.
+
+
+
+%\input{conclusion}
+
+\bibliographystyle{plain}
+\bibliography{abe,broadcast}
+
+
+\appendix
+\section{Background on Bilinear Maps and our Complexity Assumptions}
+\subsection{Bilinear Maps}
+\label{section:bilinearmaps}
+
+We briefly review the necessary facts about bilinear maps
+and bilinear map groups.   We use the following standard
+notation~\cite{Joux,Joux2,BF01}:
+\begin{enumerate}\squish
+\item $\G$ and $\G_T$ are two (multiplicative) cyclic groups of prime
+order $p$;
+\item $g$ is a generator of $\G$.
+\item $\weil: \G \times \G \to \G_T$ is a bilinear map.
+\end{enumerate}\squishend
+
+Let $\G$~and $\G_T$ be two groups as above.  A bilinear map is a
+map~$\weil: \G \times \G \to \G_T$ with the following properties:
+\begin{enumerate}\squish
+\item Bilinear: for all $u,v \in \G$ and $a,b \in \Z$,
+      we have $\weil(u^a, v^b) = \weil(u,v)^{ab}$.
+\item Non-degenerate:   $\weil(g,g) \neq 1$.
+\end{enumerate}\squishend
+
+We say that $\G$ is a bilinear group if the group
+action in $\G$ can be computed efficiently
+and there exists a group $\G_T$ and an efficiently computable
+bilinear map $\weil:\G \times \G \to \G_T$ as above.
+Note that $\weil(,)$ is symmetric since
+$\weil(g^a,g^b) = \weil(g,g)^{ab} = \weil(g^b,g^a)$.
+
+
+\subsection{Complexity Assumptions}
+\label{sec:complexity}
+\paragraph{Decisional Bilinear Diffie-Hellman Assumption} The decisional Bilinear Diffie-Hellman problem is defined as follows. We choose a group $\G$ of prime order $p$. We choose a random generator $g$ of $\G$ and random exponents $c_1, c_2, c_3 \in \Z_p$. If the attacker is given
+\[\vec{y} = \{g, g^{c_1}, g^{c_2}, g^{c_3}\},\]
+it must remain hard to distinguish $e(g,g)^{c_1c_2c_3} \in \G_{T}$ from a random element of $\G_{T}$.
+
+An algorithm $\mathcal{B}$ that outputs $z \in \{0,1\}$ has advantage $\epsilon$ in solving decisional BDH in $\G$ if
+\begin{eqnarray*}
+\bigg| \Pr\left[   \AlgB\big(\vec{y},
+                                    T=e(g,g)^{c_1c_2c_3}\big) = 0 \right] -
+       \Pr\left[   \AlgB\big(\vec{y},
+                                    T=R \big) = 0 \right] \bigg| \geq \e
+\end{eqnarray*}
+
+\begin{definition} We say the decisional BDH assumption holds if no poly-time algorithm has a non-negligible advantage in solving the decisional BDH problem.
+\end{definition}
+
+\paragraph{Decisional Linear Assumption}
+The decisional Linear problem is defined as follows. We choose a group $\G$ of prime order $p$. We choose random generators $g, f, \nu$ of $\G$ and random exponents $c_1, c_2 \in \Z_p$. If the attacker is given
+\[\vec{y} = g, f, \nu, g^{c_1}, f^{c_2},\]
+it must remain hard to distinguish $\nu^{c_1+c_2}$ from a random element of $\G$.
+
+An algorithm $\mathcal{B}$ that outputs $z\in \{0,1\}$ has advantage $\epsilon$ in solving the decisional Linear problem in $\G$ if
+\begin{eqnarray*}
+\bigg| \Pr\left[   \AlgB\big(\vec{y},
+                                    T=\nu^{c_1}+c_2\big) = 0 \right] -
+       \Pr\left[   \AlgB\big(\vec{y},
+                                    T=R \big) = 0 \right] \bigg| \geq \e.
+\end{eqnarray*}
+
+\begin{definition} We say the decisional Linear assumption holds if no poly-time algorithm has a non-negligible advantage in solving the decisional Linear problem.
+\end{definition}
+
+\paragraph{$q$-Decisional Multi-Exponent Bilinear Diffie-Hellman Assumption} To prove the security of our simple system we use a new assumption that we call the
+$q$-decisional Multi-Exponent Bilinear Diffie-Hellman
+assumption. Our assumption falls within a class of
+assumptions shown to be secure in the generic group model by Boneh, Boyen, and Goh~\cite{BBG05}.
+While our assumption is non-standard, we emphasize that it is non-interactive and
+thus falsifiable.
+
+Let $\G$ be a bilinear group of prime order $p$. The $q$-MEBDH problem
+in $\G$ is stated as follows:
+
+A challenger picks a generator  $g \in \G$ and random exponents
+$s,\alpha, a_1, \ldots, a_q$. The attacker is then given $\vec{y}$=
+
+\begin{eqnarray*}
+  & g, g^s, e(g,g)^{\alpha} \\
+\forall_{1 \leq i,j \leq q}  \quad &
+      g^{a_i} \quad g^{a_i s} \quad g^{a_i a_j} \quad g^{\alpha/a_i^2}\\
+\forall_{1 \leq i,j,k \leq q, i \neq j } \quad &
+      g^{a_i a_j s} \quad g^{\alpha a_j/ a_i^2} \quad
+      g^{\alpha a_i a_j / a_k^2} \quad g^{\alpha a_i^2 / a_j^2}, \\
+\end{eqnarray*}
+it must remain hard to  distinguish
+$e(g,g)^{\alpha \cdot s} \in \G_T$ from a random element in $\G_T$.
+
+
+An algorithm $\AlgB$ that outputs $z\in \{0,1\}$ has advantage $\e$ in
+solving decisional $q$-parallel BDHE in $\G$ if
+\begin{eqnarray*}
+\bigg| \Pr\left[   \AlgB\big(\vec{y},
+                                    T=e(g,g)^{\alpha s}\big) = 0 \right] -
+       \Pr\left[   \AlgB\big(\vec{y},
+                                    T=R \big) = 0 \right] \bigg| \geq \e.
+\end{eqnarray*}
+
+
+\begin{definition}
+We say that the $q$-decisional Multi-Exponent Bilinear Diffie-Hellman
+assumption holds if no poly-time algorithm has non-negligible advantage
+in solving the $q$-MEBDH problem.
+\end{definition}
+
+
+\paragraph{Remark.} \quad
+It is tempting to try to simplify our assumption using previous techniques.
+For example, we might consider letting choosing a single variable
+$a$ and substituting all $a_j$ with $a^{j}$. Unfortunately, this
+substitution gives rise to an problem that is insecure.
+
+
+
+\section{Security of our Simple Revocation System}
+%%% TEXEXPAND: INCLUDED FILE MARKER ./generic-proof.tex
+\subsection{Generic Security of Multi-Exponent BDH}
+\label{sec:generic-proof}
+
+We briefly show that are decisional MEBDH assumption is
+generically secure.  We use the generic proof template of Boneh,
+Boyen, and Goh~\cite{BBG05}.
+
+
+
+Using the terminology from BBG we need to show that $f=\alpha s$ in
+independent of the polynomials $P$ and $Q$. We have that $Q=\{ 1,\alpha \}$ In
+addition, we have
+\begin{eqnarray*}
+P&=&\{1,s, \
+ \forall_{i,j \in [1,q]} \quad a_i, \ a_i s, \ a_i a_j, \  \alpha / (a_i)^2 \}\\
+ &\cup & \{ \forall_{i,j,k \in [1,q], i \neq j} \quad a_ia_js, \ \alpha a_j/ a_i^2 ,
+\alpha a_i a_j/a_k^2, \alpha a_i^2/ a_j^2 \}\\
+\end{eqnarray*}
+
+We first note that this case at first might appear to be outside the
+BBG framework, since the polynomials are rational function (due to the
+terms with inverses. However, by a simple renaming of terms we can see
+this is equivalent to an assumption where we use a generator $u$ and
+let $g=g^{\prod_{j \in [1,q]} a_j^2}$.  Applying this substitution we
+get a a set of polynomials where maximum degree of any polynomial in
+the set $P$ is $2q+3$.
+
+We need to also check that $f$ is symbolically independent of the of
+any two polynomials in $P,Q$. To realize $f$ from $P,Q$ we would need
+to have a term of the form $\alpha s$. We note that no such terms can
+be realized from the product of two polynomials $p,p' \in P$. If we
+use the polynomial $s$ as $p$ then no other potential $p'$ has
+$\alpha$. If we use $a_i \cdot s$ as $p$ then no other potential $p'$
+has $\alpha/a_i$. Finally, if we use $a_ia_j s$ with $i \neq j$ for
+$p$ then no other potential $p'$ is of the form $\alpha/(a_i a_j)$ for
+$i \neq j$. Any dependence on $f$ must have an a term of $s$ in it,
+but we just eliminated all possibilities.
+
+It follows from the BBG framework that the assumption is then
+generically secure.  In particular, for an attacker that makes at most
+$n$ queries to the group oracle we have that its advantage is bounded
+by
+\[
+\frac{(n+ 2(q^3 + 4q^2+3q)  +2)^2 \cdot (4q+6 )}{2p}
+\]
+In the general case where $n > q^3$ we have that the advantage is
+$O(n^2\cdot q / p)$.
+
+\subsection{Proof of Security for Simple Revocation System}
+\label{sec:proof}
+
+We now prove the following theorem.
+
+\begin{theorem}
+Suppose the decisional $q$-MEBDH assumption holds. Then no poly-time adversary
+can selectively break our simple revocation system with a ciphertext encrypted to $r^* \leq q$
+revoked users.
+\end{theorem}
+
+Suppose we have an adversary $\AlgA$ with non-negligible advantage
+$\Adv{\epsilon=}$ in the selective security game against our
+construction. Moreover, suppose attacks our system with a ciphertext
+of at most $q$ revoked users. We show how to build a
+simulator, $\AlgB$, that plays the decisional $q$-MEBDH problem.
+
+
+
+The simulator begins by receiving a $q$-MEDDH
+challenge $\vec{X},T$.
+The simulator then proceeds in the game as follows.
+
+\paragraph{Init}
+The adversary $\AlgA$ declares a revocation set $S^*=\ID_1,\ldots,
+\ID_{r^*}$  of size $r^* \leq q$
+that he gives to the simulator. (If $r < q$ the simulator
+will just ignore some of the terms given in $\vec{X}$).
+
+\paragraph{Setup}
+The simulator now creates the public key $\PK$ and gives $\AlgA$ the
+private keys for all identities in $S^*$.
+Conceptually, it will set $b$ as $a_1+a_2+\cdots a_r$. The simulator first
+chooses a random $y \in \Z_p$.
+
+\comment{
+Next, it sets
+\[ w_{i,j} =
+\begin{cases}
+  1 \quad \textrm{if~} i=j\\
+  2 \quad \textrm{if~} i \neq j\\
+\end{cases}
+\]
+}
+
+The public key $PK$ is published as:
+\[ \big(
+    g, \
+    g^{b}=\prod_{1 \leq i \leq r^*} g^{a_i}, \quad
+    g^{b^2}=\prod_{1 \leq i,j \leq r} (g^{a_i \cdot a_j})
+    , \quad
+    h= \prod_{1 \leq i \leq r^*} (g^{a_i})^{-\ID_i}g^y, \quad
+    e(g,g)^{\alpha}
+\big)
+\]
+
+We observe that the public parameters are distributed identically to the
+real system and that the revocation set $S^*$ is reflected in the
+simulation's construction of the parameter $h$.
+
+Now the simulator must construct all private keys in the revocation
+set $S$. For each identity $\ID_i$ the simulator will choose a random
+$z_i \in \Z_p$ and will (implicitly) set the randomness $t_i$ of the
+$ith$ identity as $t_i= - \alpha / a_i^2 +z_i$.
+
+Setting $t_i$ allows us to generate the private key components for two
+reasons. First, in the $D_0$ component we need to cancel out the
+$g^{\alpha}$ term that we do not know. Since $g^{b^2}$ contains a term
+of $g^{a_i^2}$ raising it to the $-\alpha/a_i^2$ will cancel this term.
+Second, we need to make sure that we can still realize the $D_2$ component.
+To generate this we will have several terms of the form $g^{\alpha a_j/a_i^2}$, which
+we have for $i \neq j$. Yet, if $i=j$ this generates a term $g^{\alpha / a_i}$ that
+we do not have. However, by our setting of the $h$ parameter a term like this will
+never appear.
+
+The private key for $\ID_i$ is generated as follows:
+
+
+\begin{align*}
+D_0 &=  \left( \prod_{\substack{1 \leq j,k \leq n \\  \textrm{~s.t.~if~}  j=k \textrm{~then~} j,k \neq i}}
+           (g^{ -\alpha a_j a_k / a_i^2})
+\right) \prod_{1 \leq j,k \leq n} (g^{a_j a_k})^{z_i}
+\\
+D_1 &=  \left(
+\prod_{\substack{1 \leq j \leq n \\ j \neq i}}
+( g^{-\alpha \cdot a_j/a_i^2})^{(\ID_i-\ID_j)} (g^{(\ID_i-\ID_j) \cdot a_j})^{z_i}
+\right )
+(g^{-\alpha/a_i^2})^{y} g^{y z_i}
+\\
+D_2 &=  g^{\alpha/ a_i^2} g^{-z_i}
+\end{align*}
+
+\paragraph{Remark.}  Note that in the above construction, for any fixed coefficient $\mu$, by changing $t_i= - \mu \alpha / a_i^2 +z_i$, and appropriately raising the relevant parts of the construction above to a $\mu$ factor, one can create $D_0 = g^{\mu \alpha + b^2 t_i}$, while keeping $D_1 = (g^{b \ID_i}h)^{t_i}$, and $D_2 = g^{-t_i}$.  This observation is not relevant to this proof, but will be useful in the proof of our related ABE scheme.
+
+
+\paragraph{Challenge}
+The simulator receives $M_0,M_1$ and chooses random $\beta \in \{0,1\}$.
+The simulator then chooses random $s',s_1',\ldots,s_{r^*}' \in \Z_p$ such that
+$s'=\sum_{i} s_i'$. For notational convenience let $u_i = g^{b^2 \ID_i} h^b$, note
+this is computable from the public parameters, which were already set.
+
+
+Conceptually, the ciphertext will be encrypted under randomness $\tilde{s}=s+s'$ and be
+broken into shares $\tilde{s}_i=a_i s/b+s_i'$. Recall, that $b=\sum_{j} a_j$; therefore,
+$\sum \tilde{s}_i= \tilde{s}$.
+
+Our methodology is to split $s$ into pieces such that we can simulate
+all ciphertext components.
+%We must do this in a certain manner such that
+%all components can be simulated.
+Conceptually, we will look for a ``hole'' in each
+term. We will use the fact that from the simulator's view the function $g^{b \ID_i} h$
+has no term of $g^{a_i}$ by cancellation. Therefore, if we raise this to $s \cdot a_i$ the
+simulator will have all the necessary terms. In this manner we ``spread'' the different
+shares of $s$ as $s \cdot a_i /b$, each into its own ``slot''.
+
+
+Our proof technique has two important points. First, in simulating the $C_{i,1}$ and $C_{i,2}$
+components the $b^{-1}$ term from the shares will cancel out. Second, in generating the
+$C_{i,2}$ components we will need elements of the form $g^{s a_i a_j}$ that we have for
+$i \neq j$. Yet, if $i=j$ this creates an element that we do not have. Again, by our setting
+of $h$ we do not run into this case.
+
+
+The challenge CT is created as
+\[
+C'=T e(g,g)^{\alpha s'} \cdot M_{\beta} \quad
+C_0 = g^s g^{s'} \quad
+C_{i,1}= g^{s a_i} (\prod_{j} g^{a_j} )^{s_i'} \quad
+C_{i,2}= \left( \prod_{\substack{1 \leq j\leq r^* \\  i \neq j}}
+   (g^{s a_i a_j})^{\ID_i - \ID_j} \right) (g^{a_i s})^y
+   u_i^{s_i'}
+\]
+The $C_{i,2}$ equation can be understood by recalling that $C_{i,2}=(g^{b\ID_i} h)^{b \tilde{s}_i}$
+and then noting that $b \tilde{s}_i= s a_i + s'_i$.
+
+
+\paragraph{Guess}
+
+The adversary will eventually output a guess $\beta'$ of $\beta$. The
+simulator then outputs $0$ to guesses that $T=e(g,g)^{\alpha s}$ if
+$\beta=\beta'$; otherwise, it and outputs 1 to indicate that it believes
+$T$ is a random group element in $\G_T$.
+
+When $T$ is a tuple the simulator $\AlgB$ gives a perfect simulation
+so we have that
+\[\Pr\left[ \AlgB \left(\vec{X}, T=e(g,g)^{\alpha s} \right) = 0
+  \right] = \frac{1}{2} + \Adv{}.
+\]
+When $T$ is a random group element the message $M_{\beta}$ is
+completely hidden from the adversary and we have $\Pr\left[ \AlgB
+  \left(\vec{X}, T=R \right) = 0 \right] = \frac{1}{2}$. Therefore,
+$\AlgB$ can play the decisional $q$-MEBDH game with non-negligible
+advantage.
+
+\subsection{Remark on Security Parameters}
+\label{sec:security-remark}
+Our system is shown to be secure under a new non-interactive
+assumption. Our proof, in the standard model, shows that a
+ciphertext that revokes up to $r$ users is secure if the decisional
+r-MEBDH assumption holds. We remark that generically, an adversary
+that makes $n$ queries to a group oracle will have advantage
+$O(n^2 r/p)$ (see Appendix~\ref{sec:generic-proof} for
+a group of prime order $p$. Equivalent \emph{generic} security to
+decisional Bilinear Diffie-Hellman can then be realized by increasing
+the size of $p$ by just an \emph{additive} factor of $\lg(r)$ bits. We recognize, of course, that
+in general for concrete groups a simpler assumption is desirable, and
+leave achieving comparable efficiency under simpler assumptions as an
+important open problem.
+
+\section{Proof of Security for our Second Revocation System}
+\label{sec:system2proof}
+
+\begin{lemma}Suppose there exists an algorithm $\mathcal{A}$ such that Game$_{Real}Adv_{\mathcal{A}} - Game_0 Adv_{\mathcal{A}} = \epsilon$. Then we can build an algorithm $\mathcal{B}$ with advantage $\epsilon$ in the decision Linear game.
+\end{lemma}
+
+\begin{proof} (This proof is essentially the same as the proof of Lemma 1 in ~\cite{W09}, but we include it for completeness.) $\mathcal{B}$ first receives an instance of the decisional Linear problem: $(G, g, f , \nu, g^{c_1}, f^{c_2}, T)$. $\mathcal{B}$ must decide whether $T = \nu^{c_1+c_2}$ or is random. To accomplish this, $\mathcal{B}$ will call on $\mathcal{A}$ by simulating either Game$_{Real}$ or Game$_{0}$. $\mathcal{A}$ first sends a set $S = \{ID_1, \ldots, ID_r\}$ to $\mathcal{B}$.
+
+\paragraph{Setup} $\mathcal{B}$ chooses random exponents $b, \alpha, y_v, y_{v_1}, y_{v_2} \in \Z_p$ and random group elements $w, h \in G$. It then sets $g = g, g^{a_1} = f, g^{a_2} = \nu, w= w, h=h$. Note that $\mathcal{B}$ does not know the values $a_1, a_2$. It also sets:
+\[g^b, g^{ba_1} = f^b, g^{b a_2 } = \nu^b, v = g^{y_v}, v_1 = g^{y_{v_1}}, v_2 = g^{y_{v_2}}.\]
+$\mathcal{B}$ also computes $\tau_1, \tau_2, \tau_1^b, \tau_2^b, e(g,g)^{\alpha a_1 b} = e(g,f)^{\alpha b}$. Note that $\tau_1$ (for example) can be computed as $\tau_1 = v v_1^{a_1} = v f^{y_{v_1}}$. $\mathcal{B}$ sends the public parameters to $\mathcal{A}$.
+
+\paragraph{Key Generation} $\mathcal{B}$ only needs to produce normal keys for $ID_i$ for all $ID_i \in S$. It can produce these through the usual key generation algorithm since it knows $MSK = \{g, g^{a_1}, \alpha, v, v_1, v_2\}$.
+
+\paragraph{Challenge Ciphertext} Once $\mathcal{B}$ has given $\mathcal{A}$ the public parameters and the keys for all elements of $S = \{ID_1, \ldots, ID_r\}$, $\mathcal{A}$ sends $\mathcal{B}$ two messages $M_0, M_1$. $\mathcal{B}$ chooses a random value $\beta \in \{0,1\}$ and will create a semi-functional ciphertext for $M_\beta, S$ as follows. First, $\mathcal{B}$ chooses random exponents, $s'_1, s'_2, t_1, \ldots, t_r$, and uses the normal encryption algorithm to produce $C'_0, C'_1, \ldots, C'_7, C'_{1,1}, C'_{1,2}, \ldots, C'_{r,1}, C'_{r,2}$. It leaves the terms $C_{i,1} = C'_{i,1}, C_{i,2} = C'_{i,2}$ unchanged for $i$ from 1 to $r$. The rest of the terms are set as:
+\[C_0 = C'_0 \left(e(g^{c_1},f)e(g,f^{c_2})\right)^{b\alpha}, C_1 = C'_1(g^{c_1})^b, C_2 = C'_2 (f^{c_2})^{-b}, C_3 = C'_3(f^{c_2})^{-1}, C_4 = C'_4 (T)^b,\]
+\[C_5 = C'_5T, C_6 = C'_6(g^{c_1})^{y_v}(f^{c_2})^{-y_{v_1}} T^{y_{v_2}}, C_7 = C'_7 \left((g^{c_1})^{y_v}(f^{c_2})^{-y_{v_1}} T^{y_{v_2}}\right)^{b}.\]
+
+If $T = \nu^{c_1+c_2}$, this will be a normal ciphertext with $s_1 = -c_2 + s'_1$, $s_2 = c_1 + c_2 + s'_2$, and $s = s_1 + s_2 = c_1 + s'_1+s'_2$. If $T$ is random, this will be a properly distributed semi-functional ciphertext. Thus, $\mathcal{B}$ can use $\mathcal{A}$'s output to obtain the same advantage in distinguishing $T = \nu^{c_1+c_2}$ from random that $\mathcal{A}$ has in distinguishing Game$_{Real}$ from Game$_{0}$.
+\end{proof}
+
+\begin{lemma} Suppose there exists an algorithm $\mathcal{A}$ that submits a revoked set of $r$ users and $Game_{k-1}Adv_{\mathcal{A}} - Game_k Adv_{\mathcal{A}} = \epsilon$ for some $k$ with $1 \leq k \leq r$. Then we can build an algorithm $B$ with advantage $\epsilon$ in the decision Linear game.
+\end{lemma}
+
+\begin{proof} $\mathcal{B}$ first receives an instance of the decisional Linear problem: $(G, g, f , \nu, g^{c_1}, f^{c_2}, T)$. $\mathcal{B}$ must decide whether $T = \nu^{c_1+c_2}$ or is random. To accomplish this, $\mathcal{B}$ will call on $\mathcal{A}$ by simulating either Game$_{k}$ or Game$_{k-1}$. $\mathcal{A}$ first sends a set $S = \{ID_1, \ldots, ID_r\}$ to $\mathcal{B}$.
+
+\paragraph{Setup} $\mathcal{B}$ chooses random exponents $\alpha, a_1, a_2, y_{v_1}, y_{v_2}, y_w, y_h \in \Z_p$ and sets the public parameters by computing:
+\[g^b = f, g^{a_1}, g^{a_2}, g^{ba_1} = f^{a_1}, g^{b a_2} = f^{a_2}, v = \nu^{-a_1a_2},
+ v_1 = \nu^{a_2}g^{y_{v_1}}, v_2 = \nu^{a_1}g^{y_{v_2}}, \] \[e(g,g)^{\alpha a_1 b} = e(f,g)^{\alpha a_1},
+ \tau_1 = v v_1^{a_1}, \tau_2 = v v_2^{a_2}, \tau_1^b = f^{y_{v_1}a_1}, \tau_2^b = f^{y_{v_2}a_2},
+w = fg^{y_w}, h = w^{-ID_k g^{y_h}}.\]
+
+\paragraph{Key Generation} To generate a normal key for $ID_j$ when $j > k$, the simulator $B$ can run the usual key generation algorithm, since it knows the $MSK$. To generate a semi-functional key for $ID_j$ when $j < k$, the simulator can run the semi-functional key generation algorithm described above because it knows the exponents $a_1$ and $a_2$. For $ID_k$, the simulator will create a key that is normal if $T = \nu^{c_1 + c_2}$ and is semi-functional if $T$ is random.
+
+To generate the key for $ID_k$, $\mathcal{B}$ starts by running the usual key generation algorithm to produce a normal key $SK_{ID_k}$: $D'_1, D'_2, \ldots, D'_7, K'$. We let $d'_1, d'_2, z'_1, z'_2$ denote the random exponents that were chosen. We then set:
+\[ D_1 = D'_1 T^{-a_1a_2}, D_2 = D'_2 T^{a_2}(g^{c_1})^{y_{v_1}}, D_3 = D'_3 (f^{c_2})^{y_{v_1}}, D_4 = D'_4 T^{a_1} (g^{c_1})^{y_{v_2}},\]
+\[ D_5 = D'_5 (f^{c_2})^{y_{v_2}}, D_6 = D'_6 f^{c_2}, D_7 = D'_7 (g^{c_1}), K = K' (g^{c_1})^{y_h}.\]
+
+We note that we have implicitly set $z_1 = z'_1 - y_{v_1}c_2$ and $z'_2 - y_{v_2}c_2$. If $T = \nu^{c_1+c_2}$, then this is a normal key with $d_1 = d'_1 + c_1$ and $d_2 = d'_2 + c_2$. We can compute $K$ because the $w^{ID_k}$ terms cancel: $K = (w^{ID_k} w^{-ID_k} g^{y_h})^{d'_1 + c_1}$. If $T$ is random, we can write $T$ as $T = \nu^{c_1+c_2} g^{\gamma}$ and we obtain a semi-functional key with $\gamma$ playing the same role as in the semi-functional key definition above.
+
+\paragraph{Challenge Ciphertext} Once $\mathcal{B}$ has given $\mathcal{A}$ the public parameters and the keys for all elements of $S = \{ID_1, \ldots, ID_r\}$, $\mathcal{A}$ sends $\mathcal{B}$ two messages $M_0, M_1$. $\mathcal{B}$ chooses a random value $\beta \in \{0,1\}$ and will create a semi-functional ciphertext for $M_\beta, S$ as follows. First, $\mathcal{B}$ uses the normal encryption algorithm with randomly chosen exponents $s'_1, s'_2, t'$ to create $C'_0, C'_1, \ldots, C'_7$. Then $C_0 = C'_0, C_1 = C'_1, C_2 = C'_2, C_3 = C'_3$ are left unchanged. To add semi-functionality, $\mathcal{B}$ chooses a random exponent $x \in \Z_p$ and sets:
+\[C_4 = C'_4 f^{a_2 x}, C_5 = C'_5 g^{a_2x}, C_6 = C'_6v_2^{a_2x}, C_7 = C'_7 f^{a_2 y_{v_2}x} \nu^{-a_1 x y_w a_2}.\]
+
+To create $C_7$, we have implicitly set $g^{t} = g^{t'} \nu^{a_1 x a_2}$. We let $y_{\nu}$ denote the unknown discrete log of $\nu$ in base $g$. Then, we have set $t = t' + y_{\nu} a_1 a_2 x$, so $t$ is not known to $\mathcal{B}$, but $t'$ is. For $i\neq k$, $1\leq i \leq r$, $\mathcal{B}$ sets $t_i$ to be a randomly chosen value. We let $t''$ denote the sum of these values. Then $t_k$ is defined to be $t'-t'' + y_{\nu} a_1 a_2 x$. For $i\neq k$, the simulator $\mathcal{B}$ knows the value of $t_i$, and so can compute:
+\[C_{i,1} = g^{t_i}, C_{i,2} = (w^{ID_i}h)^{t_i}.\]
+
+For $i = k$, $\mathcal{B}$ computes:
+\[C_{k,1} = g^{t_k} = g^{t'-t''} \nu^{a_1 a_2 x}, \]
+\[C_{k,2}  = (w^{ID_k}w^{-ID_k}g^{y_h})^{y_\nu a_1 a_2 x + t' - t''} = \nu^{y_h a_1 a_2 x} g^{y_h(t' - t'')}.\]
+We note that the we could only form the semi-functional ciphertext because $ID_k \in S$: otherwise we would not have been able to use the cancelation of $w^{ID_k}$ to compute the ciphertext term corresponding to the unknown share. This is an essential feature of our argument: the simulator must not be able to test semi-functionality of key $k$ for itself by doing a test decryption on the semi-functional ciphertext it can create. In this case, such a test will fail because the created key $k$ must always be for a revoked user who cannot decrypt, otherwise the semi-functional challenge ciphertext cannot be created.
+
+In summary, when $T = \nu^{c_1+c_2}$, $\mathcal{B}$ has properly simulated Game$_{k-1}$. When $T$ is random, $\mathcal{B}$ has properly simulated Game$_k$. Thus, $\mathcal{B}$ can use $\mathcal{A}$'s output to obtain the same advantage in distinguishing $T = \nu^{c_1+c_2}$ from random that $\mathcal{A}$ has in distinguishing Game$_{k-1}$ from Game$_{k}$.
+\end{proof}
+
+\begin{lemma} Suppose there exists an algorithm $\mathcal{A}$ that submits a revoked set of $r$ users and $Game_{r}Adv_{\mathcal{A}} - Game_{Final} Adv_{\mathcal{A}} = \epsilon$. Then we can build an algorithm $B$ with advantage $\epsilon$ in the decision BDH game.
+\end{lemma}
+
+\begin{proof} (This proof is essentially the same as the proof of Lemma 3 in ~\cite{W09}, but we include it for completeness.) $\mathcal{B}$ first receives an instance of the d-BDH problem: $(g, g^{c_1}, g^{c_2}, g^{c_3}, T)$. $\mathcal{B}$ must decide whether $T = e(g,g)^{c_1 c_2 c_3}$ or is random. To accomplish this, $\mathcal{B}$ will call on $\mathcal{A}$ by simulating either Game$_{r}$ or Game$_{Final}$. $\mathcal{A}$ first sends a set $S = \{ID_1, \ldots, ID_r\}$ to $\mathcal{B}$.
+
+\paragraph{Setup} $\mathcal{B}$ chooses random exponents $a_1, b, y_v, y_{v_1}, y_{v_2}, y_w, y_h \in \Z_p$. It sets:
+\[g = g, g^b, g^{a_1}, g^{a_2} = g^{c_2}, g^{b a_1}, g^{ba_2} = (g^{c_2})^b, v = g^{y_v}, v_1 = g^{y_{v_1}},\]
+\[ v_2 = g^{y_{v_2}}, w = g^{y_w}, h = g^{y_h}, e(g,g)^{a_1 \alpha b}= e(g^{c_1}, g^{c_2})^{a_1 b}.\]
+Note that this implicitly sets $a_2$ to the unknown value $c_2$ and $\alpha$ to the unknown value $c_1 c_2$.
+$\mathcal{B}$ also computes $\tau_1 = v v_1^{a_1}, \tau_1^b, \tau_2 = v (g^{c_2})^{y_{v_2}}, \tau_2^b$ and sends the public parameters to $\mathcal{A}$.
+
+\paragraph{Key Generation} $\mathcal{B}$ must now generate semi-functional keys for $ID_1, \ldots, ID_r$. For each $ID_i$, $\mathcal{B}$ chooses random exponents $d_1, d_2, z_1, z_2, \gamma' \in \Z_p$ and sets $d = d_1+d_2$. The key elements are computed as:
+\[D_1 = (g^{c_2})^{-\gamma'a_1}v^d, D_2 = (g^{c_2})^{\gamma'}v_1^d g^{z_1}, D_3 = (g^b)^{-z_1}, D_4 = (g^{c_1})^{a_1} g^{a_1\gamma'}v_2^d g^{z_2},\]
+\[D_5 = g^{-b z_2}, D_6 = g^{d_2 b}, D_7 = g^{d_1}, K = (w^{ID_i}h)^{d_1}.\]
+
+\paragraph{Challenge Ciphertext} Once $\mathcal{B}$ has given $\mathcal{A}$ the public parameters and the keys for all elements of $S = \{ID_1, \ldots, ID_r\}$, $\mathcal{A}$ sends $\mathcal{B}$ two messages $M_0, M_1$. $\mathcal{B}$ chooses a random value $\beta \in \{0,1\}$ and will create either a semi-functional ciphertext for $M_\beta$ or a semi-functional encryption of a random message.
+
+$\mathcal{B}$ chooses random exponents $s_1, x', t_1, \ldots, t_r$ and sets $t = t_1+ \cdots + t_r$. It forms the ciphertext as:
+\[C_0 = M_{\beta} T^{a_1 b}, C_1 = g^{s_1 b}(g^{c_3})^b, C_2 = g^{b a_1 s_1}, C_3 = g^{a_1 s_1}, C_4 = (g^{c_2})^{x'b}, C_5 = (g^{c_2})^{x'},\]
+\[C_6 = \tau_1^{s_1}(g^{c_3})^{y_v}(g^{c_2})^{y_{v_2}x'}, C_7 = (\tau_1^b)^{s_1}(g^{c_3})^{y_v b}(g^{c_2})^{y_{v_2}x' b} w^{-t},\]
+\[C_{1,1} = g^{t_1}, C_{1,2} = (w^{ID_1}h)^{t_1}, \ldots, C_{r,1} = g^{t_r}, C_{r,2} = (w^{ID_r}h)^{t_r}.\]
+These assignments implicitly set $s_2 = c_3$ and $x = -c_3+x'$.
+
+If $T = e(g,g)^{c_1c_2c_3}$, then this is a properly distributed semi-functional encryption of $M_\beta$. If $T$ is random, then this is a properly distributed semi-functional encryption of a random message. Thus, $\mathcal{B}$ can use $\mathcal{A}$'s output to distinguish $T = e(g,g)^{c_1 c_2 c_3}$ from random with the same advantage that $\mathcal{A}$ has in distinguishing Game$_r$ from Game$_{Final}$.
+\end{proof}
+
+\section{Proof of Security for ABE scheme}
+\label{sec:ABE-proof}
+
+We prove that the security of our main construction
+in the
+attribute-based selective-set model reduces to
+the hardness of the $q$-MEBDH assumption.
+
+
+
+\begin{theorem} If an adversary can break our ABE scheme with advantage $\epsilon$ in the
+attribute-based selective-set model of security, then a simulator can be
+constructed to play the $q$-MEBDH game with
+advantage $\epsilon/2$.\end{theorem}
+
+\begin{proof}
+Our proof will follow the outline of, and include much of the text
+from, the proofs of previous ABE schemes~\cite{sw05,GPSW06,OSW07}, but
+will incorporate the ideas from our new revocation scheme.  We note
+that our revocation scheme, which we will use to realize ``negated''
+attributes in our ABE scheme, is based on the $q$-MEDDH
+assumption. The technique we use to deal with ordinary, non-negated
+attributes, is the same as~\cite{GPSW06}, which was based on the BDDH
+assumption.  To adapt that part to the $q$-MEDDH assumption, we note
+that the BDDH assumption is embedded (in many different ways) in the
+$q$-MEDDH assumption that we use.  In the BDDH assumption, we are
+given $A = g^{\tilde{a}}, B = g^{\tilde{b}}, g^s$ and must distinguish
+$e(g,g)^{\tilde{a}\tilde{b}s}$ from a random element. We will
+implicitly set $\tilde{a} = \alpha / a_1^2$, and $\tilde{b} = a_1^2$.
+Note that in the $q$-MEDDH assumption, we are given $A =
+g^{\tilde{a}}$ and $B = g^{\tilde{b}}$ for these settings of
+$\tilde{a}$ and $\tilde{b}$.  Below we will use $A$ and $B$ to mean
+these values.
+
+Suppose there exists a polynomial-time adversary $\mathcal{A}$ that
+can attack our scheme in the selective-set model with advantage
+$\epsilon$. We build a simulator $\mathcal{B}$ that can play the
+$q$-MEDDH game with advantage $\epsilon/2$. The simulation proceeds as
+follows:
+
+
+The simulator begins by receiving a $q$-MEDDH
+challenge $\vec{X},Z$.  Note that with probability $1/2$,
+$Z = \ghat^{\alpha s}$.  We will denote this event as $\Xi=0$.
+With probability $1/2$, however, $Z = \ghat^z$ where $z$ is a random element of $\zz_p$. We will denote this event as $\Xi=1$.
+%We first let the challenger set the groups $\G$ and
+%$\GT$ with an efficient bilinear map, $e$.
+% The challenger flips a fair binary coin $\mu$, outside of
+%$\mathcal{B}$'s view. If $\mu=0$, the challenger sets
+%$(g,A,B,C,Z)=(g,g^a,g^b,g^c,\ghat^{abc})$; otherwise, it sets
+%$(g,A,B,C,Z)=(g,g^a,g^b,g^c,\ghat^{z})$ for random $a,b,c,z$.\\
+
+\paragraph{Init} The simulator $\mathcal{B}$ runs
+$\mathcal{A}$. $\mathcal{A}$ chooses the challenge set, $\gamma$, a
+set of $d$ members of $\zz_p^*$.
+
+\paragraph{Setup}
+The simulator assigns the public
+parameters $g_1=A$ and $g_2=B$, thereby implicitly setting
+$\alpha' = \alpha/a_1^2$ and $\alpha'' = a_1^2$.
+
+
+The simulator will also program the random oracle $H(x)$ as follows.
+Suppose the adversary queries the oracle on $x$. If the simulator
+already answered such a query, it simply returns the same answer.
+Otherwise, it picks a random $f_x \in \zz_p$ and responds as follows:
+\[
+H(x) =
+\begin{cases}
+g^{f_x} \quad \mathrm{~if~} x \in \gamma\\
+g_2 g^{f_x} \quad \mathrm{~if~} x \notin \gamma\\
+\end{cases}
+\]
+
+
+The simulator sets up the remainder of the public key exactly as in
+the proof of the revocation scheme, where the revocation set $S^* =
+\gamma$.
+
+\paragraph{Phase 1}$\mathcal{A}$ adaptively makes requests
+for several access structures such that $\gamma$ passes through none
+of them. Suppose $\mathcal{A}$ makes a request for the secret key
+for an access structure $\mathbb{\tilde{A}}$ where $\mathbb{\tilde{A}}(\gamma)=0$.  Note that by assumption, $\mathbb{\tilde{A}}$ is given as $NM(\mathbb{{A}})$ for some monotonic access structure $\mathbb{A}$,
+over a set $\mathcal{P}$ of parties (whose names will be attributes), associated with a linear secret-sharing scheme $\Pi$.
+
+Let $M$ be the share-generating matrix for $\Pi$:
+Recall, $M$ is a matrix over $\zz_p$ with $\ell$ rows
+and $n+1$ columns.
+For all $i=1,\dots,\ell$, the $i$'th row of $M$ is labeled with a party named $\breve{x}_i \in \mathcal{P}$, where $x_i$
+is the attribute underlying $\breve{x}_i$.  Note that $\breve{x}_i$
+can be primed (negated) or unprimed (non-negated).
+When we consider the column
+vector $v=(s,r_1, r_2, \dots, r_n)$, where $s$ is the secret to be
+shared, and $r_1, \dots, r_n \in \zz_p$ are randomly chosen,
+then $Mv$ is the vector of $\ell$ shares of the secret $s$ according to $\Pi$.
+
+We make use of the following well-known observation about linear secret-sharing schemes (see, e.g.~\cite{bei}\footnote{
+Here, we are essentially exploiting the equivalence between
+linear secret-sharing schemes and monotone span programs, as
+proven in~\cite{bei}.  The proof in~\cite{bei} is for a slightly
+different formulation, but applies here as well.}):  If $S \subset \mathcal{P}$ is a set of parties, then these parties can reconstruct the secret iff the column vector
+$(1,0,0, \dots, 0)$ is in the span of the rows of $M_S$, where $M_S$ is the submatrix of $M$ containing only those rows that are labeled by a party in $S$.  Note that since $\mathbb{\tilde{A}}(\gamma)=0$,
+we know that $\mathbb{A}(\gamma')=0$, where $\gamma' = N(\gamma)$.
+Thus, we know that $(1,0,\dots,0)$ is linearly independent of the
+rows of $M_{\gamma'}$.
+
+During key generation, a secret sharing of the secret $\alpha' = \tilde{a}$
+is supposed to be selected.  In this simulation, however, we will
+choose this sharing (implicitly) in a slightly different manner, as we describe now:
+First, we pick a uniformly random vector $v = (v_1, \dots, v_{n+1}) \in \zz_p^{n+1}$.
+Now, we make use of the following simple
+proposition~\cite{ela,Prasolov} from linear algebra:
+
+\begin{proposition} A vector ${\pi}$ is linearly independent of a set of
+vectors represented by a matrix $N$ if and only if there exists a
+vector ${w}$ such that $N{w}=\vec{0}$ while
+${\pi}\cdot{w} = 1$.
+\end{proposition}
+
+Since $(1,0,\dots,0)$ is independent of $M_{\gamma'}$, there
+exists a vector ${w}=(w_1, \dots, w_{n+1})$ such that $M_{\gamma'}{w}=\vec{0}$ and
+$(1,0,\dots,0)\cdot{w} = w_1 = 1$. Such a vector can be
+efficiently computed~\cite{ela,Prasolov}.
+Now we define the vector $u = v + (\tilde{a}-v_1) w$.
+(Note that $u$ is distributed uniformly subject to the constraint
+that $u_1 = \tilde{a}$.)
+We will implicitly use the shares $\vec{\lambda} = Mu$.
+This has the property that for any $\lambda_i$ such that
+$\breve{x}_i \in \gamma'$,
+we have that $\lambda_i = M_i u = M_i v$ has no dependence on $\tilde{a}$.
+
+Now that we have established how to distribute shares to ``parties'', which map to negated or non
+negated attributes, we need to show how to generate the key material.
+
+We first describe how to generate decryption key material corresponding to negated parties $\breve{x}_i = x_i'$. Note that by definition,
+$\breve{x}_i \in \gamma'$ if and only if $x_i \notin \gamma$.
+
+\begin{itemize}
+\item If $x_i \in \gamma$, then since $\breve{x}_i \notin \gamma'$,
+we have that $\lambda_i$ may depend linearly on $\tilde{a}$, and in general $\lambda_i = \mu \tilde{a} + \theta$, for some known constants $\mu$ and $\theta$.
+However, by the simulator's choices at setup, we can invoke the proof of the revocation scheme to generate the appropriate key material.  Note that in our setting, the randomness $r_i$ is the name of the randomness $t_i$ from the revocation scheme, and $x_i$ is the name of the identity $\ID_i$.  Furthermore, note that with our parameters, we have that
+$D^{(3)}_i = g_2^{\lambda_i}g^{b^2r_i} = g^{\mu \alpha} g^{b^2r_i} \cdot g^{\theta \alpha''}$.  Note that $g^{\theta \alpha''}$ can be generated immediately from $g^{\alpha''} = g^{a_1^2}$ which is given as part of the $q$-MEDDH assumption.  The remainder of the key material is generated exactly as specified in the proof of the revocation scheme (see also the remark following the key generation part of the proof).
+
+%
+%recall that $q(x_i) = \theta_{x_i}$.
+%The simulator now chooses $r_i' \in \zz_p$ at random, and
+%implicitly sets $r_i = -\lambda_i + r_i'$.
+%Thus, it outputs the following:
+%$$D_i = (
+%D^{(3)}_i = g_2^{r_i'},
+%D^{(4)}_i = g^{\theta_{x_i} \cdot (-\lambda_i + r_i')},
+%D^{(5)}_i = g^{-\lambda_i + r_i'})$$
+%Note that the simulator can compute the latter two of these elements using $A$.
+
+\item If $x_i \notin \gamma$, then since $\breve{x}_i \in \gamma'$,
+we have that $\lambda_i$ is independent of any secrets and is completely known to the simulator.  In this case, the simulator
+chooses $r_i \in \zz_p$ at random, and outputs the following:
+$$D_i = (
+D^{(3)}_i = g_2^{\lambda_i + b^2 r_i},
+D^{(4)}_i = g^{r_ibx_i}h^{r_i},
+D^{(5)}_i = g^{-r_i})$$
+Note that the simulator can compute all these elements using elements already computed as part of the computation of the public key ($g^{b^2}, g^b, h$).
+%$B$; indeed $V()$ is publicly computable given the public parameters already produced by the simulation.
+\end{itemize}
+
+
+We now describe how to give key material corresponding to non negated parties $\breve{x}_i = x_i$.
+The simulated key construction techniques for non negated parties is similar to previous
+work ~\cite{GPSW06,sw05}.
+
+
+\begin{itemize}
+\item
+If $x_i \in \gamma$, then since $\lambda_i$ has no dependence on any unknown secrets, we simply choose $r_{i} \in \zz_p$, and
+output $D_i = (D_i^{(1)} = g_2^{\lambda_i} \cdot H(x_i)^{r_i},
+D_i^{(2)} = g^{r_i})$.
+
+\item
+If $x_i \notin \gamma$, then we work as follows:
+Let $g_3 = g^{\lambda_i}$.  Note that the simulator can
+compute $g_3$ using $A$ and $g$.
+Choose $r'_i \in \zz_p$ at random, and output the components
+of $D_i$ as follows:
+\begin{eqnarray*}
+D_i^{(1)}&=&g_3^{-f_{x_i}}(g_2 g^{f_{x_i}})^{r'_{i}}\\
+D_i^{(2)}&=&g_3^{-1}g^{r'_{i}}\end{eqnarray*}
+\end{itemize}
+
+
+\begin{claim}
+\label{claim:key}
+The simulation above produces valid decryption keys, that are furthermore distributed identically to the decryption keys that would have been produced by the ABE scheme for the same public parameters.
+\end{claim}
+%
+
+
+\begin{proof}
+
+We will establish this claim by a case analysis.
+For key material corresponding to negated parties $\breve{x}_i$, this has already been verified in the proof of the revocation scheme.
+
+%\begin{itemize}
+%\item If $x_i \in \gamma$, then let $r_i = -\lambda_i + r_i'$.
+%Note that $r_i$ is distributed uniformly over $\zz_p$ and is independent of all other variables except $r_i'$.
+%Then observe that $D^{(3)}_i = g_2^{r_i'} = g_2^{\lambda_i + r_i}$.
+%Also, $D^{(4)}_i = g^{\theta_{x_i} \cdot (-\lambda_i + r_i')}
+%= V(x_i)^{r_i}$.
+%And finally, $D^{(5)}_i = g^{-\lambda_i + r_i'} = g^{r_i}$.
+%Thus, this key material is valid and distributed correctly.
+%
+%\item If $x_i \notin \gamma$, then the simulation produces key material using the same procedure as the ABE scheme.
+%\end{itemize}
+
+For key material corresponding to non negated parties $\breve{x}_i$:
+
+
+\begin{itemize}
+\item
+If $x_i \in \gamma$, then the simulation produces key material using the same procedure as the ABE scheme.
+
+\item
+If $x_i \notin \gamma$, then to see why the simulated key material is
+good, note that by our programming of the hash function $H(x)$ has a
+$g_2$ component for all $x_i\notin\gamma$.  Now let
+$r_{i}=r'_{i}-\lambda_i$.  Note that $r_i$ is
+distributed uniformly over $\zz_p$ and is independent of all other
+variables except $r'_i$.  Then,
+\begin{eqnarray*}
+D_i^{(1)}&=&g_3^{-f_{x_i}} (g_2 g^{f_{x_i}})^{r'_i}\\
+&=&g^{-\lambda_i f_{x_i} }  (g_2  g^{f_{x_i}})^{r'_i}\\
+&=&g_2^{\lambda_i} (g_2 g^{f_{x_i}})^{-\lambda_i } (g_2 g^{f_{x_i}})^{r'_i}\\
+&=&g_2^{\lambda_i}(g_2 g^{f_{x_i}})^{r'_i-\lambda_i }\\
+&=&g_2^{\lambda_i}H(x_i)^{r_i}
+\end{eqnarray*}
+and \[D_i^{(2)}=g_3^{-1}g^{r'_i}=g^{r'_i-\lambda_i}=g^{r_i}\]
+\end{itemize}
+
+\end{proof}
+
+%
+%
+%Thus, the simulator is able to construct a private key for the
+%access structure $\mathbb{A}$. Furthermore, the distribution of the
+%private key
+%for $\mathbb{A}$ is identical to that of the original scheme.\\
+
+\paragraph{Challenge}The adversary $\mathcal{A}$,
+will submit two challenge messages $M_0$ and $M_1$ to the simulator.
+Let $C$ denote $g^sg^{s'}$, where $s'$ is chosen at random, and $g^s$
+is as provided by the $q$-MEDDH assumption.  The simulator flips a
+fair binary coin $\nu$, and returns an encryption of $M_{\nu}$. The
+ciphertext is output as
+\[E = \left(
+\gamma, E^{(1)} = M_{\nu} Z,
+E^{(2)} = C,
+\{E^{(3)}_x = C^{f(x)}\}_{x\in\gamma},
+\{E^{(4)}_x \},
+\{E^{(5)}_x \}
+%= C^{\theta_x}\}_{x\in\gamma}
+\right)
+\]
+where $\{E^{(4)}_x \}, \{E^{(5)}_x \}$ are constructed exactly as $C_{i,1}$
+and $C_{i,2}$, respectively, in the proof of the revocation scheme.
+
+If $\Xi=0$ then $Z=\ghat^{\alpha s}$. Then by inspection, the ciphertext
+is a valid ciphertext for the message $M_\nu$ under the set
+$\gamma$.
+
+Otherwise, if $\Xi=1$, then $Z=\ghat^z$. We then have
+$E^{(1)}=M_{\nu}\ghat^{z}$. Since $z$ is random, $E^{(1)}$ will be a
+random element of $\GT$ from the adversary's viewpoint and the
+message contains no information about $M_\nu$.\\
+
+\paragraph{Phase 2}The simulator acts exactly as
+it did in Phase 1.
+
+\paragraph{Guess}$\mathcal{A}$ will submit a
+guess $\nu'$ of $\nu$. If $\nu'=\nu$ the simulator will output
+$\Xi'=0$ to indicate that it was given a valid $q$-MEDDH tuple;
+otherwise, it will output $\Xi'=1$ to indicate it was given a
+random target element $Z$.
+
+As shown above, the simulator's generation of public
+parameters and private keys is identical to that of the actual
+scheme.
+
+In the case where $\Xi=1$ the adversary gains no information about
+$\nu$. Therefore, we have $\Pr[\nu\neq\nu'|\Xi=1]=\frac{1}{2}$.
+Since the simulator guesses $\Xi'=1$ when $\nu\neq\nu'$, we
+have $\Pr[\Xi'=\Xi|\Xi=1]=\frac{1}{2}$.
+
+If $\Xi=0$ then the adversary sees an encryption of $M_\nu$. The
+adversary's advantage in this situation is $\epsilon$ by assumption.
+Therefore, we have $\Pr[\nu=\nu'|\Xi=0]=\frac{1}{2}+\epsilon$.
+Since the simulator guesses $\Xi'=0$ when $\nu=\nu'$, we have
+$\Pr[\Xi'=\Xi|\Xi=0]=\frac{1}{2}+\epsilon$.
+
+The overall advantage of the simulator in the $q$-MEDDH game is
+$\frac{1}{2}\Pr[\Xi'=\Xi|\Xi=0]+\frac{1}{2}\Pr[\Xi'=\Xi|\Xi=1]-\frac{1}{2}=\frac{1}{2}(\frac{1}{2}+\epsilon)+\frac{1}{2}\frac{1}{2}-\frac{1}{2}=\frac{1}{2}\epsilon$.
+\end{proof}
+
+\end{document}

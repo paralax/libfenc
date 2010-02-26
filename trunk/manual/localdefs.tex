@@ -1,0 +1,389 @@
+\newcommand{\protoboxsize}{4in}
+\newcommand{\figurefont}{}
+\newcommand{\mylabel}[1]{\textnormal{\textsf{[#1]}}
+
+\label{#1}}
+\renewcommand{\mylabel}[1]{\label{#1}}
+
+\long\def\symbolfootnote[#1]#2{\begingroup%
+\def\thefootnote{\fnsymbol{footnote}}\footnote[#1]{#2}\endgroup}
+
+% Set the following comment to display comment.
+% Unset before sending in camera ready
+%\newcommand{\comment}[1]{{\bf [[#1]]}}
+\newcommand{\comment}[1]{}
+\newcommand{\pushin}{\hspace{.15in}}
+\newcommand{\getsr}{\stackrel{r}{\gets}}
+
+\newcommand{\mattpara}[1]{\medskip \noindent {\bf #1.}}
+\newcommand{\decfail}{\ensuremath{\phi}}
+\newcommand{\verifyciphertext}{\ensuremath{\mathsf{VerifyCiphertext}}}
+% Avoid line breaks before citations (\cite) and references (\ref)
+\let\latexcite=\cite
+\def\cite{\nolinebreak\latexcite}
+\let\latexref=\ref
+\def\ref{\nolinebreak\latexref}
+\def\El{ElG}
+\newcommand{\mattspace}[1]{\vspace*{0em}}
+\newcommand{\mattindent}{}
+\newcommand{\parahead}[1]{\paragraph{#1}}
+\newcommand{\linearenc}{{\sf LE}}
+\newcommand{\blindcs}{{\sf BCS}}
+
+\newcommand{\epsilonzk}{\ensuremath{\epsilon_{ZK}}}
+\newcommand{\epsilonwi}{\ensuremath{\epsilon_{WI}}}
+\newcommand{\epsilonextract}{\ensuremath{\epsilon_{Ext}}}
+\newcommand{\epsilonextractone}{\ensuremath{\epsilon_{Ext1}}}
+\newcommand{\epsilonextractthree}{\ensuremath{\epsilon_{Ext3}}}
+
+\newcommand{\ignore}[1]{}
+\newcommand{\mdg}[1]{{\bf MDG: #1}}
+\newcommand{\brk}[1]{\langle #1 \rangle}
+
+\renewcommand{\deg}[0]{\circle}
+\newcommand{\myindent}{\ \ \ \ }
+
+%\newcommand{\schemeone}{Scheme One}
+\newcommand{\bfuniname}{IBP1}
+%\newcommand{\schemetwo}{IBP2}
+\newcommand{\schemethree}{IBP2}
+\newcommand{\schemefour}{PRE3}
+
+\newcommand{\guessbit}{b}
+\newcommand{\securityparam}{\ensuremath{{\kappa}}}
+
+\newcommand{\fsignaturewaters}{{\sf FSig}_{Waters}}
+\newcommand{\negl}{\nu}
+
+\newcommand{\signature}{\pi}
+
+\newcommand{\emptystring}{\ensuremath{\varepsilon}}
+\newcommand{\trustparty}{\ensuremath{\mathcal{T}}}
+\newcommand{\sym}{{\mathsf{sym}}}
+\newcommand{\auth}{{\mathsf{auth}}}
+\newcommand{\dem}{{\mathsf{DEM}}}
+\newcommand{\seedlen}{{\mathsf{seed-len}}}
+\newcommand{\keys}{{\cal K}}
+\newcommand{\symkeys}{\keys^\sym}
+\newcommand{\symencrypt}{\encrypt^\sym}
+\newcommand{\authencrypt}{\encrypt^\auth}
+\newcommand{\authdecrypt}{\decrypt^\auth}
+\newcommand{\demencrypt}{{\encrypt}^{\dem}}
+\newcommand{\demdecrypt}{{\decrypt}^{\dem}}
+\newcommand{\ptexts}{{\cal M}}
+\newcommand{\symptexts}{\ptexts^\sym}
+\newcommand{\ctexts}{{\cal C}}
+\newcommand{\symctexts}{\ctexts^\sym}
+\newcommand{\symdecrypt}{\decrypt^\sym}
+\newcommand{\idsel}{\mathit IdSel}
+\newcommand{\exper}[3]{\mathit{Exp}^{#1,\,\mbox{\scriptsize  #2},\,#3}} % adversary name, game, bit
+\newcommand{\adv}[2]{\mathit{Adv}^{\mbox{\scriptsize  #1}}_{#2}} % game, adversary name
+\newcommand{\AlgA}{\mathcal{A}}
+\newcommand{\AlgB}{\mathcal{B}}
+\newcommand{\commitparams}{\rho}
+\newcommand{\setupcommit}{\mathsf{CSetup}}
+\newcommand{\commit}{\mathsf{Commit}}
+\newcommand{\decommit}{\mathsf{Decommit}}
+\newcommand{\commitment}{{\mathcal C}}
+\newcommand{\decommitment}{{\mathcal D}}
+\newcommand{\tcommit}{\mathsf{TCom}}
+\newcommand{\tdecommit}{\mathsf{TDec}}
+\newcommand{\tforgedecommit}{\mathsf{TForge}}
+\newcommand{\functionalitycrs}{\ensuremath{{\cal F}_{CRS}}}
+
+\newcommand{\zeroone}{\{0,1\}}
+\newcommand{\prf}{f}
+\newcommand{\prfkey}{x}
+\newcommand{\prfkeysize}{n(k)}
+\newcommand{\comparevalues}{\stackrel{?}{=}}
+\newcommand{\compind}{\stackrel{c}{\approx}}
+\newcommand{\necomparevalues}{\stackrel{?}{\ne}}
+\newcommand{\transform}{\Pi}
+\newcommand{\adversary}{{\cal A}}
+\newcommand{\distinguisher}{\ensuremath{D}}
+\newcommand{\Sim}{{\cal S}}
+\newcommand{\newadversary}{{\cal B}}
+\newcommand{\pke}{PKE}
+
+\newcommand{\keyset}{{\ensuremath {\cal R}}_{dec}}
+\newcommand{\keyedges}{{\ensuremath {\cal R}}_{edge}}
+\newcommand{\keygraph}{{\ensuremath {\cal R}}}
+\newcommand{\specialids}{{\ensuremath {\cal P}}}
+\newcommand{\pathexists}{{\ensuremath \mathsf{path\_exists}}}
+\newcommand{\validpaths}{{\ensuremath \mathsf{valid\_paths}}}
+\newcommand{\decryptionpaths}{{\ensuremath {\cal C}}}
+
+\newcommand{\hash}{\ensuremath{{\mathcal H}}}
+\newcommand{\identityhash}{\ensuremath{{\mathcal H}_1}}
+\newcommand{\sharedsecrethash}{\ensuremath{{\mathcal H}_2}}
+\newcommand{\signaturehash}{\ensuremath{{\mathcal H}_3}}
+\newcommand{\fujirhash}{\ensuremath{{\mathcal H}_4}}
+\newcommand{\fujipadhash}{\ensuremath{{\mathcal H}_5}}
+\newcommand{\keyencapshash}{\ensuremath{{\mathcal H}_6}}
+
+\newcommand{\otran}[2]{\ensuremath{\mathsf{OT}^{#1}_{#2}}}
+\newcommand{\otranpublic}[2]{\ensuremath{\mathsf{PCOT}^{#1}_{#2}}}
+
+\newcommand{\pok}{\ensuremath{\pi}}
+
+\newcommand{\senderinit}{\ensuremath{\mathsf{S_I}}}
+\newcommand{\receiverinit}{\ensuremath{\mathsf{R_I}}}
+\newcommand{\sendertransfer}{\ensuremath{\mathsf{S_T}}}
+\newcommand{\receivertransfer}{\ensuremath{\mathsf{R_T}}}
+
+\newcommand{\receiver}{\ensuremath{\mathsf{R}}}
+\newcommand{\sender}{\ensuremath{\mathsf{S}}}
+\newcommand{\cheatreceiver}{\ensuremath{\mathsf{\hat{R}}}}
+\newcommand{\cheatsender}{\ensuremath{\mathsf{\hat{S}}}}
+\newcommand{\idealcheatreceiver}{\ensuremath{\mathsf{\hat{R}^{\prime}}}}
+\newcommand{\idealcheatsender}{\ensuremath{\mathsf{\hat{S}^{\prime}}}}
+\newcommand{\idealreceiver}{\ensuremath{\mathsf{R^{\prime}}}}
+\newcommand{\idealsender}{\ensuremath{\mathsf{S^{\prime}}}}
+
+\newcommand{\idealexper}[2]{\ensuremath{\mathbf{Ideal}_{#1,#2}}}
+\newcommand{\realexper}[2]{\ensuremath{\mathbf{Real}_{#1,#2}}}
+
+\newcommand{\sfblind}{\sf{SFB}}
+\newcommand{\atk}{\sf{ATK}}
+\newcommand{\cpa}{\sf{CPA}}
+\newcommand{\cca}{\sf{CCA}}
+\newcommand{\rcca}{\sf{RCCA}}
+\newcommand{\indcpa}{\sf{IND-CPA}}
+\newcommand{\indcca}{\sf{IND-CCA2}}
+\newcommand{\indrcca}{\sf{IND-RCCA}}
+\newcommand{\indidatk}{{\sf IND-ID-ATK}}
+\newcommand{\indidrcca}{{\sf IND-ID-RCCA}}
+\newcommand{\indidcpa}{{\sf IND-ID-CPA}}
+\newcommand{\indidcca}{{\sf IND-ID-CCA}}
+\newcommand{\indpridatk}{\sf{IND-PrID-ATK}}
+\newcommand{\indpridrcca}{{\sf IND-PrID-RCCA}}
+\newcommand{\indpridcpa}{{\sf IND-Pr-ID-CPA}}
+\newcommand{\indspridcpa}{{\sf IND-Pr-sID-CPA}}
+\newcommand{\indpridcca}{{\sf IND-PrID-CCA}}
+\newcommand{\indsidcpa}{{\sf{IND-sID-CPA}}}
+\newcommand{\indsbidcpa}{{\sf{IND-sbID-CPA}}}
+\newcommand{\indsidatk}{\sf{IND-sID-ATK}}
+\newcommand{\indrndidcpa}{IND-rndID-CPA}
+\newcommand{\indrndidcca}{IND-rndID-CCA}
+\newcommand{\indrndidrcca}{IND-rndID-RCCA}
+\newcommand{\indrndidatk}{IND-rndID-ATK}
+
+\newcommand{\indheidcpa}{IND-heID-CPA}
+\newcommand{\indheidcca}{IND-heID-CCA}
+\newcommand{\indheidrcca}{IND-heID-RCCA}
+\newcommand{\indheidatk}{IND-heID-ATK}
+
+\newcommand{\indsidcca}{IND-sID-CCA}
+\newcommand{\indmsidcpa}{IND-msID-CPA}
+\newcommand{\indspidcpa}{IND-spID-CPA}
+\newcommand{\lorindccatwo}{LOR-IND-CCA2}
+
+\newcommand{\badibe}{{\tt IBE1}}
+\newcommand{\badibepke}{{\tt CHK1}}
+
+\newcommand{\cpapke}{{\tt CPA}}
+
+\newcommand{\pk}{\mathit{pk}}
+\newcommand{\sk}{\mathit{sk}}
+\newcommand{\rk}{\mathit{rk}}  %% key for the proxy
+\newcommand{\dk}{\mathit{dk}}  %% extra secrets for the delegatee
+\newcommand{\blank}{BLANK}
+\newcommand{\newblank}{NEWBLANK}
+\newcommand{\level}{{\ensuremath{\ell}}}
+\newcommand{\maxencryptionlevels}{\mathsf{MaxLevels}}
+
+\newcommand{\Adv}{\mathsf{Adv}}
+\newcommand{\DBDH}{\mathrm{DBDH}}
+\newcommand{\sDBDH}{\mathrm{EDBDH}}
+\newcommand{\EDBDH}{\mathrm{EDBDH}}
+\newcommand{\CDH}{\mathrm{CDH}}
+\newcommand{\coDDH}{\mathrm{coDDH}}
+
+\newcommand{\p}{\mathsf{P}}
+\newcommand{\np}{\mathsf{NP}}
+\newcommand{\co}{\mathsf{co}}
+\newcommand{\bpp}{\mathsf{BPP}}
+\newcommand{\pspace}{\mathsf{PSPACE}}
+\newcommand{\ph}{\mathsf{PH}}
+\newcommand{\sigmap}[1]{\Sigma_{#1}^{\p}}
+\newcommand{\pip}[1]{\Pi_{#1}^{\p}}
+\newcommand{\poly}{\mathrm{poly}}
+%\newcommand{\Prob}{\mathrm{Pr}}
+\newcommand{\from}{\stackrel{\scriptstyle R}{\leftarrow}}
+
+\newcommand{\BMsetup}{\ensuremath{\mathsf{BMsetup}}}
+\newcommand{\ait}[1]{#1}
+\newcommand{\Ga}{\mathbb{G}_1}
+\newcommand{\ga}{g_1}
+\newcommand{\ha}{h_1}
+
+\newcommand{\bit}[1]{#1}
+\newcommand{\Gb}{\mathbb{G}_2}
+\newcommand{\gb}{g_2}
+\newcommand{\hb}{h_2}
+
+\newcommand{\cit}[1]{#1}
+\newcommand{\Gc}{\mathbb{G}_T}
+\newcommand{\gc}{g_T}
+\newcommand{\hc}{h_T}
+
+\newcommand{\map}{e}
+\newcommand{\Group}{\mathbb{G}}
+\newcommand{\PedCom}{\mathrm{PedCom}}
+
+\newcommand{\keygen}{\ensuremath{\mathsf{KeyGen}}}
+\newcommand{\setup}{\ensuremath{\mathsf{Setup}}}
+\newcommand{\encrypt}{\ensuremath{\mathsf{Encrypt}}}
+\newcommand{\decrypt}{\ensuremath{\mathsf{Decrypt}}}
+\newcommand{\extract}{\ensuremath{\mathsf{Extract}}}
+\newcommand{\bextract}{\ensuremath{\mathsf{BlindExtract}}}
+\newcommand{\blinddec}{\ensuremath{\mathsf{BlindDec}}}
+\newcommand{\isvalid}{\ensuremath{\mathsf{IsValid}}}
+\newcommand{\Derive}{\extract}
+\newcommand{\UserDerive}{\extract}
+\newcommand{\sign}{\ensuremath{\mathsf{Sign}}}
+\newcommand{\verify}{\ensuremath{\mathsf{Verify}}}
+\newcommand{\Fverify}{\ensuremath{\mathsf{F\-Verify}}}
+
+\newcommand{\game}[1]{{\mathbf{Game\ {#1}}}}
+\newcommand{\Prob}[1]{{{\bf Pr}\left[\,{#1}\,\right]}}
+\newcommand{\Advantage}[1]{{{\bf Adv}\left[\,{#1}\,\right]}}
+\newcommand{\gZero}{\ensuremath{{\mathbb G}}}
+\newcommand{\gOne}{\ensuremath{{\mathbb G}_1}}
+\newcommand{\gTwo}{\ensuremath{{\mathbb G}_2}}
+\newcommand{\gTarget}{\ensuremath{{\mathbb G}_T}}
+\newcommand{\zeeQ}{\ensuremath{{\mathbb Z}_p}}
+\newcommand{\zeeQstar}{\ensuremath{{\mathbb Z}_{p}^{*}}}
+\newcommand{\fulldomainhash}{\ensuremath{{\mathcal H}}}
+\newcommand{\stringencoding}{\ensuremath{\mathsf{encode}}}
+\newcommand{\stringdecoding}{\ensuremath{\mathsf{encode}^{-1}}}
+\newcommand{\regularoldhash}{\ensuremath{{\mathcal G}}}
+%\newcommand{\identityspace}{\ensuremath{\{0,1\}^{*}}}
+\newcommand{\identityspace}{{\cal I}}
+\newcommand{\randomchoice}{\ensuremath{\stackrel{\$}{\leftarrow}}}
+
+\newcommand{\vk}{\mathit{vk}}
+\newcommand{\mpk}{\mathit{params}}
+\newcommand{\msk}{\mathit{msk}}
+\newcommand{\id}{\mathit{id}}
+
+\newcommand{\encode}{\mathsf{encode}}
+\newcommand{\decode}{\mathsf{decode}}
+
+\newcommand{\protobb}{\ensuremath{\Pi_{1}}}
+\newcommand{\protocs}{\ensuremath{\Pi_{2}}}
+\newcommand{\protobboriginal}{\ensuremath{\Pi_{BB}}}
+\newcommand{\pkg}{\mathcal{P}}
+\newcommand{\user}{\mathcal{U}}
+\newcommand{\contributor}{\mathcal{C}}
+\newcommand{\contributorstrategy}{\Tau}
+\newcommand{\contributorinit}{\mathsf{C_I}}
+
+%%\newcommand{\adversary}{\ensuremath{\cal A}}
+
+\iffalse
+\setcounter{smarkcounter}{0}
+\newcommand{smark}[1]{{\bf Remark \usecounter{smarkcounter}.} #1}
+\fi
+      
+\newcommand{\qed}{\hfill\Box}
+\newtheorem{theorem}{Theorem}[section]
+\newtheorem{fact}[theorem]{Fact}
+\newtheorem{proposition}[theorem]{Proposition}
+\newtheorem{lemma}[theorem]{Lemma}
+\newtheorem{assumption}[theorem]{Assumption}
+\newtheorem{definition}[theorem]{Definition}
+\newtheorem{corollary}[theorem]{Corollary}
+\newtheorem{remark}[theorem]{Remark}
+\newtheorem{claim}[theorem]{Claim}
+\newtheorem{conjecture}[theorem]{Conjecture}
+\newenvironment{proof}{
+\vspace*{-\parskip}\noindent\textit{Proof.}}{$\qed$
+\medskip
+}
+
+\newenvironment{proofsketch}{
+\vspace*{-\parskip}\noindent\textit{Proof sketch.}}{$\qed$
+
+\medskip
+}
+
+\newcommand{\arrowstart}{140}
+\newcommand{\arrowlength}{120}
+\newcommand{\arrowreturn}{260} % \arrowlength + \arrowstart
+\newcommand{\arrowstarttwo}{-81}
+\newcommand{\arrowreturntwo}{39} % \arrowlength + \arrowstarttwo
+
+\newcommand{\mdgdoublearrow}{ \put(\arrowstart,0){\vector(2,0){\arrowlength}} \put(\arrowreturn,0){\vector(-2,0){\arrowlength}} }
+\newcommand{\mdgrightarrow}{ \put(\arrowstart,0){\vector(2,0){\arrowlength}} }
+\newcommand{\mdgdoublearrowtwo}{ \put(\arrowstarttwo,0){\vector(2,0){\arrowlength}} \put(\arrowreturntwo,0){\vector(-2,0){\arrowlength}} }
+\newcommand{\mdgleftarrow}{ \put(\arrowreturn,0){\vector(-2,0){\arrowlength}} }
+
+% and with no QED at the end (for weird spacing issues).
+%\newenvironment{proof*}{\noindent\textit{Proof.}}{
+%
+%\vspace{1pc}
+%}
+
+
+
+\newcommand{\tup}[1]{\langle #1 \rangle}
+\newcommand{\pr}[2][{}]{\mathtt{Pr}_{#1}\!\left[ #2 \right]}
+\newcommand{\cpr}[2]{\pr{#1 \,|\, #2}}
+\newcommand{\expect}[1]{\mathtt{E}\!\left[ #1 \right]}
+%\renewcommand{\epsilon}{\varepsilon}
+\newcommand{\eps}{\epsilon}
+\newcommand{\eqdef}{~\stackrel{\mbox{\tiny \textnormal{def}}}{=}~}
+\newcommand{\ints}{\mathbb{Z}}
+\newcommand{\Zp}{\mathbb{Z}_p}
+\newcommand{\modulo}{~\mathsf{mod}~}
+%\newcommand{\mod}{\mathsf{mod}~}
+
+\newcounter{romanlistcounter}
+\newenvironment{romanlist}%
+  {\setcounter{romanlistcounter}{0}%
+   \begin{list}{\textit{(\roman{romanlistcounter})}}{%
+        \usecounter{romanlistcounter}%
+      \setlength{\itemsep}{0pc}%
+      \setlength{\itemindent}{1pc}%
+      \setlength{\topsep}{0pc}%
+      \setlength{\mylabelwidth}{3em}}}
+  {\end{list}}
+
+\newcounter{alphalistcounter}
+\newenvironment{alphalist}%
+  {\setcounter{alphalistcounter}{0}%
+   \begin{list}{\textit{(\alph{alphalistcounter})}}{%
+        \usecounter{alphalistcounter}%
+      \setlength{\itemsep}{0pc}%
+      \setlength{\itemindent}{1pc}%
+      \setlength{\topsep}{0pc}%
+      \setlength{\mylabelwidth}{3em}}}
+  {\end{list}}
+
+% Compact itemize and enumerate.  Note that they use the same counters and
+% symbols as the usual itemize and enumerate environments.
+\def\compactify{\itemsep=0pt \topsep=0pt \partopsep=0pt \parsep=0pt}
+\let\latexusecounter=\usecounter
+\newenvironment{CompactEnumerate}
+  {\def\usecounter{\compactify\latexusecounter}
+   \begin{enumerate}}
+  {\end{enumerate}\let\usecounter=\latexusecounter}
+\newenvironment{CompactItemize}
+  {\def\usecounter{\compactify\latexusecounter}
+   \begin{itemize}}
+  {\end{itemize}\let\usecounter=\latexusecounter}
+\let\latexusecounter=\usecounter
+\newenvironment{CompactCenter}
+  {\def\usecounter{\compactify\latexusecounter}
+   \begin{center}}
+  {\end{center}\let\usecounter=\latexusecounter}
+
+\newenvironment{oldtheorem}[1][Theorem]{
+  \noindent
+  \textbf{#1} \em
+  }{
+
+  ~
+
+  }

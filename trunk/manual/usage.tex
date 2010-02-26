@@ -1,0 +1,55 @@
+\chapter{Using the Library}
+
+\newcommand{\fenccontext}{fenc\_context}
+\newcommand{\fencglobalparams}{fenc\_global\_params}
+\newcommand{\fencerror}{FENC\_ERROR}
+\newcommand{\fencerrornone}{FENC\_ERROR\_NONE}
+\newcommand{\fencschemeLSW}{FENC\_SCHEME\_LSW}
+\newcommand{\libfencinitialize}{libfenc\_init}
+\newcommand{\libfencerrortostring}{libfenc\_error\_to\_string}
+\newcommand{\libfenccreatecontext}{libfenc\_create\_context}
+\newcommand{\libfencgenparams}{libfenc\_gen\_params}
+
+
+This section provides a brief tutorial on {\libraryshort}, tailored for the developers who wish to use the library in their applications.  We first describe the process of building and installing the library, then give some examples of how the library is used in practice.  For a full description of the library API, see chapter~\ref{chap:api}.
+
+\section{Building the Library}
+
+\section{Using {\libraryshort} in an application}
+
+\subsection{Compiling the application}
+
+The build process above produces the static library {\libraryunixlib} which should be located in a known location in your system.  
+
+\subsection{A brief tutorial}
+\label{sec:tutorial}
+
+The basic unit of the {\libraryname} is the {\em encryption context}.  This is an abstract data structure responsible for storing the scheme type as well as the public and/or secret parameters associated with the scheme.  An application may instantiate multiple encryption contexts if desired, running the same or different encryption schemes.
+
+Most API routines return an error code of type {\tt \fencerror}.  Always be sure to check that the returned value is {\fencerrornone}, or the library may not operate correctly.  Error codes can be converted into strings using the {\tt \libfencerrortostring()} call.
+
+\begin{enumerate}
+\item Initialize the {\libraryshort} library.  An application must execute this routine before conducting any operations with the library:
+
+~~~~  {\tt err\_code = \libfencinitialize();} 
+
+\item Next, create an encryption context for a given scheme type.  The caller is responsible for allocating the {\fenccontext} structure which is passed to this routine.  A list of encryption schemes is provided in \S\ref{sec:schemes}:
+
+~~~~ {\tt {\fenccontext} context;} 
+
+~~~~ {\tt err\_code = \libfenccreatecontext(\&context, {\fencschemeLSW});}
+
+\item The next step is to provision the scheme with a set of parameters.  For most schemes, only public parameters are needed for encryption.  Secret parameters will also be needed if the application wishes to extract decryption keys.  
+
+Keys may be loaded from an external source, or they can be generated from scratch.  To generate both the public and secret parameters, use the {\tt \libfencgenparams} call as in the following snippet:
+
+~~~~ {\tt {\fencglobalparams} global\_params;}
+
+~~~~ {\tt err\_code = \libfencgenparams(\&context, \&global\_params);}
+
+
+
+\end{enumerate}
+
+\medskip \noindent
+{\bf Library Initialization.}   
