@@ -1,0 +1,26 @@
+libpbc_la-get_time.lo libpbc_la-get_time.o: misc/get_time.c \
+  /usr/include/sys/time.h /usr/include/sys/cdefs.h \
+  /usr/include/sys/_types.h /usr/include/machine/_types.h \
+  /usr/include/i386/_types.h /usr/include/sys/_structs.h \
+  /usr/include/time.h /usr/include/_types.h /usr/include/_structs.h \
+  /usr/include/sys/_select.h
+
+/usr/include/sys/time.h:
+
+/usr/include/sys/cdefs.h:
+
+/usr/include/sys/_types.h:
+
+/usr/include/machine/_types.h:
+
+/usr/include/i386/_types.h:
+
+/usr/include/sys/_structs.h:
+
+/usr/include/time.h:
+
+/usr/include/_types.h:
+
+/usr/include/_structs.h:
+
+/usr/include/sys/_select.h:
