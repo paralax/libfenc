@@ -1,0 +1,9 @@
+
+
+* Decode/Encode plaintexts to GT
+* The NM (negated attributes) functionality isn't working
+  - Figure out the N() function and NM() functions
+* Decode attribute policies from strings
+
+* Plaintext/ciphertext structures should be more abstract
+* Hashing currently assumes element_t (Zr) structs
