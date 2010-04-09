@@ -5,8 +5,8 @@
 #include <stdlib.h>
 #include <stdint.h>
 #include <stdarg.h>
-#include <pbc.h>
-
+#include <pbc/pbc.h>	
+	
 #include "libfenc.h"
 #include "libfenc_group_params.h"
 #include "libfenc_ABE_common.h"
@@ -62,7 +62,9 @@ fenc_attribute_subtree* ge_policy( sized_integer_t* n, char* attr );
 ptr_array_t* ptr_array_new();
 void ptr_array_add(ptr_array_t *ptr, fenc_attribute_subtree* subtree);
 GString* g_string_new(char *str);
+char* s_string_new(int max);
 void g_string_append_c(GString *left, char right);
+void s_string_append_c(char *left, int max, char right);
 char* g_strnfill(size_t num, char fill);
 char* g_strdup_printf(char *, ...);
 
@@ -148,6 +150,7 @@ void g_string_free(GString* g, void* s)
 
 GString* g_string_new(char* str)
 {
+	printf("BEFORE: str => '%s'\n");
 	GString* g;
 	
 	g = SAFE_MALLOC(sizeof(GString));
@@ -156,7 +159,7 @@ GString* g_string_new(char* str)
 	g->str = SAFE_MALLOC(strlen(str) + G_STRING_INIT_SIZE);
 	g->buf_len = strlen(str) + G_STRING_INIT_SIZE;
 	strcpy(g->str, str);
-	
+	printf("AFTER: g->str = '%s'", g->str);
 	return g;
 }
 
@@ -279,6 +282,7 @@ policy_free( fenc_attribute_subtree* p )
 fenc_attribute_subtree*
 leaf_policy( char* attr )
 {
+	printf("leaf_node => '%s'", attr);
 	return fenc_policy_create_leaf(attr);
 }
 

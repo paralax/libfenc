@@ -96,7 +96,7 @@
 #include <stdlib.h>
 #include <stdint.h>
 #include <stdarg.h>
-#include <pbc.h>
+#include <pbc/pbc.h>
 
 #include "libfenc.h"
 #include "libfenc_group_params.h"
@@ -113,6 +113,7 @@ typedef struct
 }
 sized_integer_t;
 	
+
 typedef struct
 {	
 	char* str;
@@ -153,7 +154,9 @@ fenc_attribute_subtree* ge_policy( sized_integer_t* n, char* attr );
 ptr_array_t* ptr_array_new();
 void ptr_array_add(ptr_array_t *ptr, fenc_attribute_subtree* subtree);
 GString* g_string_new(char *str);
+char* s_string_new(int max);
 void g_string_append_c(GString *left, char right);
+void s_string_append_c(char *left, int max, char right);
 char* g_strnfill(size_t num, char fill);
 char* g_strdup_printf(char *, ...);
 
@@ -188,7 +191,7 @@ typedef union YYSTYPE
 	ptr_array_t* list;
 }
 /* Line 193 of yacc.c.  */
-#line 192 "policy_lang.tab.c"
+#line 194 "policy_lang.tab.c"
 	YYSTYPE;
 # define yystype YYSTYPE /* obsolescent; will be withdrawn */
 # define YYSTYPE_IS_DECLARED 1
@@ -1763,18 +1766,47 @@ void g_string_free(GString* g, void* s)
 	SAFE_FREE(g);
 }
 
+void s_string_free(char* g)
+{
+	if (g == NULL) {
+		return;
+	}
+	
+	if (g != NULL) {
+		SAFE_FREE(g);
+	}
+	
+	SAFE_FREE(g);
+}
+
+
 GString* g_string_new(char* str)
 {
 	GString* g;
 	
 	g = SAFE_MALLOC(sizeof(GString));
+	if(g == NULL) {
+		die("g doesnt exist\n");
+	}
 	memset(g, 0, sizeof(GString));
 	
 	g->str = SAFE_MALLOC(strlen(str) + G_STRING_INIT_SIZE);
 	g->buf_len = strlen(str) + G_STRING_INIT_SIZE;
 	strcpy(g->str, str);
-	
 	return g;
+}
+
+char* s_string_new(int max)
+{
+	char* g;
+	
+	g = SAFE_MALLOC(max);
+	if(g == NULL) {
+		die("g doesnt exist\n");
+	}
+	memset(g, 0, max);
+	
+	return g;	
 }
 
 void g_string_append_c(GString *left, char right)
@@ -1795,6 +1827,18 @@ void g_string_append_c(GString *left, char right)
 	left->str[len] = right;
 	left->str[len + 1] = 0;
 }
+
+void s_string_append_c(char *left, int max, char right)
+{
+	size_t len;
+	
+	len = strlen(left);
+	if ( len < (max - 1) ) {
+		left[len] = right;
+		left[len+1] = 0;
+	}
+}
+
 
 char* g_strnfill(size_t num, char fill)
 {
@@ -1896,6 +1940,7 @@ policy_free( fenc_attribute_subtree* p )
 fenc_attribute_subtree*
 leaf_policy( char* attr )
 {
+	// printf("leaf_node => '%s'\n", attr);
 	return fenc_policy_create_leaf(attr);
 }
 
@@ -2142,47 +2187,51 @@ yylex()
 	}
 	else if( isdigit(c) )
 	{
-		GString* s;
-
-		s = g_string_new("");
-		g_string_append_c(s, c);
+		// GString* s;
+		int len = 50;
+		char *s = s_string_new(len);
+		// s = g_string_new("");
+		// g_string_append_c(s, c);
+		s[0] = c;
 		while( isdigit(PEEK_CHAR) )
-			g_string_append_c(s, NEXT_CHAR);
+			s_string_append_c(s, len, NEXT_CHAR);
 
-		sscanf(s->str, "%llu", &(yylval.nat));
+		sscanf(s, "%llu", &(yylval.nat));
 
-		g_string_free(s, 1);
+		// s_string_free(s);
 		r = INTLIT;
 	}
 	else if( isalpha(c) )
 	{
-		GString* s;
-
-		s = g_string_new("");
-		g_string_append_c(s, c);
-
-		while( isalnum(PEEK_CHAR) || PEEK_CHAR == '_' )
-			g_string_append_c(s, NEXT_CHAR);
-
-		if( !strcmp(s->str, "and") )
+		int len = 50;
+		char *s = s_string_new(len);
+		memset(s, '\0', len);
+		s[0] = c;
+		while( isalnum(PEEK_CHAR) || PEEK_CHAR == '_' ) {
+			s_string_append_c(s, len, NEXT_CHAR);
+		}
+				   
+		// printf("Word => '%s'\n", s);
+		if( !strcmp(s, "and") )
 		{
-			g_string_free(s, 1);
+			// s_string_free(s);
 			r = AND;
 		}
-		else if( !strcmp(s->str, "or") )
+		else if( !strcmp(s, "or") )
 		{
-			g_string_free(s, 1);
+			// s_string_free(s);
 			r = OR;
 		}
-		else if( !strcmp(s->str, "of") )
+		else if( !strcmp(s, "of") )
 		{
-			g_string_free(s, 1);
+			// s_string_free(s);
 			r = OF;
 		}
 		else
 		{
-			yylval.str = s->str;
-			g_string_free(s, 0);
+			// printf("TAG\n");
+			yylval.str = s;
+			// s_string_free(s);
 			r = TAG;
 		}
 	}
@@ -2355,6 +2404,7 @@ parse_policy_lang( char* s )
 	cur_string = s;
 	
 	yyparse();
+	printf("Parsing... '%s'\n", s);
  	fenc_policy_compact(final_policy);
  	//tidy(final_policy);
 	

@@ -9,10 +9,10 @@
 #define __LIBFENC_GROUP_PARAMS_H__
 
 #include "libfenc.h"
-#include "pbc.h"
+#include <pbc/pbc.h>
 /*#include "pbc_fieldmpz.h"*/
-#include "pbc_fp.h"
-#include "pbc_utils.h"
+#include <pbc/pbc_fp.h>
+#include <pbc/pbc_utils.h>
 
 #define	MAX_PBC_PARAM_STRING	5000
 
