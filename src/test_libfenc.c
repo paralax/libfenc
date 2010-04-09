@@ -266,7 +266,7 @@ main(/*int argc, char **argv*/)
 	
 	//parse_policy_lang_as_str("FOO");
 	fenc_policy_from_string(&parsed_policy, "FOO and JOHN");
-	fenc_attribute_policy_to_string(&(parsed_policy.root), output_str, 0, &output_str_len);
+	fenc_attribute_policy_to_string(parsed_policy.root, output_str, 0, &output_str_len);
 	printf("output policy: %s\n", output_str);
 
 	/* Create a Sahai-Waters context. */

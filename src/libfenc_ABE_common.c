@@ -8,10 +8,10 @@
 #include <string.h>
 #include <stdlib.h>
 #include <stdio.h>
+#include <pbc/pbc.h>
 #include "libfenc.h"
 #include "libfenc_group_params.h"
 #include "libfenc_abe_common.h"
-#include <pbc.h>
 
 /*!
  * Generate a set of global (elliptic curve) parameters.  Caller is responsible

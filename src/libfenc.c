@@ -11,7 +11,7 @@
 #include <string.h>
 #include <stdlib.h>
 #include <stdio.h>
-#include "pbc.h"
+#include <pbc/pbc.h>
 #include "libfenc.h"
 #include "libfenc_group_params.h"
 #include "libfenc_utils.h"
