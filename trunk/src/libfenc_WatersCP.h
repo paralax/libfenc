@@ -364,16 +364,6 @@ FENC_ERROR	fenc_ciphertext_WatersCP_initialize(fenc_ciphertext_WatersCP *ciphert
 FENC_ERROR fenc_ciphertext_WatersCP_clear(fenc_ciphertext_WatersCP *ciphertext);
 
 /*!
- * Process an attribute list, ensuring that all attributes are hashed.
- *
- * @param attribute_list	The attribute list.
- * @param pairing			A pairing structure.
- * @return					FENC_ERROR_NONE or an error code.
- */
-
-FENC_ERROR	attribute_list_compute_hashes(fenc_attribute_list *attribute_list, pairing_t pairing);
-
-/*!
  * Initialize and allocate a fenc_global_params_WatersCP structure.
  *
  * @param	group_params		A fenc_group_params structure.
@@ -382,64 +372,6 @@ FENC_ERROR	attribute_list_compute_hashes(fenc_attribute_list *attribute_list, pa
  */
 
 fenc_global_params_WatersCP*	initialize_global_params_WatersCP(fenc_group_params *group_params, fenc_global_params_WatersCP *global_params);
-
-/*!
- * Process an attribute tree, ensuring that all attributes are hashed.
- *
- * @param attribute_list	The attribute list.
- * @param pairing			A pairing structure.
- * @return					FENC_ERROR_NONE or an error code.
- */
-
-FENC_ERROR	attribute_tree_compute_hashes(fenc_attribute_subtree *subtree, pairing_t pairing);
-
-/*!
- * Hash an attribute structure.  This entails initializing the attribute_hash member
- * with the pairing structure and hashing the attribute_str into it as an element
- * of Zr.  This function does nothing if is_hashed is already set.
- *
- * @param attribute			The fenc_attribute structure.
- * @param pairing			A pairing_t structure.
- * @return					FENC_ERROR_NONE or an error code.
- */
-
-FENC_ERROR	hash_attribute(fenc_attribute *attribute, pairing_t pairing);
-
-/*!
- * Hash an attribute string to an element of Zr.  This is modeled as a collision-resistant hash.
- * Although this hash function is not explicitly described in LSW09, it's a standard way to
- * map strings Zr, which is the domain of attributes in the scheme.
- *
- * @param attribute_str		The attribute string.
- * @param hashed_attr		Pointer to an (initialized) element of Zr.
- * @return					FENC_ERROR_NONE or an error code.
- */
-
-FENC_ERROR	hash1_attribute_string_to_Zr(uint8 *attribute_str, element_t *hashed_attr);
-
-/*!
- * Hash an element of Zr to an element of G1.  In the LSW09 scheme this hash function is 
- * modeled as a random oracle.
- *
- * @param attribute_elt		The attribute as an element of Zr.
- * @param hashed_attr		Pointer to an (initialized) element of G1.
- * @return					FENC_ERROR_NONE or an error code.
- */
-
-FENC_ERROR	hash2_attribute_element_to_G1(element_t *attribute_elt, element_t *hashed_attr);
-
-/*!
- * Hash an attribute string first to an element of Zr using hash1_attribute_string_to_Zr.
- * Then process the result directly into an element of G1 using hash2_attribute_element_to_G1.
- * This is just a shortcut routine to avoid making separate function calls.
- *
- * @param attribute_elt		The attribute as an element of Zr.
- * @param hashed_attr		Pointer to an (initialized) element of G1.
- * @param temp_elt			Initialized element of Zr used for temporary storage.
- * @return					FENC_ERROR_NONE or an error code.
- */
-
-FENC_ERROR	hash2_attribute_string_to_G1(uint8 *attribute_str, element_t *hashed_attr, element_t *temp_elt);
 
 /*!
  * Allocates and initializes a fenc_key_WatersCP structure.
@@ -486,18 +418,6 @@ FENC_ERROR	public_params_initialize_WatersCP(fenc_public_params_WatersCP *params
  */
 
 FENC_ERROR	secret_params_initialize_WatersCP(fenc_secret_params_WatersCP *params, pairing_t pairing);
-
-/*!
- * Hash an attribute string to a value in Zr.  The result is stored within the
- * attribute structure.  Note that this hash may already have been stored,
- * in which case this routine will avoid redundant computation.
- *
- * @param attribute			Pointer to a fenc_attribute data structure.
- * @param global_params		Pointer to a fenc_group_parameters data structure.
- * @return					FENC_ERROR_NONE or an error code.
- */
-
-FENC_ERROR	hash_attribute_string_to_Zr(fenc_attribute *attribute, fenc_global_params_WatersCP *global_params);
 
 /*!
  * Print a ciphertext to a file as ASCII.
