@@ -300,7 +300,7 @@ libfenc_extract_key_WatersCP(fenc_context *context, fenc_function_input *input, 
 	
 	/* Stash the key_WatersCP structure inside of the fenc_key.		*/
 	memset(key, 0, sizeof(fenc_key));
-	key->scheme_type = FENC_SCHEME_WatersCP;
+	key->scheme_type = FENC_SCHEME_WATERSCP;
 	key->valid = TRUE;
 	key->scheme_key = (void*)key_WatersCP;
 	
@@ -407,233 +407,26 @@ libfenc_decrypt_WatersCP(fenc_context *context, fenc_ciphertext *ciphertext, fen
 	/* Get the scheme-specific context. */
 	scheme_context = (fenc_scheme_context_WatersCP*)context->scheme_context;
 	if (scheme_context == NULL) {
-		result = FENC_ERROR_INVALID_CONTEXT;
-		goto cleanup;
+		return FENC_ERROR_INVALID_CONTEXT;
 	}
 	
 	/* Obtain the LSW-specific key data structure and make sure it's correct.	*/
 	if (key->scheme_key == NULL) {
 		LOG_ERROR("libfenc_decrypt_WatersCP: could not obtain scheme-specific decryption key");
-		result = FENC_ERROR_INVALID_KEY;
-		goto cleanup;
+		return FENC_ERROR_INVALID_KEY;
 	}
-	key_WatersCP = (fenc_key_WatersCP*)key->scheme_key;
-	err_code = attribute_list_compute_hashes(&(key_WatersCP->attribute_list), scheme_context->global_params->pairing);
-	err_code = attribute_tree_compute_hashes(key_WatersCP->policy->root, scheme_context->global_params->pairing);
 	
-	/* Deserialize the ciphertext.	*/
-	err_code = libfenc_deserialize_ciphertext_WatersCP(ciphertext->data, ciphertext->data_len, &ciphertext_WatersCP, scheme_context);
+	/* MDG Hack: Just return a zero decryption for now.	*/
+	/* Initialize the plaintext structure.		*/
+	err_code = libfenc_plaintext_initialize(plaintext, 16);
 	if (err_code != FENC_ERROR_NONE) {
-		LOG_ERROR("libfenc_decrypt_WatersCP: unable to deserialize ciphertext");
-		result = err_code;
-		goto cleanup;
+		return err_code;
 	}
 	
-	/* libfenc_fprint_ciphertext_WatersCP(&ciphertext_WatersCP, stdout);   */
-
-	/* Apply the N() function to the ciphertext's attribute list and the key.  This derives a list of 
-	 * negated/non-negated attributes that we'll use in the decryption procedure below.	*/
-	memset(&(attribute_list_N), 0, sizeof(fenc_attribute_list));
-	err_code = fenc_apply_N_function_to_attributes(&attribute_list_N, &(ciphertext_WatersCP.attribute_list), key_WatersCP->policy,
-												   scheme_context->global_params->pairing);
-	if (err_code != FENC_ERROR_NONE) {
-		LOG_ERROR("libfenc_decrypt_WatersCP: unable to apply N() function to ciphertext attributes");
-		result = err_code;
-		goto cleanup;
-	}
-	attribute_list_N_initialized = TRUE;
+	memset(libfenc_plaintext_get_buf(plaintext), 0, 16);
+	plaintext->data_len = 16;
 	
-	/* Use the policy to calculate the \Beta coefficients that will be used in the decryption process.
-	 * This is a procedure associated with the LSSS (linear secret sharing scheme) used to generate
-	 * the decryption key.	We are responsible for allocating and initializing the coefficient list that 
-	 * will hold the coefficients.  We must also clear it when we're done.  If the policy isn't satisfied
-	 * we get an error from this routine.
-	 *
-	 * Note: all this memory allocation probably slows decryption down; it should be amortized. */
-
-	/* Use the LSSS-associated procedure to recover the coefficients.  This gives us a list of coefficients
-	 * that should match up in a 1-to-1 fashion with the components of the decryption key. 
-	 * First, initialize a coefficients list:													*/
-	err_code = LSSS_allocate_coefficient_list(&coefficient_list, key_WatersCP->num_components, scheme_context->global_params->pairing);
-	if (err_code != FENC_ERROR_NONE) {
-		LOG_ERROR("libfenc_decrypt_WatersCP: could not allocate coefficients");
-		result = err_code;
-		goto cleanup;
-	}
-	coefficients_initialized = TRUE;
-
-	/* Now calculate the actual coefficients.													*/
-	err_code = fenc_LSSS_calculate_coefficients_from_policy(key_WatersCP->policy, &attribute_list_N, &coefficient_list,
-															scheme_context->global_params->pairing);
-	if (err_code != FENC_ERROR_NONE) {
-		LOG_ERROR("libfenc_decrypt_WatersCP: unable to compute LSSS coefficients");
-		result = FENC_ERROR_INVALID_CIPHERTEXT;
-		goto cleanup;
-	}
-	
-	/* Allocate some temporary work variables.	*/
-	elements_initialized = TRUE;
-	element_init_GT(tempGT, scheme_context->global_params->pairing);
-	element_init_GT(temp2GT, scheme_context->global_params->pairing);
-	element_init_GT(temp3GT, scheme_context->global_params->pairing);
-	element_init_GT(temp4GT, scheme_context->global_params->pairing);
-	element_init_GT(prodT, scheme_context->global_params->pairing);
-	element_init_GT(finalT, scheme_context->global_params->pairing);
-	element_init_G1(tempONE, scheme_context->global_params->pairing);
-	element_init_G1(temp2ONE, scheme_context->global_params->pairing);
-	element_init_G1(temp3ONE, scheme_context->global_params->pairing);
-	element_init_Zr(tempZ, scheme_context->global_params->pairing);
-	element_init_Zr(temp2Z, scheme_context->global_params->pairing);
-
-	/* Now compute the product of the sub-components raised to the coefficients:
-	 *		prodT = \prod_{i=0}^num_attributes (Z_i^{coefficient[i]}).  
-	 * We compute one of these for every value in attribute_list_N.	 */
-	element_set1(prodT);
-	for (i = 0; i < coefficient_list.num_coefficients; i++) {		
-
-		if (coefficient_list.coefficients[i].is_set == TRUE) {
-			if (key_WatersCP->attribute_list.attribute[i].is_negated == FALSE) {
-				/* For positive (non-negated) attributes:
-				 * 
-				 * Let index_ciph be the attribute's index in the ciphertext structure.
-				 * Let index_key be the attribute's index in the key structure.
-				 *
-				 * Compute finalT = e(D1ONE[index_key] , E2TWO) / e(E3ONE[index_ciph] , D2TWO[index_key]).		*/
-
-				/* Find the corresponding indices in the ciphertext attribute list and in the key.	*/
-				index_ciph = libfenc_get_attribute_index_in_list(&(key_WatersCP->attribute_list.attribute[i]), &(ciphertext_WatersCP.attribute_list));
-				index_key = i;/*libfenc_get_attribute_index_in_list(&(attribute_list_N.attribute[i]), &(key_WatersCP.attribute_list));*/
-				
-				if (index_ciph < 0 || index_key < 0) {
-					DEBUG_ELEMENT_PRINTF("key element %d=%B\n", index_key, key_WatersCP->attribute_list.attribute[i].attribute_hash);
-					LOG_ERROR("libfenc_decrypt_WatersCP: could not find attribute in key and ciphertext");
-					/*DEBUG_ELEMENT_PRINTF("attribute(%s)=%B\n", attribute_list_N.attribute[i].attribute_str, attribute_list_N.attribute[i].attribute_hash);*/
-					result = FENC_ERROR_INVALID_INPUT;
-					goto cleanup;
-				}
-			
-				/* Compute Z_vals[i] = e(D1ONE[index_key] , E2TWO) / e(E3ONE[index_ciph] , D2TWO[index_key]).		*/
-				pairing_apply(tempGT, ciphertext_WatersCP.E3ONE[index_ciph], key_WatersCP->D2TWO[index_key],
-							  scheme_context->global_params->pairing);
-				element_invert(temp2GT, tempGT);
-				pairing_apply(tempGT, key_WatersCP->D1ONE[index_key], ciphertext_WatersCP.E2TWO, scheme_context->global_params->pairing);
-				element_mul(finalT, tempGT, temp2GT);
-				
-				DEBUG_ELEMENT_PRINTF("finalT=%B\n", finalT);
-			
-			} else {
-				/* For negated attributes: 
-				 *
-				 * Let neg_atr be the negated attribute
-				 * Let (attribute[j] \in ciphertext) represent an attribute in the ciphertext (at index j).
-				 *
-				 * Compute finalT = e(D3ONE[index_key] , E2TWO) / 
-				 *					e(\prod_{attribute[j] \in ciphertext}(E4ONE[j])^{1/(neg_atr - attribute[j])} , D4TWO[i]) *
-				 *					e(\prod_{attribute[j] \in ciphertext}(E4ONE[j])^{1/(neg_atr - attribute[j])} , D5TWO[i]).			 */
-			
-				/* Find the corresponding index in the key.	*/
-				index_key = i;/*libfenc_get_attribute_index_in_list(&(attribute_list_N.attribute[i]), &(key_WatersCP->attribute_list));*/
-				if (index_key < 0) {
-					LOG_ERROR("libfenc_decrypt_WatersCP: could not find attribute in key");
-					result = FENC_ERROR_INVALID_INPUT;
-					goto cleanup;
-				}
-			
-				/* Compute	tempONE =	\prod_{attribute[j] \in ciphertext}(E4ONE[j])^{1/(neg_atr - attribute[j])}
-				 *			temp2ONE =	\prod_{attribute[j] \in ciphertext}(E5ONE[j])^{1/(neg_atr - attribute[j])}		*/
-
-				element_set1(tempONE);
-				element_set1(temp2ONE);
-				for (j = 0; j < ciphertext_WatersCP.attribute_list.num_attributes; j++) {
-					/* First compute tempZ = (1/(neg_atr - attribute[j])).	*/
-					element_sub(temp2Z, attribute_list_N.attribute[i].attribute_hash, ciphertext_WatersCP.attribute_list.attribute[j].attribute_hash);
-					element_invert(tempZ, temp2Z);
-				
-					/* tempONE = tempONE * E4ONE[j]^{tempZ}	*/
-					element_mul(temp3ONE, tempONE, ciphertext_WatersCP.E4ONE[j]);
-					element_pow_zn(tempONE, temp3ONE, tempZ);
-				
-					/* temp2ONE = temp2ONE * E5ONE[j]^{tempZ}	*/
-					element_mul(temp3ONE, temp2ONE, ciphertext_WatersCP.E5ONE[j]);
-					element_pow_zn(temp2ONE, temp3ONE, tempZ);
-				}
-				 
-				/* Compute	tempGT =	e(D3ONE[index_key] , E2TWO),
-							temp2GT	=	e(tempONE , D4TWO[index_key])
-							temp3GT =	e(temp2ONE , D5TWO[index_key])	*/
-				pairing_apply(tempGT, key_WatersCP->D3ONE[index_key], ciphertext_WatersCP.E2TWO, scheme_context->global_params->pairing);
-				pairing_apply(temp2GT, tempONE, key_WatersCP->D4TWO[index_key], scheme_context->global_params->pairing);
-				pairing_apply(temp3GT, temp2ONE, key_WatersCP->D5TWO[index_key], scheme_context->global_params->pairing);
-			
-				/* Compute finalT = tempGT / (temp2GT * temp3GT)			*/
-				element_mul(temp4GT, temp2GT, temp3GT);
-				element_invert(temp2GT, temp4GT);
-				element_mul(finalT, tempGT, temp2GT);
-				DEBUG_ELEMENT_PRINTF("negated: finalT=%B\n", finalT);
-			}	/* end of if clause	*/
-		
-			/* We computed the Z value as "finalT", now raise it to coefficient[i] and multiply it into 
-			 * prodT.	*/
-			element_pow_zn(tempGT, finalT, coefficient_list.coefficients[i].coefficient);
-			element_mul(temp2GT, tempGT, prodT);
-			element_set(prodT, temp2GT);
-		} /* end of if coefficient.is_set clause */
-	} /* end of for clause */
-	
-	/* Final computation: this depends on whether this is a KEM or a standard encryption.	*/
-	if (ciphertext_WatersCP.type == FENC_CIPHERTEXT_TYPE_KEM_CPA) {
-		/* If its a KEM, hash prodT and that's the resulting session key.	*/
-		err_code = derive_session_key_from_element(plaintext, &prodT, ciphertext_WatersCP.kem_key_len, scheme_context->global_params->pairing);
-		if (err_code != FENC_ERROR_NONE) {
-			result = err_code;
-			goto cleanup;
-		}
-	} else {
-		/* If it's a standard ciphertext, compute the plaintext as finalT = (E1T / prodT).	*/
-		element_invert(tempGT, prodT);
-		element_mul(finalT, ciphertext_WatersCP.E1T, tempGT);
-	
-		DEBUG_ELEMENT_PRINTF("decrypted plaintext=%B\n", finalT);
-		
-		/* Convert the group element "finalT" back into a bit string.	*/
-		err_code = decode_plaintext_GT(plaintext, &finalT, scheme_context->global_params->pairing);
-		if (err_code != FENC_ERROR_NONE)	{
-			LOG_ERROR("libfenc_decrypt_WatersCP: could not decode plaintext from group element");
-			result = err_code;
-			goto cleanup;
-		}
-	}
-
-	/* Success!	*/
-	result = FENC_ERROR_NONE;
-	
-cleanup:
-	/* If the coefficient list was allocated/initialized, we have to clear it.	*/
-	if (coefficients_initialized == TRUE) {
-		LSSS_clear_coefficients_list(&coefficient_list);
-	}
-	
-	/* Clear temporary variables.	*/
-	if (elements_initialized == TRUE) {
-		element_clear(finalT);
-		element_clear(prodT);
-		element_clear(tempGT);
-		element_clear(temp2GT);	
-		element_clear(temp3GT);	
-		element_clear(temp4GT);	
-		element_clear(tempONE);
-		element_clear(temp2ONE);	
-		element_clear(temp3ONE);	
-		element_clear(tempZ);	
-		element_clear(temp2Z);	
-	}
-	
-	/* Clear out the attribute_list_N structure.	*/
-	if (attribute_list_N_initialized == TRUE) {
-		fenc_attribute_list_clear(&(attribute_list_N));
-	}
-	
-	return result;
+	return FENC_ERROR_NONE;
 }
 
 /*!
@@ -665,148 +458,29 @@ encrypt_WatersCP_internal(fenc_context *context, fenc_function_input *input, fen
 	size_t serialized_len = 0;
 	fenc_attribute_list attribute_list;
 	
-	/* Wipe the attribute list structure clean.	*/
-	memset(&attribute_list, 0, sizeof(fenc_attribute_list));
-	
 	/* Get the scheme-specific context. */
 	scheme_context = (fenc_scheme_context_WatersCP*)context->scheme_context;
 	if (scheme_context == NULL) {
-		result = FENC_ERROR_INVALID_CONTEXT;
-		goto cleanup;
+		return FENC_ERROR_INVALID_CONTEXT;
 	}
 	
-	/* Parse the "function" to obtain an attribute list (first allocate memory). */
-	err_code = libfenc_parse_input_as_attribute_list(input, &attribute_list, scheme_context->global_params->pairing);
-	if (attribute_list.num_attributes < 1 || attribute_list.num_attributes > MAX_CIPHERTEXT_ATTRIBUTES) { err_code = FENC_ERROR_INVALID_INPUT; }
-	if (err_code != FENC_ERROR_NONE) {
-		/* Fail if the attribute list is empty or too long. */
-		LOG_ERROR("libfenc_encrypt_WatersCP: too many or too few attributes specified: %d", attribute_list.num_attributes);
-		result = err_code;
-		goto cleanup;
-	}
-	
-	/* Initialize the ciphertext structure and temporary elements. */
-	elements_initialized = TRUE;
-	fenc_ciphertext_WatersCP_initialize(&ciphertext_WatersCP, attribute_list.num_attributes, FENC_CIPHERTEXT_TYPE_UNDEFINED, scheme_context);
-	memcpy(&(ciphertext_WatersCP.attribute_list), &attribute_list, sizeof(fenc_attribute_list));
-	
-	element_init_GT(plaintextT, scheme_context->global_params->pairing);
-	element_init_GT(eggalphasT, scheme_context->global_params->pairing);
-	element_init_G1(hashONE, scheme_context->global_params->pairing);
-	element_init_Zr(sZ, scheme_context->global_params->pairing);
-	element_init_Zr(tempZ, scheme_context->global_params->pairing);
-	element_init_G1(tempONE, scheme_context->global_params->pairing);
-	element_init_G1(temp2ONE, scheme_context->global_params->pairing);
-	for (i = 0; i < ciphertext_WatersCP.attribute_list.num_attributes; i++) {
-		element_init_Zr(sxZ[i], scheme_context->global_params->pairing);
-	}
-		
-	/* Pick a random value s \in Zp */
-	element_random(sZ);
-	
-	/* Select a collection of num_attributes random values s_x such that the sum of these values is equal to s */
-	element_set(sxZ[0], sZ);
-	for (i = 1; i < ciphertext_WatersCP.attribute_list.num_attributes; i++) {
-		/* Pick random value sxZ[i], set sxZ[0] -= sxZ[i]. */
-		element_random(sxZ[i]);
-		element_sub(tempZ, sxZ[0], sxZ[i]);
-		element_set(sxZ[0], tempZ);
-	}
-	
-	/* Compute: eggalphasT = e(gONE,gTWO)^{alpha s} */
-	element_pow_zn(eggalphasT, scheme_context->public_params.eggalphaT, sZ);	/* eggalphasT = eggalphaT^s */
-	
-	/* If we're in KEM mode, compute the hash of eggalphasT and return this as the session key.
-	 * In standard encryption mode, we compute E1T.			*/
+	/* MDG Hack: this is just a dummy encryption.	*/
 	if (kem_mode == TRUE) {
 		/* In key encapsulation mode we derive a key from eggalphasT.	*/
-		err_code = fenc_derive_key_from_element(eggalphasT, kem_key_len, kem_key_buf);
-		if (err_code != FENC_ERROR_NONE) {
-			result = err_code;
-			goto cleanup;
-		}
+		memset(kem_key_buf, 0, kem_key_len);
+	
 		ciphertext_WatersCP.type = FENC_CIPHERTEXT_TYPE_KEM_CPA;
 		ciphertext_WatersCP.kem_key_len = kem_key_len;
 	} else {
-		/* In normal encryption mode we compute E1T = M * eggalphasT.	*/
-		ciphertext_WatersCP.type = FENC_CIPHERTEXT_TYPE_CPA;
-		err_code = encode_plaintext_GT(plaintext, &plaintextT, scheme_context->global_params->pairing);
-		if (err_code != FENC_ERROR_NONE) {
-			result = err_code;
-			goto cleanup;
-		}
-		DEBUG_ELEMENT_PRINTF("initial plaintext=%B\n", plaintextT);
-		
-		element_mul(ciphertext_WatersCP.E1T, eggalphasT, plaintextT);					/* E1T  = eggalphasT * M */
+		return FENC_ERROR_UNKNOWN;
 	}
 	
-	/* Compute: E2 = gTWO^s */
-	element_pow_zn(ciphertext_WatersCP.E2TWO, scheme_context->public_params.gTWO, sZ);	/* E2TWO = gTWO^s */
+	serialized_len = 150;
+	libfenc_ciphertext_initialize(ciphertext, serialized_len, FENC_SCHEME_WATERSCP);
+	memset(ciphertext->data, 0xF, 150);
+	ciphertext->data_len = 150;
 	
-	/* For each attribute, set E3, E4, E5. */
-	for (i = 0; i < ciphertext_WatersCP.attribute_list.num_attributes; i++) {
-		/* Note that in the LSW description the attributes are in Z*p and these integers are subsequently hashed 
-		 * into group elements.  We accept attributes as C strings and first hash to Zp to encode the attribute as
-		 * an integer.  As part of the encryption, we then hash these integers to elements of G1.  These operate as
-		 * two distinct hash functions.
-		 *
-		 * First, compute the attribute ciphertext_WatersCP.attribute[i] = H1(attribute_i) */
-		err_code = hash_attribute_string_to_Zr(&(attribute_list.attribute[i]), scheme_context->global_params);
-		if (err_code != FENC_ERROR_NONE) { result = err_code; goto cleanup; }
-		
-		/* Now compute the group element hashONE = H2(ciphertext_WatersCP.attribute[i]) */
-		err_code = hash2_attribute_element_to_G1(&(ciphertext_WatersCP.attribute_list.attribute[i].attribute_hash), &hashONE);
-		DEBUG_ELEMENT_PRINTF("hashed to G1: %B\n", hashONE);
-		if (err_code != FENC_ERROR_NONE) { result = err_code; goto cleanup; }
-		
-		/* Compute E3 = H(attribute_i)^s */
-		element_pow_zn(ciphertext_WatersCP.E3ONE[i], hashONE, sZ);	/* E3ONE = H(attribute_i)^s */
-		
-		/* Compute E4 = gbONE^{sxZ[i]} */
-		element_pow_zn(ciphertext_WatersCP.E4ONE[i], scheme_context->public_params.gbONE, sxZ[i]);
-		
-		/* Compute E5 = gb2ONE^{sxZ[i] * ciphertext_WatersCP.attribute[i]} * hbONE^{sxZ[i]} */
-		element_mul(tempZ, sxZ[i], ciphertext_WatersCP.attribute_list.attribute[i].attribute_hash);					
-		element_pow_zn(tempONE, scheme_context->public_params.gb2ONE, tempZ); /* tempONE = gb2ONE^{sxZ[i] * ciphertext_WatersCP.attribute[i]} */
-		element_pow_zn(temp2ONE, scheme_context->public_params.hbONE, sxZ[i]); /* temp2ONE = hbONE^{sxZ[i]} */
-		element_mul(ciphertext_WatersCP.E5ONE[i], tempONE, temp2ONE);					
-	}
-	
-	/* Serialize the LSW ciphertext structure into a fenc_ciphertext container 
-	 * (which is essentially just a binary buffer).  First we get the length, then we 
-	 * allocate the ciphertext buffer, then we serialize. *.
-	 * First get the length: */
-	libfenc_serialize_ciphertext_WatersCP(&ciphertext_WatersCP, NULL, 0, &serialized_len);	/* This gets the serialized length. */
-	libfenc_ciphertext_initialize(ciphertext, serialized_len, FENC_SCHEME_WatersCP);
-	if (err_code != FENC_ERROR_NONE) {	result = err_code;	goto cleanup;	}
-	err_code = libfenc_serialize_ciphertext_WatersCP(&ciphertext_WatersCP, ciphertext->data, ciphertext->max_len, &ciphertext->data_len);	/* Serialization. */
-	if (err_code != FENC_ERROR_NONE) {	result = err_code;	goto cleanup;	}
-	
-	/* Success. */
-	result = FENC_ERROR_NONE;
-	
-cleanup:
-	
-	/* If any elements were initialized, release their memory.  This includes the LSW ciphertext structure. */ 
-	if (elements_initialized == TRUE) {
-		element_clear(plaintextT);
-		element_clear(eggalphasT);
-		element_clear(hashONE);
-		element_clear(sZ);
-		element_clear(tempZ);
-		element_clear(tempONE);
-		element_clear(temp2ONE);
-		for (i = 0; i < ciphertext_WatersCP.attribute_list.num_attributes; i++) {
-			element_clear(sxZ[i]);
-		}
-		
-		fenc_ciphertext_WatersCP_clear(&ciphertext_WatersCP);
-	}
-	
-	/* Get rid of the attribute list, if one was allocated. */
-	fenc_attribute_list_clear(&(ciphertext_WatersCP.attribute_list));
-	
-	return result;
+	return FENC_ERROR_NONE;
 }
 
 /*!
@@ -1475,153 +1149,6 @@ initialize_global_params_WatersCP(fenc_group_params *group_params, fenc_global_p
 }
 
 /*!
- * Process an attribute list, ensuring that all attributes are hashed.
- *
- * @param attribute_list	The attribute list.
- * @param pairing			A pairing structure.
- * @return					FENC_ERROR_NONE or an error code.
- */
-
-FENC_ERROR
-attribute_list_compute_hashes(fenc_attribute_list *attribute_list, pairing_t pairing) 
-{
-	int i;
-	
-	for (i = 0; i < attribute_list->num_attributes; i++) {
-		hash_attribute(&(attribute_list->attribute[i]), pairing);
-	}
-	
-	return FENC_ERROR_NONE;
-}
-
-/*!
- * Process an attribute tree, ensuring that all attributes are hashed.
- *
- * @param subtree			The attribute subtree.
- * @param pairing			A pairing structure.
- * @return					FENC_ERROR_NONE or an error code.
- */
-
-FENC_ERROR
-attribute_tree_compute_hashes(fenc_attribute_subtree *subtree, pairing_t pairing) 
-{
-	FENC_ERROR err_code;
-	uint32 i;
-	
-	if (subtree == NULL) { return FENC_ERROR_UNKNOWN;	}
-	
-	if (subtree->node_type == FENC_ATTRIBUTE_POLICY_NODE_LEAF) {
-		hash_attribute(&(subtree->attribute), pairing);
-	} else {
-		for (i = 0; i < subtree->num_subnodes; i++) {
-			err_code = attribute_tree_compute_hashes(subtree->subnode[i], pairing);
-		}
-	}
-
-	return FENC_ERROR_NONE;
-}
-
-/*!
- * Hash an attribute structure.  This entails initializing the attribute_hash member
- * with the pairing structure and hashing the attribute_str into it as an element
- * of Zr.  This function does nothing if is_hashed is already set.
- *
- * @param attribute			The fenc_attribute structure.
- * @param pairing			A pairing_t structure.
- * @return					FENC_ERROR_NONE or an error code.
- */
-
-FENC_ERROR
-hash_attribute(fenc_attribute *attribute, pairing_t pairing)
-{
-	/* If there's no string and the attribute hash isn't present, that's an error.	*/
-	if (attribute->is_hashed == FALSE && attribute->attribute_str[0] == 0) {
-		return FENC_ERROR_INVALID_INPUT;
-	}
-	
-	/* If there is an attribute string and no hash is present, perform the hashing.	*/
-	if (attribute->attribute_str[0] != 0 && attribute->is_hashed == FALSE) {
-		element_init_Zr(attribute->attribute_hash, pairing);
-		hash1_attribute_string_to_Zr(attribute->attribute_str, attribute->attribute_hash);
-		attribute->is_hashed = TRUE;
-	}
-	
-	return FENC_ERROR_NONE;
-}
-
-/*!
- * Hash an attribute string to an element of Zr.  This is modeled as a collision-resistant hash.
- * Although this hash function is not explicitly described in LSW09, this is a standard way to
- * map strings Zr, which is the domain of attributes in the scheme.
- *
- * @param attribute_str		The attribute string.
- * @param hashed_attr		Pointer to an (initialized) element of Zr.
- * @return					FENC_ERROR_NONE or an error code.
- */
-
-FENC_ERROR
-hash1_attribute_string_to_Zr(uint8 *attribute_str, element_t *hashed_attr)
-{
-	FENC_ERROR err_code;
-	uint8	hash_buf[HASH_TARGET_LEN];
-	
-	/* TODO: HASH_TARGET_LEN must be replaced with something more sophisticated.	*/
-	err_code = hash_to_bytes(attribute_str, strlen(attribute_str), HASH_TARGET_LEN, hash_buf, HASH_FUNCTION_STR_TO_Zr_CRH);
-	if (err_code != FENC_ERROR_NONE) { return err_code; }
-	element_from_hash(*hashed_attr, hash_buf, HASH_TARGET_LEN); 
-	
-	return FENC_ERROR_NONE;
-}
-
-/*!
- * Hash an element of Zr to an element of G1.  In the LSW09 scheme this hash function is 
- * modeled as a random oracle.
- *
- * @param attribute_elt		The attribute as an element of Zr.
- * @param hashed_attr		Pointer to an (initialized) element of G1.
- * @return					FENC_ERROR_NONE or an error code.
- */
-	
-FENC_ERROR
-hash2_attribute_element_to_G1(element_t *attribute_elt, element_t *hashed_attr)
-{
-	FENC_ERROR err_code;
-	uint8	hash_buf[HASH_TARGET_LEN];
-		
-	/* TODO: HASH_TARGET_LEN must be replaced with something more sophisticated.	*/
-	/* Use the hash function index HASH_FUNCTION_Zr_TO_G1_ROM.	*/
-	err_code = hash_element_to_bytes(attribute_elt, HASH_TARGET_LEN, hash_buf, HASH_FUNCTION_Zr_TO_G1_ROM);
-	if (err_code != FENC_ERROR_NONE) { return err_code; }
-	element_from_hash(*hashed_attr, hash_buf, HASH_TARGET_LEN); 
-	
-	return FENC_ERROR_NONE;
-}
-
-/*!
- * Hash an attribute string first to an element of Zr using hash1_attribute_string_to_Zr.
- * Then process the result directly into an element of G1 using hash2_attribute_element_to_G1.
- * This is just a shortcut routine to avoid making separate function calls.
- *
- * @param attribute_elt		The attribute as an element of Zr.
- * @param hashed_attr		Pointer to an (initialized) element of G1.
- * @param temp_elt			Initialized element of Zr used for temporary storage.
- * @return					FENC_ERROR_NONE or an error code.
- */
-	
-FENC_ERROR
-hash2_attribute_string_to_G1(uint8 *attribute_str, element_t *hashed_attr, element_t *temp_elt)
-{
-	FENC_ERROR err_code;
-	
-	err_code = hash1_attribute_string_to_Zr(attribute_str, temp_elt);
-	if (err_code != FENC_ERROR_NONE) { return err_code; }		
-	err_code = hash2_attribute_element_to_G1(temp_elt, hashed_attr);
-	if (err_code != FENC_ERROR_NONE) { return err_code; }
-
-	return FENC_ERROR_NONE;
-}
-
-/*!
  * Allocates and initializes a fenc_key_WatersCP structure.
  *
  * @param key_WatersCP			The fenc_key_WatersCP structure.
@@ -1751,35 +1278,6 @@ secret_params_initialize_WatersCP(fenc_secret_params_WatersCP *params, pairing_t
 	element_init_Zr(params->alphaprimeZ, pairing);
 	element_init_Zr(params->alphaprimeprimeZ, pairing);
 	element_init_Zr(params->bZ, pairing);
-	
-	return FENC_ERROR_NONE;
-}
-
-/*!
- * Hash an attribute string to a value in Zr.  The result is stored within the
- * attribute structure.  Note that this hash may already have been stored,
- * in which case this routine will avoid redundant computation.
- *
- * @param attribute			Pointer to a fenc_attribute data structure.
- * @param global_params		Pointer to a fenc_group_parameters data structure.
- * @return					FENC_ERROR_NONE or an error code.
- */
-
-FENC_ERROR
-hash_attribute_string_to_Zr(fenc_attribute *attribute, fenc_global_params_WatersCP *global_params)
-{
-	FENC_ERROR err_code;
-	
-	if (attribute->is_hashed == FALSE) {
-		element_init_Zr(attribute->attribute_hash, global_params->pairing);
-		err_code = hash1_attribute_string_to_Zr(attribute->attribute_str, &(attribute->attribute_hash));
-		DEBUG_ELEMENT_PRINTF("Hashed %s to %B\n", attribute->attribute_str, attribute->attribute_hash);
-		if (err_code != FENC_ERROR_NONE) {
-			element_clear(attribute->attribute_hash);
-			return err_code;
-		}
-		attribute->is_hashed = TRUE;
-	}
 	
 	return FENC_ERROR_NONE;
 }

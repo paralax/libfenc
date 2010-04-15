@@ -17,6 +17,7 @@
 #include "libfenc_utils.h"
 #include "libfenc_ABE_common.h"
 #include "libfenc_LSW.h"
+#include "libfenc_WatersCP.h"
 
 /********************************************************************************
  * Library global variables
@@ -100,6 +101,9 @@ libfenc_create_context(fenc_context *context, FENC_SCHEME_TYPE scheme_type)
 	switch(scheme_type) {
 		case FENC_SCHEME_LSW:
 			result = libfenc_create_context_LSW(context);
+			break;
+		case FENC_SCHEME_WATERSCP:
+			result = libfenc_create_context_WatersCP(context);
 			break;
 		default:
 			result = FENC_ERROR_UNKNOWN_SCHEME;

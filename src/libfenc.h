@@ -31,6 +31,7 @@ extern	FILE	*global_error_file;
 typedef enum _FENC_SCHEME_TYPE {
 	FENC_SCHEME_NONE = 0,
 	FENC_SCHEME_LSW,
+	FENC_SCHEME_WATERSCP
 } FENC_SCHEME_TYPE;
 
 typedef enum _FENC_CIPHERTEXT_TYPE	{
@@ -403,6 +404,31 @@ FENC_ERROR	libfenc_export_global_params(fenc_context *context, uint8 *buffer, si
  */
 
 FENC_ERROR	libfenc_import_global_params(fenc_context *context, uint8 *buffer, size_t buf_len);
+
+/*!
+ * Serialize an ABE key structure.
+ *
+ * @param context		The fenc_context data structure
+ * @param key			The fenc_key data structure.
+ * @param buffer		A pre-allocated buffer for the resulting export.
+ * @param buf_len		The maximum allocated size of the buffer (in bytes).
+ * @param result_len	The size of the resulting export (in bytes).
+ * @return				FENC_ERROR_NONE or an error code.
+ */
+
+FENC_ERROR	libfenc_export_secret_key(fenc_context *context, fenc_key *key, uint8 *buffer, size_t buf_len, size_t result_len);
+
+/*!
+ * Deserialize an ABE key structure.
+ *
+ * @param context		The fenc_context data structure
+ * @param key			The fenc_key data structure (pre-allocated).
+ * @param buffer		The buffer.
+ * @param buf_len		The size of the buffer (in bytes).
+ * @return				FENC_ERROR_NONE or an error code.
+ */
+
+FENC_ERROR	libfenc_import_secret_key(fenc_context *context, fenc_key *key, uint8 *buffer, size_t buf_len);
 
 /*!
  * Destroy the internal contents of a fenc_context structure.  The caller is responsible for
