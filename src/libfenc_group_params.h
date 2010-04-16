@@ -21,7 +21,7 @@
  */
 
 typedef struct _fenc_group_params {
-	bool			initialized;
+	Bool			initialized;
 	pbc_param_t		params;
 	uint8*			param_buf;
 	size_t			param_buf_len;

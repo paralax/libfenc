@@ -38,10 +38,10 @@ typedef enum _FENC_ATTRIBUTE_NODE_TYPE {
 typedef struct _fenc_attribute {
 	uint8			attribute_str[MAX_ATTRIBUTE_STR];	/* Attribute as string.	*/
 	element_t		attribute_hash;						/* Optional: attribute hashed to an element.	*/
-	bool			is_hashed;
-	bool			is_negated;
+	Bool			is_hashed;
+	Bool			is_negated;
 	element_t		share;								/* Optional: secret share value.	*/
-	bool			contains_share;
+	Bool			contains_share;
 } fenc_attribute;
 	
 /**
@@ -60,10 +60,10 @@ typedef struct _fenc_attribute_list {
 typedef struct _fenc_attribute_subtree {
 	FENC_ATTRIBUTE_NODE_TYPE		node_type;
 	fenc_attribute					attribute;
-	bool							is_negated;
+	Bool							is_negated;
 	uint32							num_subnodes;
 	uint32							threshold_k;
-	bool							use_subnode;
+	Bool							use_subnode;
 	struct _fenc_attribute_subtree	**subnode;
 } fenc_attribute_subtree;
 
@@ -241,7 +241,6 @@ FENC_ERROR	fenc_attribute_subtree_clear(fenc_attribute_subtree *subtree);
 
 FENC_ERROR	fenc_attribute_copy(fenc_attribute *attribute_DST, fenc_attribute *attribute_SRC, pairing_t pairing);
 
-
 /*!
  * Recursively print a policy tree into an ASCII string.
  *
@@ -251,7 +250,7 @@ FENC_ERROR	fenc_attribute_copy(fenc_attribute *attribute_DST, fenc_attribute *at
  * @return							FENC_ERROR_NONE or an error code.
  */
 
-FENC_ERROR	fenc_attribute_policy_to_string(fenc_attribute_subtree *subtree, char *output_str, size_t *str_index, size_t buf_len);
+FENC_ERROR	fenc_attribute_policy_to_string(fenc_attribute_subtree *subtree, char *output_str, size_t buf_len);
 
 /***************************************************************************
  * Policy manipulation

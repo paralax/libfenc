@@ -265,7 +265,7 @@ FENC_ERROR	libfenc_export_global_params_WatersCP(fenc_context *context, uint8 *b
  */
 
 FENC_ERROR	encrypt_WatersCP_internal(fenc_context *context, fenc_function_input *input, fenc_plaintext *plaintext,
-					 bool kem_mode, uint8* kem_key_buf, size_t kem_key_len, fenc_ciphertext *ciphertext);
+					 Bool kem_mode, uint8* kem_key_buf, size_t kem_key_len, fenc_ciphertext *ciphertext);
 
 /*!
  * Destroy the internal contents of a fenc_context structure.  The caller is responsible for
@@ -385,7 +385,7 @@ fenc_global_params_WatersCP*	initialize_global_params_WatersCP(fenc_group_params
  */
 
 fenc_key_WatersCP*
-key_WatersCP_initialize(fenc_attribute_list *attribute_list, fenc_attribute_policy *policy, bool copy_attr_list, 
+key_WatersCP_initialize(fenc_attribute_list *attribute_list, fenc_attribute_policy *policy, Bool copy_attr_list, 
 				   fenc_global_params_WatersCP *global_params);
 
 /*!

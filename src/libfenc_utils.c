@@ -145,7 +145,7 @@ export_components_to_buffer(uint8* buffer, size_t max_len, size_t *result_len, c
 			case 'P':
 				policy = va_arg(comp_list, fenc_attribute_policy*);
 				index = 0;
-				result = fenc_attribute_policy_to_string(policy->root, buf_ptr, &index, (max_len - *result_len));
+				result = fenc_attribute_policy_to_string(policy->root, buf_ptr, (max_len - *result_len));
 				*result_len += index + 1;
 				break;
 				

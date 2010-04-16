@@ -259,13 +259,13 @@ cleanup:
  */
 
 FENC_ERROR
-LSSS_compute_coefficients_on_subtree(element_t *in_coef, bool active_subtree, fenc_attribute_subtree *subtree, fenc_lsss_coefficient_list *coefficient_list,
+LSSS_compute_coefficients_on_subtree(element_t *in_coef, Bool active_subtree, fenc_attribute_subtree *subtree, fenc_lsss_coefficient_list *coefficient_list,
 							   uint32 *list_index, pairing_t pairing)
 {
 	FENC_ERROR err_code, result = FENC_ERROR_NONE;
 	uint32 threshold_k = 0, num_coefs = 0, i;
 	element_t shareZ, tempZ, temp2Z, temp3Z;
-	bool elements_initialized = FALSE;
+	Bool elements_initialized = FALSE;
 	
 	/* Process the subtree differently depending on whether it's a leaf or an AND/OR/THRESHOLD-k gate.	*/
 	switch(subtree->node_type) {
@@ -591,7 +591,7 @@ compute_lagrange(uint32 k, uint32 subnode_index, fenc_attribute_subtree *subtree
  * @return					true if the attribute is in the list, FALSE if it isn't
  */
 
-bool
+Bool
 LSSS_element_in_attribute_list(fenc_attribute_subtree *subtree, fenc_attribute_list *attribute_list)
 {
 	uint32 i;
