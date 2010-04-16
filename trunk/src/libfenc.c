@@ -357,7 +357,7 @@ FENC_ERROR	libfenc_decrypt(fenc_context *context, fenc_ciphertext *ciphertext, f
 
 FENC_ERROR	
 libfenc_export_public_params(fenc_context *context, uint8 *buffer, size_t buf_len, size_t *result_len,
-										 bool include_global_params)
+										 Bool include_global_params)
 {
 	FENC_ERROR result = FENC_ERROR_NONE;
 	size_t global_params_len = 0;

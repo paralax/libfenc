@@ -88,7 +88,7 @@ libfenc_gen_params_LSW(fenc_context *context, fenc_global_params *global_params)
 	FENC_ERROR result = FENC_ERROR_UNKNOWN, err_code = FENC_ERROR_NONE;
 	element_t eggT, alphaZ, loghZ;
 	fenc_scheme_context_LSW* scheme_context;
-	bool elements_initialized = FALSE;
+	Bool elements_initialized = FALSE;
 	
 	/* Get the scheme-specific context. */
 	scheme_context = (fenc_scheme_context_LSW*)context->scheme_context;
@@ -188,7 +188,7 @@ libfenc_extract_key_LSW(fenc_context *context, fenc_function_input *input, fenc_
 	fenc_scheme_context_LSW*	scheme_context;
 	int							i;
 	element_t					rZ, hashONE, tempONE, temp2ONE, tempZ, temp2Z, tempTWO, temp2TWO;
-	bool						elements_initialized = FALSE;
+	Bool						elements_initialized = FALSE;
 	
 	/* Get the scheme-specific context. */
 	scheme_context = (fenc_scheme_context_LSW*)context->scheme_context;
@@ -401,8 +401,8 @@ libfenc_decrypt_LSW(fenc_context *context, fenc_ciphertext *ciphertext, fenc_key
 	element_t						temp3GT, temp4GT, prodT, finalT;
 	uint32							i, j;
 	int32							index_ciph, index_key;
-	bool							elements_initialized = FALSE, coefficients_initialized = FALSE;
-	bool							attribute_list_N_initialized = FALSE;
+	Bool							elements_initialized = FALSE, coefficients_initialized = FALSE;
+	Bool							attribute_list_N_initialized = FALSE;
 	
 	/* Get the scheme-specific context. */
 	scheme_context = (fenc_scheme_context_LSW*)context->scheme_context;
@@ -652,7 +652,7 @@ cleanup:
 
 FENC_ERROR
 encrypt_LSW_internal(fenc_context *context, fenc_function_input *input, fenc_plaintext *plaintext,
-					 bool kem_mode, uint8* kem_key_buf, size_t kem_key_len, fenc_ciphertext *ciphertext)
+					 Bool kem_mode, uint8* kem_key_buf, size_t kem_key_len, fenc_ciphertext *ciphertext)
 {
 	FENC_ERROR result = FENC_ERROR_UNKNOWN, err_code = FENC_ERROR_NONE;
 	fenc_scheme_context_LSW* scheme_context;
@@ -661,7 +661,7 @@ encrypt_LSW_internal(fenc_context *context, fenc_function_input *input, fenc_pla
 	element_t eggalphasT, tempONE, temp2ONE;
 	element_t sxZ[MAX_CIPHERTEXT_ATTRIBUTES];
 	uint32 i;
-	bool elements_initialized = FALSE;
+	Bool elements_initialized = FALSE;
 	size_t serialized_len = 0;
 	fenc_attribute_list attribute_list;
 	
@@ -1633,7 +1633,7 @@ hash2_attribute_string_to_G1(uint8 *attribute_str, element_t *hashed_attr, eleme
  */
 
 fenc_key_LSW*
-key_LSW_initialize(fenc_attribute_list *attribute_list, fenc_attribute_policy *policy, bool copy_attr_list, 
+key_LSW_initialize(fenc_attribute_list *attribute_list, fenc_attribute_policy *policy, Bool copy_attr_list, 
 				   fenc_global_params_LSW *global_params)
 {
 	FENC_ERROR err_code;

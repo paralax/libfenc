@@ -505,39 +505,51 @@ fenc_attribute_copy(fenc_attribute *attribute_DST, fenc_attribute *attribute_SRC
  */
 
 FENC_ERROR
-fenc_attribute_policy_to_string(fenc_attribute_subtree *subtree, char *output_str, size_t *str_index, size_t buf_len)
+fenc_attribute_policy_to_string(fenc_attribute_subtree *subtree, char *output_str, size_t buf_len)
 {
 	FENC_ERROR err_code;
-	char token[400];
+	uint32 len = 10;
+	char token[len], tmp[len];
 	uint32 i;
-	bool use_hash = FALSE;
-	
+	// ssize_t start = *str_index;
+	Bool use_hash = FALSE;
+	memset(token, '\0', len);
+	memset(tmp, '\0', len);
 	/* Base case (leaf)	*/
 	if (subtree->node_type == FENC_ATTRIBUTE_POLICY_NODE_LEAF) {
-		/* Is it negated?	*/
-		if (subtree->attribute.is_negated == TRUE )	{
-			if (output_str != NULL) {	snprintf((output_str+*str_index), buf_len - *str_index, "!");	}
-			(*str_index) += 1;
-		}
+		// printf("Parsing a leaf node\n");
+		/* Is it negated?
+		 if (subtree->attribute.is_negated == TRUE )	{
+		 if (output_str != NULL) {	snprintf((output_str+*str_index), buf_len - *str_index, "!");	}
+		 (*str_index) += 1;
+		 } */
 		
-		/* Use either the hash or the attribute string, whichever is shortest.	*/
-		if (subtree->attribute.is_hashed == TRUE) {
-			if (element_snprintf(token, 400, "{%B}", subtree->attribute.attribute_hash) == 0) {
-				LOG_ERROR("fenc_attribute_policy_to_string: element is too large");
-				return FENC_ERROR_UNKNOWN;
-			}
-			
-			if (strlen(token) < (strlen(subtree->attribute.attribute_str) + 2)) {
-				use_hash = TRUE;
-			}
-		}
+		/* Use either the hash or the attribute string, whichever is shortest.	
+		 if (subtree->attribute.is_hashed == TRUE) {
+		 if (element_snprintf(token, 400, "{%B}", subtree->attribute.attribute_hash) == 0) {
+		 LOG_ERROR("fenc_attribute_policy_to_string: element is too large");
+		 return FENC_ERROR_UNKNOWN;
+		 }
+		 
+		 if (strlen(token) < (strlen(subtree->attribute.attribute_str) + 2)) {
+		 use_hash = TRUE;
+		 } 
+		 } */
 		
 		if (use_hash == TRUE) {
-			if (output_str != NULL) {	snprintf((output_str+*str_index), buf_len - *str_index, "%s", token);	}
-			(*str_index) += strlen(token) + 2;
-		} else if (strlen(subtree->attribute.attribute_str) != 0) {
-			if (output_str != NULL)	{	snprintf((output_str+*str_index), buf_len - *str_index, "\"%s\"", subtree->attribute.attribute_str);	}
-			(*str_index) += strlen(subtree->attribute.attribute_str) + 2;
+			if (output_str != NULL) {	
+				// snprintf((output_str+*str_index), buf_len - *str_index, "%s", token);
+				sprintf(tmp, "%s", token);
+				strncat(output_str, tmp, strlen(tmp));
+			}
+			// (*str_index) += strlen(token) + 2;
+		} else if (strlen(subtree->attribute.attribute_str) > 0) {
+			if (output_str != NULL)	{	
+				// snprintf((output_str+*str_index), buf_len - *str_index, "\"%s\"", subtree->attribute.attribute_str);
+				sprintf(tmp, "%s", subtree->attribute.attribute_str);
+				strncat(output_str, tmp, strlen(tmp));
+			}
+			// (*str_index) += strlen(subtree->attribute.attribute_str) + 2;
 		} else {
 			/* Element has neither name nor hash, can't serialize it.	*/
 			return FENC_ERROR_INVALID_INPUT;
@@ -546,44 +558,56 @@ fenc_attribute_policy_to_string(fenc_attribute_subtree *subtree, char *output_st
 		return FENC_ERROR_NONE;
 	}
 	
+	// printf("Parsing a OPERATOR node\n");
 	/* Recursive case.	*/
 	switch (subtree->node_type) {
 		case FENC_ATTRIBUTE_POLICY_NODE_AND:
-			sprintf(token, "AND");
+			sprintf(token, "and");
 			break;
 		case FENC_ATTRIBUTE_POLICY_NODE_OR:
-			sprintf(token, "OR");
+			sprintf(token, "or");
 			break;
 		case FENC_ATTRIBUTE_POLICY_NODE_THRESHOLD:
-			sprintf(token, "TH{%d}", subtree->threshold_k);
+			sprintf(token, "th{%d}", subtree->threshold_k);
 			break;
 		default:
 			return FENC_ERROR_INVALID_INPUT;
 	}
-	
+	memset(tmp, '\0', len);
 	/* Print the token to the output string.	*/
-	if (output_str != NULL)	{	snprintf((output_str+*str_index), buf_len - *str_index, "(%s ", token);	}
-	(*str_index) += (strlen(token) + 2);
-
+	if (output_str != NULL)	{	
+		// snprintf((output_str+*str_index), buf_len - *str_index, "(%s ", token);	
+		sprintf(tmp, "(");
+		strncat(output_str, tmp, strlen(tmp));
+	}
+	// (*str_index) += (strlen(token) + 2);
+	
 	/* Recurse from left to right, spitting out the leaves.	*/
 	for (i = 0; i < subtree->num_subnodes; i++) {
 		if (i > 0) {
-			if (output_str != NULL)	{	snprintf(output_str + *str_index, buf_len - *str_index, ",");	}
-			(*str_index) += 1;
+			if (output_str != NULL)	{	
+				// snprintf(output_str + *str_index, buf_len - *str_index, ",");	
+				sprintf(tmp, " %s ", token);
+				strncat(output_str, tmp, strlen(tmp));
+			}
+			// (*str_index) += 1;
 		}
-			
-		err_code = fenc_attribute_policy_to_string(subtree->subnode[i], output_str, str_index, buf_len);
+		
+		err_code = fenc_attribute_policy_to_string(subtree->subnode[i], output_str, buf_len);
 		if (err_code != FENC_ERROR_NONE) {
 			return err_code;
 		}
 	}
 	
-	if (output_str != NULL){	snprintf(output_str + *str_index, buf_len - *str_index, ")");	}
-	(*str_index) += 1;
+	if (output_str != NULL) {	
+		// snprintf(output_str + *str_index, buf_len - *str_index, ")");
+		strncat(output_str, ")", 1);	
+	}
+	// (*str_index) += 1;
 	
 	return FENC_ERROR_NONE;
 }
-	
+
 /*!
  * This recursive function counts the number of leaves under a given subtree.
  *

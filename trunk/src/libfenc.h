@@ -81,7 +81,7 @@ typedef int	int32;
 typedef short int16;
 typedef unsigned char uint8;
 typedef char int8;
-typedef int bool;
+typedef int Bool;
 
 //typedef struct _struct _fenc_group_params struct _fenc_group_params; /*!< defined in libstruct _fenc_group_params.h */
 struct _fenc_group_params; /*!< defined in libstruct _fenc_group_params.h */
@@ -124,7 +124,7 @@ typedef struct _fenc_function_input {
  */
 
 typedef struct _fenc_plaintext {
-	bool					valid;
+	Bool					valid;
 	uint8*					data;
 	unsigned int			max_len;
 	unsigned int			data_len;
@@ -147,7 +147,7 @@ typedef struct _fenc_ciphertext {
 
 typedef struct _fenc_key {
 	FENC_SCHEME_TYPE		scheme_type;
-	bool					valid;
+	Bool					valid;
 	void*					scheme_key;
 } fenc_key;
 
@@ -160,8 +160,8 @@ typedef struct _fenc_context {
 	void					*scheme_context;	/*!< Scheme-specific context data structure */
 
 	/* Flags	*/
-	bool					contains_public_params;
-	bool					contains_secret_params;
+	Bool					contains_public_params;
+	Bool					contains_secret_params;
 	
 	/* Function pointers */
 	FENC_ERROR				(*gen_params)(struct _fenc_context*, fenc_global_params*);
@@ -338,7 +338,7 @@ FENC_ERROR	libfenc_decrypt(fenc_context *context, fenc_ciphertext *ciphertext, f
  */
 
 FENC_ERROR	libfenc_export_public_params(fenc_context *context, uint8 *buffer, size_t buf_len, size_t *result_len,
-										 bool include_global_params);
+										 Bool include_global_params);
 
 /*!
  * Export a context's secret parameters (MSK) to a binary buffer.  Calling this function with buffer 

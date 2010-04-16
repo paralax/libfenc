@@ -9,7 +9,7 @@
 #define __LIBFENC_LSSS_H__
 
 typedef struct _fenc_lsss_coefficient {
-	bool			is_set;
+	Bool			is_set;
 	element_t		coefficient;
 	fenc_attribute	*attribute;
 } fenc_lsss_coefficient;
@@ -99,7 +99,7 @@ FENC_ERROR	LSSS_compute_shares_on_subtree(element_t *secret, fenc_attribute_subt
  * @return					FENC_ERROR_NONE or an error code.
  */
 
-FENC_ERROR	LSSS_compute_coefficients_on_subtree(element_t *in_coef, bool active_subtree, fenc_attribute_subtree *subtree, fenc_lsss_coefficient_list *coefficient_list,
+FENC_ERROR	LSSS_compute_coefficients_on_subtree(element_t *in_coef, Bool active_subtree, fenc_attribute_subtree *subtree, fenc_lsss_coefficient_list *coefficient_list,
 									 uint32 *list_index, pairing_t pairing);
 
 /*!
@@ -154,6 +154,6 @@ FENC_ERROR	compute_lagrange(uint32 k, uint32 point_index, fenc_attribute_subtree
  * @return					true if the attribute is in the list, false if it isn't
  */
 
-bool	LSSS_element_in_attribute_list(fenc_attribute_subtree *subtree, fenc_attribute_list *attribute_list);
+Bool	LSSS_element_in_attribute_list(fenc_attribute_subtree *subtree, fenc_attribute_list *attribute_list);
 
 #endif /* ifdef __LIBFENC_LSSS_H__ */
