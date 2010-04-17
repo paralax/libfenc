@@ -15,9 +15,8 @@
 typedef struct _fenc_public_params_WatersCP {
 	element_t gONE;
 	element_t gTWO;
-	element_t hbONE;
-	element_t gbONE;
-	element_t gb2ONE;
+	element_t gaONE;
+	element_t gaTWO;
 	element_t eggalphaT;
 	
 } fenc_public_params_WatersCP;
@@ -36,11 +35,9 @@ typedef struct _fenc_global_params_WatersCP {
  */
 
 typedef struct _fenc_secret_params_WatersCP {
-	element_t hONE;
-	element_t hTWO;
-	element_t alphaprimeZ;
-	element_t alphaprimeprimeZ;
-	element_t bZ;			
+
+	element_t alphaZ;
+	element_t aZ;
 } fenc_secret_params_WatersCP;
 
 /*!
@@ -60,13 +57,13 @@ typedef struct _fenc_scheme_context_WatersCP {
 typedef struct _fenc_ciphertext_WatersCP {
 	FENC_CIPHERTEXT_TYPE	type;
 	fenc_attribute_list		attribute_list;
+	char					policy_str[MAX_POLICY_STR];
 	size_t					kem_key_len;
 
-	element_t				E1T;
-	element_t				E2TWO;
-	element_t				E3ONE[MAX_CIPHERTEXT_ATTRIBUTES];
-	element_t				E4ONE[MAX_CIPHERTEXT_ATTRIBUTES];
-	element_t				E5ONE[MAX_CIPHERTEXT_ATTRIBUTES];
+	element_t				CT;
+	element_t				CprimeONE;
+	element_t				CONE[MAX_CIPHERTEXT_ATTRIBUTES];
+	element_t				DTWO[MAX_CIPHERTEXT_ATTRIBUTES];
 } fenc_ciphertext_WatersCP;
 
 /*!
@@ -79,11 +76,9 @@ typedef struct _fenc_key_WatersCP {
 	fenc_attribute_policy	*policy;
 	fenc_attribute_list		attribute_list;
 	uint32					num_components;
-	element_t				D1ONE[MAX_CIPHERTEXT_ATTRIBUTES];
-	element_t				D2TWO[MAX_CIPHERTEXT_ATTRIBUTES];
-	element_t				D3ONE[MAX_CIPHERTEXT_ATTRIBUTES];
-	element_t				D4TWO[MAX_CIPHERTEXT_ATTRIBUTES];
-	element_t				D5TWO[MAX_CIPHERTEXT_ATTRIBUTES];
+	element_t				KTWO;
+	element_t				LTWO;
+	element_t				KXONE[MAX_CIPHERTEXT_ATTRIBUTES];
 } fenc_key_WatersCP;
 
 /********************************************************************************
@@ -312,6 +307,21 @@ FENC_ERROR libfenc_validate_global_params_WatersCP(fenc_global_params *global_pa
 FENC_ERROR	libfenc_serialize_key_WatersCP(fenc_key_WatersCP *key, unsigned char *buffer, size_t max_len, size_t *serialized_len);
 
 /*!
+ * Deserialize a decryption key from a binary buffer.  Accepts an LSW key, buffer, and buffer length.
+ * If the buffer is large enough, the serialized result is written to the buffer and returns the
+ * length in "serialized_len".  Calling with a NULL buffer returns the length /only/ but does
+ * not actually serialize the structure.
+ *
+ * @param key				The key to serialize.
+ * @param buffer			Pointer to a buffer, or NULL to get the length only.
+ * @param buf_len			The maximum size of the buffer (in bytes).
+ * @param serialized_len	Total size of the serialized structure (in bytes).
+ * @return					FENC_ERROR_NONE or FENC_ERROR_BUFFER_TOO_SMALL.
+ */
+
+FENC_ERROR	libfenc_deserialize_key_WatersCP(fenc_key_WatersCP *key, unsigned char *buffer, size_t buf_len);
+
+/*!
  * Serialize a ciphertext to a binary buffer.  Accepts an LSW ciphertext, buffer, and buffer length.
  * If the buffer is large enough, the serialized result is written to the buffer and returns the
  * length in "serialized_len".  Calling with a NULL buffer returns the length /only/ but does
@@ -351,8 +361,8 @@ FENC_ERROR libfenc_deserialize_ciphertext_WatersCP(unsigned char *buffer, size_t
  * @return					FENC_ERROR_NONE or an error code.
  */
 
-FENC_ERROR	fenc_ciphertext_WatersCP_initialize(fenc_ciphertext_WatersCP *ciphertext, uint32 num_attributes, FENC_CIPHERTEXT_TYPE type,
-										   fenc_scheme_context_WatersCP *scheme_context);
+FENC_ERROR	fenc_ciphertext_WatersCP_initialize(fenc_ciphertext_WatersCP *ciphertext, fenc_attribute_list *attribute_list, fenc_attribute_policy* policy, FENC_CIPHERTEXT_TYPE type,
+									fenc_scheme_context_WatersCP *scheme_context);
 
 /*!
  * Utility function to release the internals of a fenc_ciphertext_WatersCP structure.  
@@ -385,7 +395,7 @@ fenc_global_params_WatersCP*	initialize_global_params_WatersCP(fenc_group_params
  */
 
 fenc_key_WatersCP*
-key_WatersCP_initialize(fenc_attribute_list *attribute_list, fenc_attribute_policy *policy, Bool copy_attr_list, 
+fenc_key_WatersCP_initialize(fenc_attribute_list *attribute_list, Bool copy_attr_list, 
 				   fenc_global_params_WatersCP *global_params);
 
 /*!
@@ -395,7 +405,7 @@ key_WatersCP_initialize(fenc_attribute_list *attribute_list, fenc_attribute_poli
  * @return					FENC_ERROR_NONE or an error code.
  */
 
-FENC_ERROR	key_WatersCP_clear(fenc_key_WatersCP *key_WatersCP);
+FENC_ERROR	fenc_key_WatersCP_clear(fenc_key_WatersCP *key_WatersCP);
 
 /*!
  * Initialize a fenc_public_params_WatersCP structure.  This requires initializing

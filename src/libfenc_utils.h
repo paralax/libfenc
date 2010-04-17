@@ -23,12 +23,13 @@
  *
  * @param buffer		A pointer to the buffer.
  * @param buf_len		Length of the buffer (in bytes).
+ * @param imported_len	Pointer to an optional return value specifying num bytes read (can be set to NULL)
  * @param fmt			A format string containing %E, %C, %s, %d (elements, compressed elements, strings and ints)
  * @param ...			Variable-length argument list containing values for the import.
  * @return				FENC_ERROR_NONE or an error code.
  */
 
-FENC_ERROR	import_components_from_buffer(uint8* buffer, size_t buf_len, char* fmt, ...);
+FENC_ERROR	import_components_from_buffer(uint8* buffer, size_t buf_len, size_t *imported_len, char* fmt, ...);
 
 /*!
  * Export a collection of parameters to a buffer.

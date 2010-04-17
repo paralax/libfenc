@@ -902,7 +902,7 @@ libfenc_import_public_params_LSW(fenc_context *context, uint8 *buffer, size_t bu
 	public_params_initialize_LSW(&(scheme_context->public_params), scheme_context->global_params->pairing);
 
 	/* Import the elements from the buffer.								*/
-	return import_components_from_buffer(buffer, buf_len, "%C%C%C%C%C%E",
+	return import_components_from_buffer(buffer, buf_len, NULL, "%C%C%C%C%C%E",
 										 &(scheme_context->public_params.gONE), 
 										 &(scheme_context->public_params.gTWO),
 										 &(scheme_context->public_params.hbONE),
@@ -934,7 +934,7 @@ libfenc_import_secret_params_LSW(fenc_context *context, uint8 *buffer, size_t bu
 	/* Initialize the secret parameters, allocating group elements.		*/
 	secret_params_initialize_LSW(&(scheme_context->secret_params), scheme_context->global_params->pairing);
 	
-	return import_components_from_buffer(buffer, buf_len, "%C%C%E%E%E",
+	return import_components_from_buffer(buffer, buf_len, NULL, "%C%C%E%E%E",
 										 &(scheme_context->secret_params.hONE), 
 										 &(scheme_context->secret_params.hTWO),
 										 &(scheme_context->secret_params.alphaprimeZ),

@@ -89,6 +89,14 @@ libfenc_parse_input_as_attribute_list(fenc_function_input *input, fenc_attribute
 {
 	FENC_ERROR result;
 	
+	if (attribute_list == NULL) {
+		return FENC_ERROR_INVALID_INPUT;
+	}
+	
+	/* Wipe the attribute list structure clean.	*/
+	memset(attribute_list, 0, sizeof(fenc_attribute_list));
+	
+	/* Can't parse invalid inputs.	*/
 	if (input->input_type != FENC_INPUT_ATTRIBUTE_LIST) {
 		return FENC_ERROR_INVALID_INPUT;
 	}
