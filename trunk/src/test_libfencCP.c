@@ -139,9 +139,11 @@ test_secret_sharing(fenc_attribute_policy *policy, pairing_t pairing)
 	size_t str_len = 2048, index = 0;
 	
 	/* Print the policy.	*/
-	fenc_attribute_policy_to_string(policy->root, NULL, &str_len, 100000);
+	//fenc_attribute_policy_to_string(policy->root, NULL, &str_len, 100000);
+	fenc_attribute_policy_to_string(policy->root, NULL, 100000);
 	policy_str = (char*)SAFE_MALLOC(str_len);
-	fenc_attribute_policy_to_string(policy->root, policy_str, &index, str_len);
+	//fenc_attribute_policy_to_string(policy->root, policy_str, &index, str_len);
+	fenc_attribute_policy_to_string(policy->root, policy_str, str_len);
 	printf("%s\n", policy_str);
 	
 	/* Pick a random secret value.	*/
@@ -271,7 +273,7 @@ main(/*int argc, char **argv*/)
 
 	/* Create a Sahai-Waters context. */
 	result = libfenc_create_context(&context, FENC_SCHEME_WATERSCP);
-	report_error("Creating a Lewko-Sahai-Waters encryption context", result);
+	report_error("Creating a Waters CP encryption context", result);
 
 	/* Load group parameters from a file. */
 	fp = fopen("d224.param", "r");
@@ -293,6 +295,8 @@ main(/*int argc, char **argv*/)
 	construct_test_attribute_list(&func_list_input);
 	func_policy_input.input_type = FENC_INPUT_NM_ATTRIBUTE_POLICY;
 	func_policy_input.scheme_input = (void*)test_policy;
+	fenc_attribute_policy_to_string(test_policy->root, output_str, 100000);
+	printf("Test policy is: %s\n", output_str);
 	//test_secret_sharing(test_policy, pairing);
 	
 	fenc_attribute_list_to_buffer((fenc_attribute_list*)(func_list_input.scheme_input), output_str, 200, &output_str_len);
@@ -326,15 +330,16 @@ main(/*int argc, char **argv*/)
 	
 	/* Encrypt a test ciphertext using KEM mode. */
 	//result = libfenc_set_plaintext_bytes(&plaintext, plaintext_str, strlen(plaintext_str) + 1);
-	result = libfenc_kem_encrypt(&context, &func_list_input, SESSION_KEY_LEN, session_key, &ciphertext);
+	result = libfenc_kem_encrypt(&context, &func_policy_input, SESSION_KEY_LEN, session_key, &ciphertext);
 	//result = libfenc_encrypt(&context, &func_list_input, &plaintext, &ciphertext);
 	report_error("Encrypting a test ciphertext", result);
 	
 	printf("\tSession key is: ");
 	print_buffer_as_hex(session_key, SESSION_KEY_LEN);
+	printf("\tCiphertext size is: %d\n", ciphertext.data_len);
 	
 	/* Extract a decryption key. */
-	result = libfenc_extract_key(&context, &func_policy_input, &key);
+	result = libfenc_extract_key(&context, &func_list_input, &key);
 	report_error("Extracting a decryption key", result);
 
 	/* Descrypt the resulting ciphertext. */

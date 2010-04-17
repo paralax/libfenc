@@ -29,7 +29,7 @@
  */
 
 FENC_ERROR
-import_components_from_buffer(uint8* buffer, size_t buf_len, char* fmt, ...)
+import_components_from_buffer(uint8* buffer, size_t buf_len, size_t *imported_len, char* fmt, ...)
 {
 	FENC_ERROR result = FENC_ERROR_NONE;
 	va_list comp_list;
@@ -38,7 +38,7 @@ import_components_from_buffer(uint8* buffer, size_t buf_len, char* fmt, ...)
 	uint8* buf_ptr;
 	char* fmt_ptr;
 	element_t *elt;
-
+	
 	/* Iterate through the variable-length argument list.	*/
 	va_start(comp_list, fmt);
 	
@@ -77,12 +77,22 @@ import_components_from_buffer(uint8* buffer, size_t buf_len, char* fmt, ...)
 		}
 		
 		if (deserialized_len > buf_len) {
+			/* Return the length we read.	*/
+			if (imported_len != NULL) {
+				*imported_len = deserialized_len;
+			}
+			
 			return FENC_ERROR_BUFFER_TOO_SMALL;
 		}
 	}
 	
 	va_end(comp_list);
 
+	/* Return the length we read.	*/
+	if (imported_len != NULL) {
+		*imported_len = deserialized_len;
+	}
+	
 	return result;
 }
 

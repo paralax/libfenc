@@ -139,9 +139,11 @@ test_secret_sharing(fenc_attribute_policy *policy, pairing_t pairing)
 	size_t str_len = 2048, index = 0;
 	
 	/* Print the policy.	*/
-	fenc_attribute_policy_to_string(policy->root, NULL, &str_len, 100000);
+	//fenc_attribute_policy_to_string(policy->root, NULL, &str_len, 100000);
+	fenc_attribute_policy_to_string(policy->root, NULL, 100000);
 	policy_str = (char*)SAFE_MALLOC(str_len);
-	fenc_attribute_policy_to_string(policy->root, policy_str, &index, str_len);
+	fenc_attribute_policy_to_string(policy->root, policy_str, str_len);
+	//fenc_attribute_policy_to_string(policy->root, policy_str, &index, str_len);
 	printf("%s\n", policy_str);
 	
 	/* Pick a random secret value.	*/
@@ -266,7 +268,8 @@ main(/*int argc, char **argv*/)
 	
 	//parse_policy_lang_as_str("FOO");
 	fenc_policy_from_string(&parsed_policy, "FOO and JOHN");
-	fenc_attribute_policy_to_string(parsed_policy.root, output_str, 0, &output_str_len);
+	fenc_attribute_policy_to_string(parsed_policy.root, output_str, &output_str_len);
+	//fenc_attribute_policy_to_string(parsed_policy.root, output_str, 0, &output_str_len);
 	printf("output policy: %s\n", output_str);
 
 	/* Create a Sahai-Waters context. */
@@ -332,6 +335,7 @@ main(/*int argc, char **argv*/)
 	
 	printf("\tSession key is: ");
 	print_buffer_as_hex(session_key, SESSION_KEY_LEN);
+	printf("\tCiphertext size is: %d\n", ciphertext.data_len);
 	
 	/* Extract a decryption key. */
 	result = libfenc_extract_key(&context, &func_policy_input, &key);
