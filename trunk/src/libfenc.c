@@ -483,7 +483,8 @@ libfenc_import_public_params(fenc_context *context, uint8 *buffer, size_t buf_le
 	if (context->import_public_params == NULL) {
 		result = FENC_ERROR_NOT_IMPLEMENTED;
 	}
-	
+
+#if 0
 	/* First four bytes contain the length of the global params, or 0 if they're not present.	*/
 	if (buf_len < sizeof(int32)) {
 		return FENC_ERROR_INVALID_GROUP_PARAMS;
@@ -497,6 +498,7 @@ libfenc_import_public_params(fenc_context *context, uint8 *buffer, size_t buf_le
 		result = libfenc_import_global_params(context, buffer, global_params_len);
 		buffer += global_params_len;
 	}
+#endif
 	
 	/* Call the appropriate function pointer to deserialize the remaining parameters. */
 	if (result == FENC_ERROR_NONE) {
