@@ -12,6 +12,7 @@
 #include "libfenc.h"
 #include "libfenc_group_params.h"
 #include "libfenc_abe_common.h"
+#include "policy_lang.h"
 
 /*!
  * Generate a set of global (elliptic curve) parameters.  Caller is responsible
@@ -383,7 +384,7 @@ libfenc_get_attribute_index_in_list(fenc_attribute *attribute, fenc_attribute_li
 		}
 		/* If both don't have a string, but /do/ have hashes, compare them.		*/
 		else if (attribute->is_hashed == TRUE && attribute_list->attribute[i].is_hashed == TRUE) {
-			//if (attribute->is_hashed) { element_printf("\tfound: %B\n", attribute_list->attribute[i].attribute_hash); }
+			if (attribute->is_hashed) { element_printf("\tfound: %B\n", attribute_list->attribute[i].attribute_hash); }
 			if (element_cmp(attribute->attribute_hash, attribute_list->attribute[i].attribute_hash) == 0) {
 				/* Found a match.	*/
 				return i;
@@ -858,9 +859,12 @@ fenc_policy_extend_array(fenc_attribute_subtree **attributes, uint32 old_nodes, 
 FENC_ERROR
 fenc_policy_from_string(fenc_attribute_policy *policy, char *policy_str)
 {
+	fenc_attribute_subtree* subtree = NULL;
+
 	memset(policy, 0, sizeof(fenc_attribute_policy));
 	
-	policy->root = parse_policy_lang( policy_str );
+	subtree = parse_policy_lang( policy_str );
+	policy->root = subtree;
 	
 	return FENC_ERROR_NONE;
 }

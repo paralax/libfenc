@@ -26,9 +26,9 @@ report_error(char* action, FENC_ERROR result)
 void
 construct_test_attribute_list(fenc_function_input *input)
 {
-	char *attributes[3] = {"ONE", "THREE"};//, "THREE", "FIVE" };
+	char *attributes[3] = {"ONE", "THREE", "FIVE"};//, "THREE", "FIVE" };
 	
-	libfenc_create_attribute_list_from_strings(input, attributes, 2);
+	libfenc_create_attribute_list_from_strings(input, attributes, 3);
 }
 
 fenc_attribute_policy *
@@ -123,6 +123,7 @@ construct_simple_test_policy()
 	strcpy((char*)subtree_L2->attribute.attribute_str, "TWO");
 	
 	policy->root = subtree_OR;
+	//policy->root = subtree_L1;
 	
 	return policy;
 }
@@ -267,8 +268,8 @@ main(/*int argc, char **argv*/)
 	report_error("Initializing library", result);
 	
 	//parse_policy_lang_as_str("FOO");
-	//fenc_policy_from_string(&parsed_policy, "FOO and JOHN");
-	//fenc_attribute_policy_to_string(parsed_policy.root, output_str, 0, &output_str_len);
+	//fenc_policy_from_string(&parsed_policy, "(A > 10)");//"((1 of (Firstname Lastname, Jane Smith)) OR (2 of (Parent of Firstname Lastname, time = 1639285200.0)))");
+	//fenc_attribute_policy_to_string(parsed_policy.root, output_str, &output_str_len);
 	//printf("output policy: %s\n", output_str);
 
 	/* Create a Sahai-Waters context. */

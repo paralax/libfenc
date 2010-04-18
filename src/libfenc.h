@@ -11,7 +11,7 @@
 #define SAFE_MALLOC(size)	malloc(size)
 #define SAFE_FREE(val)		free(val)
 #define LOG_ERROR(...)		if (global_error_file != NULL) ( fprintf (global_error_file, __VA_ARGS__), fprintf(global_error_file, " (%s:%d)\n" , __FILE__, __LINE__))
-#define DEBUG_ELEMENT_PRINTF(...)	/*element_printf(__VA_ARGS__)*/
+#define DEBUG_ELEMENT_PRINTF(...)	element_printf(__VA_ARGS__)
 
 /* 
  * Library globals (extern)
