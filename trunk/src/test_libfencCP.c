@@ -26,7 +26,7 @@ report_error(char* action, FENC_ERROR result)
 void
 construct_test_attribute_list(fenc_function_input *input)
 {
-	char *attributes[3] = {"ONE", "THREE", "FIVE"};//, "THREE", "FIVE" };
+	char *attributes[3] = {"JohnDoeDoctor", "THREE", "FIVE"};//, "THREE", "FIVE" };
 	
 	libfenc_create_attribute_list_from_strings(input, attributes, 3);
 }
@@ -250,8 +250,8 @@ main(/*int argc, char **argv*/)
 	char *plaintext_str = "Test Plaintext";
 	char session_key[SESSION_KEY_LEN];
 	size_t session_key_len;
-	char output_str[200];
-	size_t output_str_len = 200;
+	char output_str[20000];
+	size_t output_str_len = 20000;
 	
 	/* Clear data structures. */
 	memset(&context, 0, sizeof(fenc_context));
@@ -268,9 +268,9 @@ main(/*int argc, char **argv*/)
 	report_error("Initializing library", result);
 	
 	//parse_policy_lang_as_str("FOO");
-	//fenc_policy_from_string(&parsed_policy, "(A > 10)");//"((1 of (Firstname Lastname, Jane Smith)) OR (2 of (Parent of Firstname Lastname, time = 1639285200.0)))");
-	//fenc_attribute_policy_to_string(parsed_policy.root, output_str, &output_str_len);
-	//printf("output policy: %s\n", output_str);
+	fenc_policy_from_string(&parsed_policy, "(JohnDoe or (JohnDoeParent and Dog) or JohnDoeDoctor)");//"((1 of (Firstname Lastname, Jane Smith)) OR (2 of (Parent of Firstname Lastname, time = 1639285200.0)))");
+	fenc_attribute_policy_to_string(parsed_policy.root, output_str, &output_str_len);
+	printf("output policy: %s\n", output_str);
 
 	/* Create a Sahai-Waters context. */
 	result = libfenc_create_context(&context, FENC_SCHEME_WATERSCP);
@@ -295,7 +295,7 @@ main(/*int argc, char **argv*/)
 	test_policy = construct_simple_test_policy();
 	construct_test_attribute_list(&func_list_input);
 	func_policy_input.input_type = FENC_INPUT_NM_ATTRIBUTE_POLICY;
-	func_policy_input.scheme_input = (void*)test_policy;
+	func_policy_input.scheme_input = (void*)&(parsed_policy);//test_policy;
 	fenc_attribute_policy_to_string(test_policy->root, output_str, 100000);
 	printf("Test policy is: %s\n", output_str);
 	//test_secret_sharing(test_policy, pairing);

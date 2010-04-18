@@ -358,10 +358,15 @@ libfenc_decrypt_WatersCP(fenc_context *context, fenc_ciphertext *ciphertext, fen
 		
 	/* Now deserialize the policy string into a data structure and make sure all attributes are hashed.	*/
 	fenc_policy_from_string(&policy, ciphertext_WatersCP.policy_str);
+	strcpy(test_str, "");
 	fenc_attribute_policy_to_string(policy.root, test_str, 1000);
 	printf("PARSED ATTRIBUTE STRING: %s\n", test_str);
 	err_code = attribute_tree_compute_hashes(policy.root, scheme_context->global_params->pairing);
 
+	
+	//libfenc_fprint_ciphertext_WatersCP(&ciphertext_WatersCP, stdout);
+
+	
 	/* Use the LSSS-associated procedure to recover the coefficients.  This gives us a list of coefficients
 	 * that should match up in a 1-to-1 fashion with the components of the decryption key. 
 	 * First, initialize a coefficients list:													*/
@@ -517,6 +522,7 @@ encrypt_WatersCP_internal(fenc_context *context, fenc_function_input *input, fen
 	Bool elements_initialized = FALSE;
 	size_t serialized_len = 0;
 	fenc_attribute_list attribute_list;
+	char temp_policy_str[MAX_POLICY_STR];
 
 	/* Get the scheme-specific context. */
 	scheme_context = (fenc_scheme_context_WatersCP*)context->scheme_context;
@@ -547,6 +553,16 @@ encrypt_WatersCP_internal(fenc_context *context, fenc_function_input *input, fen
 	element_random(sZ);
 	element_pow_zn(eggalphasT, scheme_context->public_params.eggalphaT, sZ);
 	
+	/* Export the policy to a string and draw it back in again.  This clears up some issues in the way		*/
+	strcpy(temp_policy_str, "");
+	err_code = fenc_attribute_policy_to_string(policy->root, temp_policy_str, MAX_POLICY_STR);
+	if (err_code != FENC_ERROR_NONE) {
+		LOG_ERROR("encrypt_WatersCP_internal: could not serialize policy");
+		result = err_code;
+		goto cleanup;
+	}
+	fenc_policy_from_string(policy, temp_policy_str);
+	
 	/* Use the Linear Secret Sharing Scheme (LSSS) to compute an enumerated list of all
 	 * attributes and corresponding secret shares of sZ.  The shares will be placed into 
 	 * a fenc_attribute_list structure that we'll embed within the fenc_key_WatersCP struct.	*/
@@ -567,6 +583,7 @@ encrypt_WatersCP_internal(fenc_context *context, fenc_function_input *input, fen
 		result = FENC_ERROR_UNKNOWN;
 		goto cleanup;
 	}
+	strcpy(ciphertext_WatersCP.policy_str, temp_policy_str); 
 	
 	/* If we're in KEM mode, the returned key is the hash of eggalphasT.	*/
 	if (kem_mode == TRUE) {
@@ -610,7 +627,7 @@ encrypt_WatersCP_internal(fenc_context *context, fenc_function_input *input, fen
 	}
 	
 	/* DEBUG: Print out the ciphertext.	*/
-	libfenc_fprint_ciphertext_WatersCP(&ciphertext_WatersCP, stdout);
+	//libfenc_fprint_ciphertext_WatersCP(&ciphertext_WatersCP, stdout);
 	
 	/* Serialize the WatersCP ciphertext structure into a fenc_ciphertext container 
 	 * (which is essentially just a binary buffer).  First we get the length, then we 
@@ -1263,7 +1280,9 @@ fenc_ciphertext_WatersCP_initialize(fenc_ciphertext_WatersCP *ciphertext, fenc_a
 	
 	/* Copy the policy into a string.	*/
 	if (policy != NULL) {
+		strcpy(ciphertext->policy_str, "");
 		err_code = fenc_attribute_policy_to_string(policy->root, ciphertext->policy_str, MAX_POLICY_STR);
+		
 		if (err_code != FENC_ERROR_NONE) {
 			LOG_ERROR("fenc_ciphertext_WatersCP_initialize: policy string is too long");
 			return FENC_ERROR_INVALID_INPUT;
