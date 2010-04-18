@@ -2401,6 +2401,11 @@ parse_policy_lang( char* s )
 {
 	char* parsed_policy;
 	
+	if (final_policy != NULL) {
+		policy_free(final_policy);
+		parsed_policy = NULL;
+	}
+	
 	cur_string = s;
 	
 	yyparse();
