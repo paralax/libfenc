@@ -11,7 +11,7 @@
 #include <pbc/pbc.h>
 #include "libfenc.h"
 #include "libfenc_group_params.h"
-#include "libfenc_abe_common.h"
+#include "libfenc_ABE_common.h"
 #include "policy_lang.h"
 
 /*!
@@ -136,7 +136,8 @@ libfenc_parse_input_as_attribute_policy(fenc_function_input *input, fenc_attribu
 	}
 	
 	/* Clear the attribute list data structure.	*/
-	LOG_ERROR("libfenc_parse_input_as_attribute_policy: need to add a copy");
+	// TODO: Do we still need a copy here?
+	// LOG_ERROR("libfenc_parse_input_as_attribute_policy: need to add a copy");
 	memcpy(policy, (fenc_attribute_policy*)(input->scheme_input), sizeof(fenc_attribute_policy));
 
 	return FENC_ERROR_NONE;
@@ -331,9 +332,13 @@ fenc_attribute_list_to_buffer(fenc_attribute_list *attribute_list, uint8 *buffer
 	
 	/* Serialize all of the elements.	*/
 	for (i = 0; i < attribute_list->num_attributes; i++) {
+		printf("%i:%s\n", i, attribute_list->attribute[i].attribute_str);
+		
 		/* We prefer the attribute string.	*/
 			if (i != 0) {
-				if (buffer != NULL) {	buf_ptr += snprintf(buf_ptr, (buf_len - *result_len), ",", attribute_list->attribute[i].attribute_str); 	}
+				if (buffer != NULL) {	
+					buf_ptr += snprintf(buf_ptr, (buf_len - *result_len), ",", attribute_list->attribute[i].attribute_str); 
+				}
 				(*result_len)++;
 			}
 
