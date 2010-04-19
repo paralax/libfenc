@@ -1,3 +1,5 @@
+# JAA note: redo the Makefile: includes, libraries
+
 CC = gcc
 CCFLAGS = -fnested-functions -Wall -W -Wfloat-equal -Wpointer-arith -Wcast-align -Wredundant-decls -Wendif-labels -Wshadow -pipe -ffast-math -U__STRICT_ANSI__ -L/usr/local/lib -g -m64 -arch x86_64 -I../pbc-0.5.6/include
 CCLIBS = -lstdc++

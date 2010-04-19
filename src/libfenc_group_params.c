@@ -131,7 +131,8 @@ FENC_ERROR
 libfenc_copy_group_params(fenc_group_params *src_group_params, 
 									  fenc_group_params *dest_group_params)
 {
-	LOG_ERROR("libfenc_copy_group_params: this copy function may not be safe as implemented."); /* MDG: TODO */
+	/* TODO: MDG got this. :) */
+	// LOG_ERROR("libfenc_copy_group_params: this copy function may not be safe as implemented.");
 
 	if (src_group_params == NULL || dest_group_params == NULL) {
 		return FENC_ERROR_INVALID_GROUP_PARAMS;
