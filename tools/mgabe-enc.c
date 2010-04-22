@@ -19,6 +19,11 @@
 #include "openssl/rand.h"
 
 /* include code that creates policy by hand */
+#define AES_TOKEN "AES"
+#define AES_TOKEN_END "AES_END"
+#define ABE_TOKEN "ABE_CP"
+#define ABE_TOKEN_END "ABE_CP_END"
+
 
 #define MAX_ATTRIBUTES 100
 #define SIZE 2048
@@ -255,11 +260,11 @@ void cpabe_encrypt(char *policy, char *data)
 		
 	/* use the PSK to encrypt using openssl functions here */
 	AES_KEY key;
-	char iv[SESSION_KEY_LEN*4];
-	int data_len = strlen(data);
-	char aes_ciphertext[data_len+1];
+	char iv[AES_BLOCK_SIZE*4];
+	int data_len = strlen(data)*5; // consider padding?
+	char aes_ciphertext[data_len];
 	
-	memset(iv, 0, SESSION_KEY_LEN*4);
+	memset(iv, 0, AES_BLOCK_SIZE*4);
 	memset(aes_ciphertext, 0, data_len);
 	AES_set_encrypt_key((uint8 *) session_key, 8*SESSION_KEY_LEN, &key);
 	// printf("\tPlaintext is => '%s'\n", data);
@@ -269,28 +274,21 @@ void cpabe_encrypt(char *policy, char *data)
 	// printf("\tAES Ciphertext base 64: ");
 	// print_buffer_as_hex((uint8 *) aes_ciphertext, data_len);
 	
-	printf("\n\n<====  Base-64 ciphertext  ====> \n\n");
+	printf("\n\n<====  Base-64 encode ciphertext  ====> \n\n");
 	FILE *f = fopen("enc_data.xml", "w");
 	FILE *f1 = fopen("enc_data.txt", "w");
 	/* base-64 both ciphertexts and write to the stdout -- in XML? */
 	size_t abe_length, aes_length;
 	char *ABE_cipher_base64 = NewBase64Encode(ciphertext.data, ciphertext.data_len, FALSE, &abe_length);
 	fprintf(f,"<ABE type='CP'>%s</ABE>", ABE_cipher_base64);
-	fprintf(f1, "ABE_CP:%s:ABE_CP\n", ABE_cipher_base64);
+	fprintf(f1, ABE_TOKEN":%s:"ABE_TOKEN_END":", ABE_cipher_base64);
 	
 	char *AES_cipher_base64 = NewBase64Encode(aes_ciphertext, data_len, FALSE, &aes_length);
 	fprintf(f,"<EncryptedData>%s</EncryptedData>", AES_cipher_base64);
-	fprintf(f1, "AES:%s:AES", AES_cipher_base64);
+	fprintf(f1, AES_TOKEN":%s:"AES_TOKEN_END, AES_cipher_base64);
 	fclose(f);
 	fclose(f1);
-	/* write to file ? */	
-	
-	/* TEST CODE: go through decryption of ABE CP, then */
-	// AES_set_decrypt_key((uint8 *) session_key, 8*SESSION_KEY_LEN, &key);
-	// memset(iv, 0, SESSION_KEY_LEN*4);
-	
-	//AES_cbc_encrypt((uint8 *) aes_ciphertext, (uint8 *)checktext, data_len, &key, (uint8 *) iv, AES_DECRYPT);
-	
+		
 	free(ABE_cipher_base64);
 	free(AES_cipher_base64);
 	free(parsed_policy);

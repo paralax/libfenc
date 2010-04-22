@@ -10,7 +10,7 @@
 
 # How to encrypt
 (for now, requires public params in same dir).
-./abe-enc -d "some text" -p "((ONE and TWO) or THREE)"
+./abe-enc -d "some text here" -p "((ONE and TWO) or THREE)"
 
-# How to decrypt?
-...coming soon.
+# How to decrypt
+./abe-dec 
