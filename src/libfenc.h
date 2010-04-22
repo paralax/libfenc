@@ -182,6 +182,8 @@ typedef struct _fenc_context {
 	FENC_ERROR				(*import_secret_params)(struct _fenc_context *context, uint8 *buffer, size_t buf_len);
 	FENC_ERROR				(*export_global_params)(struct _fenc_context *context, uint8 *buffer, size_t buf_len, size_t *result_len);
 	FENC_ERROR				(*import_global_params)(struct _fenc_context *context, uint8 *buffer, size_t buf_len);
+	FENC_ERROR				(*export_secret_key)(struct _fenc_context *context, fenc_key *key, uint8 *buffer, size_t buf_len, size_t result_len);
+	FENC_ERROR				(*import_secret_key)(struct _fenc_context *context, fenc_key *key, uint8 *buffer, size_t buf_len);
 } fenc_context;
 
 

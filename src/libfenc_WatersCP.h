@@ -73,7 +73,7 @@ typedef struct _fenc_ciphertext_WatersCP {
 typedef struct _fenc_key_WatersCP {
 	uint32					reference_count;
 	
-	fenc_attribute_policy	*policy;
+//	fenc_attribute_policy	*policy;
 	fenc_attribute_list		attribute_list;
 	uint32					num_components;
 	element_t				KTWO;
@@ -240,6 +240,31 @@ FENC_ERROR	libfenc_import_global_params_WatersCP(fenc_context *context, uint8 *b
  */
 
 FENC_ERROR	libfenc_export_global_params_WatersCP(fenc_context *context, uint8 *buffer, size_t max_len, size_t *result_len);
+
+/*!
+ * Serialize an ABE key structure.
+ *
+ * @param context		The fenc_context data structure
+ * @param key			The fenc_key data structure.
+ * @param buffer		A pre-allocated buffer for the resulting export.
+ * @param buf_len		The maximum allocated size of the buffer (in bytes).
+ * @param result_len	The size of the resulting export (in bytes).
+ * @return				FENC_ERROR_NONE or an error code.
+ */
+FENC_ERROR  libfenc_export_secret_key_WatersCP(fenc_context *context, fenc_key *key, uint8 *buffer, size_t buf_len, size_t result_len);
+
+/*!
+ * Deserialize an ABE key structure.
+ *
+ * @param context		The fenc_context data structure
+ * @param key			The fenc_key data structure (pre-allocated).
+ * @param buffer		The buffer which contains the binary contents of key?
+ * @param buf_len		The size of the buffer (in bytes).
+ * @return				FENC_ERROR_NONE or an error code.
+ */
+
+FENC_ERROR  libfenc_import_secret_key_WatersCP(fenc_context *context, fenc_key *key, uint8 *buffer, size_t buf_len);
+
 
 /**************************************************************************************
  * Utility functions

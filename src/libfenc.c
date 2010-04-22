@@ -630,6 +630,74 @@ libfenc_import_global_params(fenc_context *context, uint8 *buffer, size_t buf_le
 }
 
 /*!
+ * Serialize an ABE key structure.
+ *
+ * @param context		The fenc_context data structure
+ * @param key			The fenc_key data structure.
+ * @param buffer		A pre-allocated buffer for the resulting export.
+ * @param buf_len		The maximum allocated size of the buffer (in bytes).
+ * @param result_len	The size of the resulting export (in bytes).
+ * @return				FENC_ERROR_NONE or an error code.
+ */
+
+FENC_ERROR	
+libfenc_export_secret_key(fenc_context *context, fenc_key *key, uint8 *buffer, size_t buf_len, size_t result_len)
+{
+	FENC_ERROR result = FENC_ERROR_NONE;
+	/* Validate the context. */
+	if (context->scheme_type == FENC_SCHEME_NONE || context->gen_params == NULL) {
+		result = FENC_ERROR_INVALID_CONTEXT;
+	}
+
+	/* Check that the functionality is implemented for this particular scheme.	*/
+	if (context->export_secret_key == NULL) {
+		result = FENC_ERROR_NOT_IMPLEMENTED;
+	}
+		
+	/* TODO: Any other checks necessary to export keys? */
+	/* Call the appropriate function pointer to deserialize the parameters. */
+	if (result == FENC_ERROR_NONE) {
+		result = context->export_secret_key(context, key, buffer, buf_len, result_len);
+	}
+	
+	return result;
+}
+
+/*!
+ * Deserialize an ABE key structure.
+ *
+ * @param context		The fenc_context data structure
+ * @param key			The fenc_key data structure (pre-allocated).
+ * @param buffer		The buffer which contains the binary contents of key?
+ * @param buf_len		The size of the buffer (in bytes).
+ * @return				FENC_ERROR_NONE or an error code.
+ */
+
+FENC_ERROR	
+libfenc_import_secret_key(fenc_context *context, fenc_key *key, uint8 *buffer, size_t buf_len)
+{
+	FENC_ERROR result = FENC_ERROR_NONE;
+	/* Validate the context. */
+	if (context->scheme_type == FENC_SCHEME_NONE || context->gen_params == NULL) {
+		result = FENC_ERROR_INVALID_CONTEXT;
+	}
+	
+	/* Check that the functionality is implemented for this particular scheme.	*/
+	if (context->import_secret_key == NULL) {
+		result = FENC_ERROR_NOT_IMPLEMENTED;
+	}
+	
+	/* TODO: Any other checks necessary to export keys? */
+	// check contents of key?
+	
+	/* Call the appropriate function pointer to deserialize the parameters. */
+	if (result == FENC_ERROR_NONE) {
+		result = context->import_secret_key(context, key, buffer, buf_len);
+	}	
+	return result;
+}
+
+/*!
  * Destroy the internal contents of a fenc_context structure.  The caller is responsible for
  * de-allocating the context buffer itself.
  *
