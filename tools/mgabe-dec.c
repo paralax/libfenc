@@ -20,8 +20,8 @@
 #include "openssl/rand.h"
 
 /* test encryption of "hello world" under policy of "ONE or TWO" */
-char *abeblob = "AgAAABAAAAACAAAAKE9ORSBvciBUV08pAHcaXp9A+whfiBydC2z1NRzTmXlklACTzPQNQZMBVJZR0PiGl58huj6y9t73BN9okqIAVJZR0PiGlw8QRMl6IYHe2r7klZrKIPGc28qH0av7KGLzmzkATkXGKyTcOKK9PD+bbOFXvEXOE30knweDcWhG1AKR7xmQv/Pz0B5udSc38UhO2OP1rl/UmBXXpvgFQf/pG+wmaSprvgGviSBRT5Aat1YEO1uRhDywACCNVMQI/YSn1sdTsLUqOWFZ2UANACCNVMQI/YQLw7BNdnb1I2Ly4HUilyFS4/bGR3jfRfWmY5laAYHriOwjQFUjHCC5uFPsuUJOc9g3qsBRyhEInXM4Yj8Y7tkqbx+1P7H+3Ts7n6ugRwlpW8QEAk9gf/H2dpHpbqHuBPRs1nkaTo93YlCmA37tSzOETgA=</ABE><EncryptedData>B44Mo+L2vuu6r+o=";
-char *aesblob = "B44Mo+L2vuu6r+o=";
+char *abeblob = "AgAAABAAAAACAAAAKEFZTyBvciBCSUxMWSkARZ5YdX2SubD7gwbN1/AhYDoO62/YsgsUo45ZkQF8Pzby/qNt7bpqNvnyF1o65SjFiAB8Pzby/qNtBlB0anvLb9yEjK7b5z8iTC4VhmoatLmzdCGYOwAhz72XZmILIaY5wl1agJ6CbG0QMWCuhRJHEJ53ZKrFHAOIZzvSjMNcIQMDzXRBtRDuZWEhSuf15CAMZHi3ODkazOn7eyvkLbM6EnKkCe//DBWVt2EAT64v8UXQOoSrl2/sOJHpwpKRufsAT64v8UXQOj9eglhTJPiiCJXglpKBBjOKRrSsca8/bg2Xt90BeX2r5cGq6snRDHMeUQzgxwymZe/KoG1P4/R/bYtwQdRo7Wizbfz7Sd/9OlXJXP3+J6bDRxO22nFgA4s8Ds9nrdiZu5EAKgGSShu7CJiTyE7IcLHxAQ==";
+char *aesblob64 = "uI6SNQ27MCjMr17xlJpzGEYPo16NzTaRwBny8w==";
 
 #define MAX_ATTRIBUTES 100
 #define SIZE 2048
@@ -298,11 +298,22 @@ void cpabe_decrypt(char *inputfile, char *keyfile)
 	printf("\tDecrypted session key is: ");
 	print_buffer_as_hex(aes_session_key.data, aes_session_key.data_len);
 
+	/* decode the aesblob64 */
+	ssize_t aesLength;
+	char *aesblob = NewBase64Decode((const char *) aesblob64, strlen(aesblob64), &aesLength);
+	
 	/* use the PSK to encrypt using openssl functions here */
-	
-	
+	AES_KEY sk;
+	char iv[SESSION_KEY_LEN*4];
+	char aes_result[aesLength+1];
+	AES_set_decrypt_key((uint8 *) aes_session_key.data, 8*SESSION_KEY_LEN, &sk);
+	memset(iv, 0, SESSION_KEY_LEN*4);
+	memset(aes_result, 0, aesLength+1);
+	AES_cbc_encrypt((uint8 *) aesblob, (uint8 *) aes_result, aesLength, &sk, (unsigned char *) iv, AES_DECRYPT);
 	/* base-64 both ciphertext and write to the stdout -- in XML? */
-		
+	
+	printf("Plaintext: %s\nSize: %i\n", aes_result, aesLength);
+	
 	/* Destroy the context. */
 	result = libfenc_destroy_context(&context);
 	report_error("Destroying the encryption context", result);	
