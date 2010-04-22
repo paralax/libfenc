@@ -101,7 +101,7 @@ void parse_attributes(char *input)
 {
 	printf("%s\n", input);
 	char *token = strtok(input, ",");
-	int ctr = 0, MAX_CHAR = 30;
+	int ctr = 0, i = 0, MAX_CHAR = 30;
 	
 	attributes = (char**)calloc(sizeof(char**),MAX_ATTRIBUTES);
 	if (attributes == NULL) {
@@ -118,7 +118,7 @@ void parse_attributes(char *input)
 	}
 	
 	attribute_count = ctr;
-	for (int i = 0; i < attribute_count; i++) {
+	for (i = 0; i < attribute_count; i++) {
 		printf("token '%i' = '%s'\n", i, attributes[i]);
 	}
 	
