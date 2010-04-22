@@ -182,7 +182,7 @@ typedef struct _fenc_context {
 	FENC_ERROR				(*import_secret_params)(struct _fenc_context *context, uint8 *buffer, size_t buf_len);
 	FENC_ERROR				(*export_global_params)(struct _fenc_context *context, uint8 *buffer, size_t buf_len, size_t *result_len);
 	FENC_ERROR				(*import_global_params)(struct _fenc_context *context, uint8 *buffer, size_t buf_len);
-	FENC_ERROR				(*export_secret_key)(struct _fenc_context *context, fenc_key *key, uint8 *buffer, size_t buf_len, size_t result_len);
+	FENC_ERROR				(*export_secret_key)(struct _fenc_context *context, fenc_key *key, uint8 *buffer, size_t buf_len, size_t *result_len);
 	FENC_ERROR				(*import_secret_key)(struct _fenc_context *context, fenc_key *key, uint8 *buffer, size_t buf_len);
 } fenc_context;
 
@@ -418,7 +418,7 @@ FENC_ERROR	libfenc_import_global_params(fenc_context *context, uint8 *buffer, si
  * @return				FENC_ERROR_NONE or an error code.
  */
 
-FENC_ERROR	libfenc_export_secret_key(fenc_context *context, fenc_key *key, uint8 *buffer, size_t buf_len, size_t result_len);
+FENC_ERROR	libfenc_export_secret_key(fenc_context *context, fenc_key *key, uint8 *buffer, size_t buf_len, size_t *result_len);
 
 /*!
  * Deserialize an ABE key structure.
