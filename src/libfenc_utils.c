@@ -73,6 +73,8 @@ import_components_from_buffer(uint8* buffer, size_t buf_len, size_t *imported_le
 				break;
 				
 			default:
+				/* Unrecognized symbol.	*/
+				result = FENC_ERROR_INVALID_INPUT;
 				break;
 		}
 		
@@ -180,6 +182,8 @@ export_components_to_buffer(uint8* buffer, size_t max_len, size_t *result_len, c
 				break;
 				
 			default:
+				/* Unrecognized symbol.	*/
+				result = FENC_ERROR_INVALID_INPUT;
 				break;
 		}
 		
