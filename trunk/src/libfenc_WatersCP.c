@@ -68,6 +68,8 @@ libfenc_create_context_WatersCP(fenc_context *context)
 		context->import_secret_params	= libfenc_import_secret_params_WatersCP;
 		context->export_global_params	= libfenc_export_global_params_WatersCP;
 		context->import_global_params	= libfenc_import_global_params_WatersCP;
+		context->export_secret_key		= libfenc_export_secret_key_WatersCP;
+		context->import_secret_key		= libfenc_import_secret_key_WatersCP;
 	}
 		
 	/* Return success/error. */
@@ -842,6 +844,41 @@ libfenc_export_global_params_WatersCP(fenc_context *context, uint8 *buffer, size
 	
 	return err_code;
 }	
+
+/*!
+ * Serialize an ABE key structure.
+ *
+ * @param context		The fenc_context data structure
+ * @param key			The fenc_key data structure.
+ * @param buffer		A pre-allocated buffer for the resulting export.
+ * @param buf_len		The maximum allocated size of the buffer (in bytes).
+ * @param result_len	The size of the resulting export (in bytes).
+ * @return				FENC_ERROR_NONE or an error code.
+ */
+
+FENC_ERROR	
+libfenc_export_secret_key_WatersCP(fenc_context *context, fenc_key *key, uint8 *buffer, size_t buf_len, size_t result_len)
+{
+	/* JAA: stub for now */
+	return FENC_ERROR_NONE;
+}
+
+/*!
+ * Deserialize an ABE key structure.
+ *
+ * @param context		The fenc_context data structure
+ * @param key			The fenc_key data structure (pre-allocated).
+ * @param buffer		The buffer which contains the binary contents of key?
+ * @param buf_len		The size of the buffer (in bytes).
+ * @return				FENC_ERROR_NONE or an error code.
+ */
+
+FENC_ERROR	
+libfenc_import_secret_key_WatersCP(fenc_context *context, fenc_key *key, uint8 *buffer, size_t buf_len)
+{
+	/* JAA: stub for now */
+	return FENC_ERROR_NONE;
+}
 
 /**************************************************************************************
  * Utility functions
