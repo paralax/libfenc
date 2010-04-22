@@ -20,25 +20,28 @@
 #include "openssl/rand.h"
 
 /* test encryption of "hello world" under policy of "ONE or TWO" */
-char *abeblob = "AgAAABAAAAACAAAAKEFZTyBvciBCSUxMWSkARZ5YdX2SubD7gwbN1/AhYDoO62/YsgsUo45ZkQF8Pzby/qNt7bpqNvnyF1o65SjFiAB8Pzby/qNtBlB0anvLb9yEjK7b5z8iTC4VhmoatLmzdCGYOwAhz72XZmILIaY5wl1agJ6CbG0QMWCuhRJHEJ53ZKrFHAOIZzvSjMNcIQMDzXRBtRDuZWEhSuf15CAMZHi3ODkazOn7eyvkLbM6EnKkCe//DBWVt2EAT64v8UXQOoSrl2/sOJHpwpKRufsAT64v8UXQOj9eglhTJPiiCJXglpKBBjOKRrSsca8/bg2Xt90BeX2r5cGq6snRDHMeUQzgxwymZe/KoG1P4/R/bYtwQdRo7Wizbfz7Sd/9OlXJXP3+J6bDRxO22nFgA4s8Ds9nrdiZu5EAKgGSShu7CJiTyE7IcLHxAQ==";
-char *aesblob64 = "uI6SNQ27MCjMr17xlJpzGEYPo16NzTaRwBny8w==";
+#define AES_TOKEN "AES"
+#define ABE_TOKEN "ABE_CP"
 
 #define MAX_ATTRIBUTES 100
 #define SIZE 2048
+#define SIZE_MAX 4096
 #define SESSION_KEY_LEN 16
 char *public_params_file = "public.param";
 char *secret_params_file = "master_secret.param";
 void report_error(char* action, FENC_ERROR result);
 void print_help(void);
-void cpabe_decrypt(char *inputfile, char *keyfile);
+Bool cpabe_decrypt(char *inputfile, char *keyfile);
 void print_buffer_as_hex(uint8* data, size_t len);
+ssize_t read_file(FILE *f, char** out);
+void tokenize_inputfile(char* in, char** abe, char** aes);
 
-/* Description: mgabe-keygen takes the outfile to write the users keys, and the .
- 
+/* Description: abe-dec takes two inputs: an encrypted file and a private key and
+ produces a file w/ the contents of the plaintext.
  */
 int main (int argc, const char * argv[]) {
 	int dflag = TRUE, kflag = TRUE;
-	char *file = "input.txt", *key = "private.key";
+	char *file = "enc_data.txt", *key = "private.key";
 	int c;
 	
 	opterr = 0;
@@ -115,8 +118,54 @@ void print_buffer_as_hex(uint8* data, size_t len)
 	printf("\n");
 }
 
+ssize_t read_file(FILE *f, char** out) {
+	
+	if(f != NULL) {
+		/* See how big the file is */
+		fseek(f, 0L, SEEK_END);
+		ssize_t out_len = ftell(f);
+		printf("out_len: %zd\n", out_len);
+		if(out_len <= SIZE_MAX) {
+			/* allocate that amount of memory only */
+			if((*out = (char *) malloc(out_len)) != NULL) {
+				fseek(f, 0L, SEEK_SET);
+				fread(*out, sizeof(char), out_len, f);
+				return out_len;
+			}
+		}
+	}
+	return 0;
+}
 
-void cpabe_decrypt(char *inputfile, char *keyfile)
+/* This function tokenizes the input file with the 
+expected format: "ABE_TOKEN : base-64 : ABE_TOKEN_END : 
+  			      AES_TOKEN : base-64 : AES_TOKEN_END"
+ */
+void tokenize_inputfile(char* in, char** abe, char** aes) 
+{	
+	ssize_t abe_len, aes_len;
+	char delim[] = ":";
+	char *token = strtok(in, delim);
+	while (token != NULL) {
+		if(strcmp(token, ABE_TOKEN) == 0) {
+			token = strtok(NULL, delim);
+			abe_len = strlen(token);
+			if((*abe = (char *) malloc(abe_len+1)) != NULL) {
+				strncpy(*abe, token, abe_len);
+			}
+		}
+		else if(strcmp(token, AES_TOKEN) == 0) {
+			token = strtok(NULL, delim);
+			aes_len = strlen(token);
+			if((*aes = (char *) malloc(aes_len+1)) != NULL) {
+				strncpy(*aes, token, aes_len);
+			}
+		}
+		token = strtok(NULL, delim);
+	}
+}
+
+Bool cpabe_decrypt(char *inputfile, char *keyfile)
 {
 	FENC_ERROR result;
 	fenc_context context;
@@ -151,19 +200,46 @@ void cpabe_decrypt(char *inputfile, char *keyfile)
 	memset(public_params_buf, 0, SIZE);
 	memset(output_str, 0, output_str_len);
 	// memset(&key, 0, sizeof(fenc_key_WatersCP));
+	// all this memory must be free'd 
+	char *input_buf = NULL;
+	char *aes_blob64 = NULL, *abe_blob64 = NULL;
+	ssize_t input_len;
+	
+	/* Load user's input file */
+	fp = fopen(inputfile, "r");
+	if(fp != NULL) {
+		if((input_len = read_file(fp, &input_buf)) > 0) {
+			// printf("Input file: %s\n", input_buf);
+			tokenize_inputfile(input_buf, &abe_blob64, &aes_blob64);
+			printf("abe_blob64 = '%s'\n", abe_blob64);
+			printf("aes_blob64 = '%s'\n", aes_blob64);			
+			free(input_buf);
+		}			
+	}
+	else {
+		fprintf(stderr, "Could not load input file: %s\n", inputfile);
+		return FALSE;
+	}
+	fclose(fp);
+	
+	/* make sure the abe and aes ptrs are set */
+	if(aes_blob64 == NULL || abe_blob64 == NULL) {
+		fprintf(stderr, "Input file either not well-formed or not encrypted.\n");
+		return FALSE;
+	}
+	
 	/* Initialize the library. */
 	result = libfenc_init();
 	/* Create a Sahai-Waters context. */
-	result = libfenc_create_context(&context, FENC_SCHEME_WATERSCP);
-	
+	result = libfenc_create_context(&context, FENC_SCHEME_WATERSCP);	
 	/* Load group parameters from a file. */
 	fp = fopen("d224.param", "r");
 	if (fp != NULL) {
 		libfenc_load_group_params_from_file(&group_params, fp);
 		libfenc_get_pbc_pairing(&group_params, pairing);
 	} else {
-		perror("Could not open parameters file.\n");
-		return;
+		fprintf(stderr, "File does not exist: global parmeterers");
+		return FALSE;
 	}
 	fclose(fp);
 	
@@ -174,7 +250,6 @@ void cpabe_decrypt(char *inputfile, char *keyfile)
 	result = libfenc_gen_params(&context, &global_params);
 	// report_error("Generating scheme parameters and secret key", result);
 	
-	printf("Reading the public parameters file = %s\n", public_params_file);	
 	/* read file */
 	fp = fopen(public_params_file, "r");
 	if(fp != NULL) {
@@ -190,8 +265,8 @@ void cpabe_decrypt(char *inputfile, char *keyfile)
 		}
 	}
 	else {
-		perror("File does not exist.\n");
-		return;
+		fprintf(stderr, "File does not exist: %s\n", public_params_file);
+		return FALSE;
 	}
 	fclose(fp);
 	// printf("public params input = '%s'\n", public_params_buf);
@@ -204,7 +279,6 @@ void cpabe_decrypt(char *inputfile, char *keyfile)
 	result = libfenc_import_public_params(&context, bin_public_buf, serialized_len);
 	report_error("Importing public parameters", result);
 	
-	printf("Reading the secret parameters file = %s\n", secret_params_file);	
 	/* read file */
 	fp = fopen(secret_params_file, "r");
 	if(fp != NULL) {
@@ -220,8 +294,8 @@ void cpabe_decrypt(char *inputfile, char *keyfile)
 		}
 	}
 	else {
-		perror("File does not exist.\n");
-		return;
+		fprintf(stderr, "File does not exist: %s\n", secret_params_file);
+		return FALSE;
 	}	
 	fclose(fp);
 	
@@ -261,8 +335,7 @@ void cpabe_decrypt(char *inputfile, char *keyfile)
 	/* deserialize key 	
 	result = libfenc_deserialize_key_WatersCP(&key, bin_keyfile_buf, keyLength);
 	report_error("Deserialize private key", result); */
-	
-	
+
 	/* BEGIN TEST: Extract a decryption key. */
 	
 	/* Retrieve secret params */
@@ -279,9 +352,9 @@ void cpabe_decrypt(char *inputfile, char *keyfile)
 	report_error("Extracting a decryption key", result);	
 	
 	// result = libfenc_import_secret_key(&context, &secret_key, bin_keyfile_buf, keyLength);
-	// report_error("Importing secret key", result);
+	// report_error("Importing secret key", result);	
 	ssize_t abeLength;
-	char *data = NewBase64Decode((const char *) abeblob, strlen(abeblob), &abeLength);
+	char *data = NewBase64Decode((const char *) abe_blob64, strlen(abe_blob64), &abeLength);
 	ciphertext.data = data;
 	ciphertext.data_len = abeLength;
 	ciphertext.max_len = abeLength;
@@ -300,7 +373,7 @@ void cpabe_decrypt(char *inputfile, char *keyfile)
 
 	/* decode the aesblob64 */
 	ssize_t aesLength;
-	char *aesblob = NewBase64Decode((const char *) aesblob64, strlen(aesblob64), &aesLength);
+	char *aesblob = NewBase64Decode((const char *) aes_blob64, strlen(aes_blob64), &aesLength);
 	
 	/* use the PSK to encrypt using openssl functions here */
 	AES_KEY sk;
@@ -321,6 +394,6 @@ void cpabe_decrypt(char *inputfile, char *keyfile)
 	/* Shutdown the library. */
 	result = libfenc_shutdown();
 	report_error("Shutting down library", result);
-	return;
+	return TRUE;
 }
 
