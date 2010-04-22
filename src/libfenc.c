@@ -641,7 +641,7 @@ libfenc_import_global_params(fenc_context *context, uint8 *buffer, size_t buf_le
  */
 
 FENC_ERROR	
-libfenc_export_secret_key(fenc_context *context, fenc_key *key, uint8 *buffer, size_t buf_len, size_t result_len)
+libfenc_export_secret_key(fenc_context *context, fenc_key *key, uint8 *buffer, size_t buf_len, size_t *result_len)
 {
 	FENC_ERROR result = FENC_ERROR_NONE;
 	/* Validate the context. */

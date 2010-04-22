@@ -251,7 +251,7 @@ FENC_ERROR	libfenc_export_global_params_WatersCP(fenc_context *context, uint8 *b
  * @param result_len	The size of the resulting export (in bytes).
  * @return				FENC_ERROR_NONE or an error code.
  */
-FENC_ERROR  libfenc_export_secret_key_WatersCP(fenc_context *context, fenc_key *key, uint8 *buffer, size_t buf_len, size_t result_len);
+FENC_ERROR  libfenc_export_secret_key_WatersCP(fenc_context *context, fenc_key *key, uint8 *buffer, size_t buf_len, size_t *result_len);
 
 /*!
  * Deserialize an ABE key structure.

@@ -268,7 +268,8 @@ main(/*int argc, char **argv*/)
 	report_error("Initializing library", result);
 	
 	//parse_policy_lang_as_str("FOO");
-	fenc_policy_from_string(&parsed_policy, "(JohnDoe or (JohnDoeParent and Dog) or JohnDoeDoctor)");//"((1 of (Firstname Lastname, Jane Smith)) OR (2 of (Parent of Firstname Lastname, time = 1639285200.0)))");
+	fenc_policy_from_string(&parsed_policy, "(JohnDoe or JohnDoeDoctor) or (JohnDoeParent and (time = 99999))");//"((1 of (Firstname Lastname, Jane Smith)) OR (2 of (Parent of Firstname Lastname, time = 1639285200.0)))");
+	strcpy(output_str, "");
 	fenc_attribute_policy_to_string(parsed_policy.root, output_str, &output_str_len);
 	printf("output policy: %s\n", output_str);
 
