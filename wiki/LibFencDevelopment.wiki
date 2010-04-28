@@ -2,7 +2,7 @@
 
 = Overview =
 
-Welcome to the Functional Attribute-Based Encryption Library wiki page. This document serves as a way to track features currently in development and to discuss features being considered for the library. Including information on how to build the library for operating systems such as Mac OS X, Linux and maybe even Windows. In addition, a quick tutorial for how to setup and use the ABE tools. 
+Welcome to the Functional Attribute-Based Encryption Library wiki page. This document serves as a way to track features currently in development and to discuss features being considered for the library. This page will also provide information on how to build the library for various operating systems such as Mac OS X, Linux and maybe even Windows. In addition, a quick tutorial for how to setup and use the ABE tools. 
 
 = Table of Contents = 
 
