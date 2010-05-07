@@ -15,46 +15,48 @@
 #include "base64.h"
 
 /* need to specify command line limit on key size */
-#define MAX_ATTRIBUTES 100
+// #define MAX_ATTRIBUTES 50
 /* will this be enough */
 #define KEYSIZE_MAX 4096
 #define SIZE 2048
 #define SESSION_KEY_LEN 16
-char **attributes = NULL;
-int attribute_count = 0;
+#define DEFAULT_KEYFILE "private.key"
+char *attributes[MAX_CIPHERTEXT_ATTRIBUTES];
+int attributes_len = 0;
 char *public_params_file = "public.param";
 char *secret_params_file = "master_secret.param";
 void report_error(char* action, FENC_ERROR result);
 void print_help(void);
+void print_buffer_as_hex(uint8* data, size_t len);
 void parse_attributes(char *input);
 void generate_keys(char *outfile);
 
 /* Description: mgabe-keygen takes the outfile to write the users keys, and the .
  
  */
-int main (int argc, const char * argv[]) {
-	int oflag = FALSE, aflag = TRUE;
-	char *outfile = NULL;
-	int  c;
-	ssize_t cwdsz = 200;
-	char cwdbuf[cwdsz];
-	char *cwd = getcwd(cwdbuf, cwdsz);
-	printf("CWD: %s\n", cwd);
-/*	
+int main (int argc, char* argv[]) {
+	int oflag = FALSE, aflag = FALSE;
+	char *keyfile = NULL, *string = NULL;
+	int  c;	
 	opterr = 0;
 	
-	while ((c = getopt (argc, argv, "o:a:")) != -1) {
+	while ((c = getopt (argc, argv, "a:o:h")) != -1) {
 	
 	switch (c)
 	  {
-		case 'a':
+		case 'a': // retrieve attributes from user 
 			  aflag = TRUE;
-			  parse_attributes(strdup(optarg));			  
+			  printf("Generating list of attributes....\n");
+			  string = strdup(optarg);
+			  parse_attributes(string);
 			  break;
 		case 'o':
-			oflag = TRUE;
-			printf("optarg = '%s'\n", optarg);
-			break;
+			  oflag = TRUE;
+			  keyfile = strdup(optarg);
+			  break;
+		case 'h':
+			  print_help();
+			  exit(1);			  
 		case '?':
 			if (optopt == 'o')
 				fprintf (stderr, "Option -%o requires an argument.\n", optopt);
@@ -65,24 +67,32 @@ int main (int argc, const char * argv[]) {
 						 "Unknown option character `\\x%x'.\n", optopt);
 			return 1;
 		default:
-				print_help();
-			abort ();
+			  print_help();
+			  abort ();
 		}
 	}
-*/	
+	
+	/* attribute list required */
 	if(aflag == FALSE) {
-		fprintf(stderr, "No attributes to generate key!\n");
+		fprintf(stderr, "Attributes list required to generate user's key!\n");
+		print_help();
 		exit(1);
 	}
-	
+
+	/* use default file name if not set */
 	if(oflag == FALSE) {
-		outfile = "private.key";
+		keyfile = DEFAULT_KEYFILE;
 	}
-		
+
 	printf("Generating your private-key...\n");
-	generate_keys(outfile);
-	if(attributes != NULL)
-		free(attributes);
+	generate_keys(keyfile);
+
+	free(string);
+	free(keyfile);
+	// free attribute list 
+	for (c = 0; c < attributes_len; c++) {
+		free(attributes[c]);
+	}	
 	return 0;
 }
 
@@ -96,34 +106,39 @@ void report_error(char* action, FENC_ERROR result)
 	printf("%s...\n\t%s (%d)\n", action, libfenc_error_to_string(result), result);
 }
 
-/* must free memory when done */
+void print_buffer_as_hex(uint8* data, size_t len)
+{
+	int i;
+	
+	for (i = 0; i < len; i++) {
+		printf("%02x ", data[i]);
+	}
+	printf("\n");
+}
+
 void parse_attributes(char *input)
 {
 	printf("%s\n", input);
 	char *token = strtok(input, ",");
-	int ctr = 0, i = 0, MAX_CHAR = 30;
+	int ctr = 0, i = 0;
 	
-	attributes = (char**)calloc(sizeof(char**),MAX_ATTRIBUTES);
-	if (attributes == NULL) {
-		printf("Error allocating filename array\n");
-		exit(1);
+	while (token != NULL) {		
+		if((attributes[ctr] = malloc(MAX_ATTRIBUTE_STR)) != NULL) {
+			memset(attributes[ctr], 0, MAX_ATTRIBUTE_STR);
+			strncpy(attributes[ctr], token, MAX_ATTRIBUTE_STR);			
+			token = strtok(NULL, ",");
+			ctr++;
+		}
+		
+		if(ctr >= MAX_CIPHERTEXT_ATTRIBUTES) /* if we've reached max attributes */
+			break;
 	}
 	
-	while (token != NULL) {
-		// printf("token %i: %s\n", ctr, token);
-		//strncpy(attributes[ctr], token, MAX_CHAR);
-		attributes[ctr] = token; 
-		token = strtok(NULL, ",");
-		ctr++;
+	attributes_len = ctr;
+	for (i = 0; i < attributes_len; i++) {
+		printf("Attribute '%i' = '%s'\n", i, attributes[i]);
 	}
-	
-	attribute_count = ctr;
-	for (i = 0; i < attribute_count; i++) {
-		printf("token '%i' = '%s'\n", i, attributes[i]);
-	}
-	
-	free(input);
-	// free(attributes);
+	return;
 }
 
 void generate_keys(char *outfile)
@@ -135,15 +150,17 @@ void generate_keys(char *outfile)
 	fenc_function_input func_list_input;
 	pairing_t pairing;
 	fenc_key key;
+	fenc_key key2;
 	FILE *fp;
 	char c;
-	ssize_t pub_len = 0, sec_len = 0;
-	ssize_t serialized_len = 0;
+	size_t pub_len = 0, sec_len = 0;
+	size_t serialized_len = 0;
 	uint8 public_params_buf[SIZE];
 	uint8 secret_params_buf[SIZE];
-	char session_key[SESSION_KEY_LEN], output_str[200];
-	int output_str_len = 0;
-	size_t session_key_len;
+	// char session_key[SESSION_KEY_LEN];
+	uint8 output_str[200];
+	size_t output_str_len = 0;
+	// size_t session_key_len;
 	
 	/* Clear data structures. */
 	memset(&context, 0, sizeof(fenc_context));
@@ -156,6 +173,7 @@ void generate_keys(char *outfile)
 	memset(&func_list_input, 0, sizeof(fenc_function_input));
 	/* stores the user's private key */
 	memset(&key, 0, sizeof(fenc_key)); 
+	memset(&key2, 0, sizeof(fenc_key));
 
 	/* Initialize the library. */
 	result = libfenc_init();
@@ -231,29 +249,27 @@ void generate_keys(char *outfile)
 	result = libfenc_import_public_params(&context, bin_public_buf, serialized_len);
 	report_error("Importing public parameters", result);
 
-	uint8 *bin_secret_buf = NewBase64Decode(secret_params_buf, sec_len, &serialized_len);
+	uint8 *bin_secret_buf = NewBase64Decode((const char *) secret_params_buf, sec_len, &serialized_len);
 	result = libfenc_import_secret_params(&context, bin_secret_buf, serialized_len, NULL, 0);
 	report_error("Importing secret parameters", result);
 	
-	char *attr[9] = {"ONE", "TWO", "THREE", "FOUR", "FIVE", "SIX", "SEVEN", "EIGHT"};
-	libfenc_create_attribute_list_from_strings(&func_list_input, attr, 8);
+	// char *attr[5] = {"ONE", "TWO", "THREE", "FOUR=100"};
+	libfenc_create_attribute_list_from_strings(&func_list_input, attributes, attributes_len);
+	// libfenc_create_attribute_list_from_strings(&func_list_input, attr, 4);
 	fenc_attribute_list_to_buffer((fenc_attribute_list*)(func_list_input.scheme_input), output_str, 200, &output_str_len);
 	printf("Attribute list: %s\n", output_str);
 
 	result = libfenc_extract_key(&context, &func_list_input, &key);
 	report_error("Extracting a decryption key", result);
+
+	uint8 *buffer = malloc(KEYSIZE_MAX);
+	memset(buffer, 0, KEYSIZE_MAX);	
+	result = libfenc_export_secret_key(&context, &key, buffer, KEYSIZE_MAX, &serialized_len);
+	report_error("Exporting key", result);
 	
-	fenc_key_WatersCP *myKey = (fenc_key_WatersCP *) key.scheme_key;
-//	result = libfenc_serialize_key_WatersCP(myKey, NULL, 0, &serialized_len);	
-//	if (result != FENC_ERROR_NONE) { report_error("Computing secret parameter output size", result); }
-	char *buffer = malloc(KEYSIZE_MAX);
-	result = libfenc_serialize_key_WatersCP(myKey, buffer, KEYSIZE_MAX, &serialized_len);		
-	report_error("Serialize user's key", result);
-	
-	ssize_t keyLength;
-	char *secret_key_buf = NewBase64Encode((uint8 *) buffer, serialized_len, FALSE, &keyLength);
-	printf("Buffer contents: '%s'\nBuffer length: '%zd'\n", buffer, serialized_len);
-	printf("Your secret-key: '%s'\n", secret_key_buf);	
+	size_t keyLength;
+	char *secret_key_buf = NewBase64Encode(buffer, serialized_len, FALSE, &keyLength);
+	printf("Your secret-key:\t'%s'\nKey-len:\t'%zd'\n", secret_key_buf, serialized_len);	
 	
 	fp = fopen(outfile, "w");
 	if(fp != NULL) {
@@ -263,7 +279,24 @@ void generate_keys(char *outfile)
 		perror("Error writing private key.");
 	}
 	fclose(fp);
+/*	
+	printf("Buffer contents:\n");
+	print_buffer_as_hex(buffer, serialized_len);
+	result = libfenc_import_secret_key(&context, &key2, buffer, serialized_len);
+	report_error("Import secret key", result);
 	
+	// print out new buffer 
+	fenc_key_WatersCP *myKey2 = (fenc_key_WatersCP *) key2.scheme_key;
+	size_t serialized_len2;
+	uint8 *buffer2 = malloc(KEYSIZE_MAX);
+	memset(buffer2, 0, KEYSIZE_MAX);
+	result = libfenc_serialize_key_WatersCP(myKey2, buffer2, KEYSIZE_MAX, &serialized_len2);		
+	report_error("Serialize user's key", result);
+	
+	printf("Key-len2: '%zu'\n", serialized_len2);
+	printf("Buffer contents 2:\n");
+	print_buffer_as_hex(buffer2, serialized_len2);
+*/	
 	/* Destroy the context. */
 	result = libfenc_destroy_context(&context);
 	report_error("Destroying context", result);
@@ -272,6 +305,7 @@ void generate_keys(char *outfile)
 	result = libfenc_shutdown();
 	report_error("Shutting down library", result);	
 		
+	/* free buffer */
 	free(buffer);
 	return;
 }
