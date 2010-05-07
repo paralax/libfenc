@@ -19,6 +19,19 @@
  * Utilities
  ********************************************************************************/
 
+void printf_buffer_as_hex(uint8* data, size_t len);
+
+void printf_buffer_as_hex(uint8* data, size_t len)
+{
+	size_t i;
+	
+	for (i = 0; i < len; i++) {
+		printf("%02x ", data[i]);
+	}
+	printf("\n");
+}
+
+
 /*!
  * Import a collection of parameters from a buffer.
  *
@@ -34,9 +47,12 @@ import_components_from_buffer(uint8* buffer, size_t buf_len, size_t *imported_le
 	FENC_ERROR result = FENC_ERROR_NONE;
 	va_list comp_list;
 	uint32 deserialized_len = 0;
+	fenc_attribute_list *attr_list = NULL;
+	char *attrs;
+	size_t len;
 	int32 temp_int;
 	uint8* buf_ptr;
-	char* fmt_ptr;
+	char* fmt_ptr; 
 	element_t *elt;
 	
 	/* Iterate through the variable-length argument list.	*/
@@ -46,7 +62,7 @@ import_components_from_buffer(uint8* buffer, size_t buf_len, size_t *imported_le
 		if(*fmt_ptr != '%')	{
 			continue;
 		}
-		
+
 		buf_ptr = (uint8*)(buffer + deserialized_len);
 		switch(*++fmt_ptr)	{
 			case 'E':
@@ -62,8 +78,8 @@ import_components_from_buffer(uint8* buffer, size_t buf_len, size_t *imported_le
 				break;
 				
 			case 's':
-				strcpy(va_arg(comp_list, char *), buf_ptr);
-				deserialized_len += strlen(buf_ptr) + 1;
+				strcpy(va_arg(comp_list, char *), (const char *) buf_ptr);
+				deserialized_len += strlen((char *)buf_ptr) + 1;
 				break;
 				
 			case 'd':
@@ -71,7 +87,19 @@ import_components_from_buffer(uint8* buffer, size_t buf_len, size_t *imported_le
 				*(va_arg(comp_list, int32*)) = temp_int;
 				deserialized_len += sizeof(int32);
 				break;
+			case 'A':
+				len = strlen((char *)buf_ptr); /* assume attribute list is NULL terminated */
+				attrs = SAFE_MALLOC(len+1);
+				memset(attrs, 0, len+1);
+				strncpy(attrs, (const char *) buf_ptr, len);
+				// printf("Raw list: '%s'\n", attrs);
+				deserialized_len += len + 1;
 				
+				attr_list =  va_arg(comp_list, fenc_attribute_list*);
+				/* tokenize the string and place in attribute_list */
+				fenc_buffer_to_attribute_list(&attrs, attr_list);
+				free(attrs);
+				break;
 			default:
 				/* Unrecognized symbol.	*/
 				result = FENC_ERROR_INVALID_INPUT;
@@ -118,10 +146,10 @@ export_components_to_buffer(uint8* buffer, size_t max_len, size_t *result_len, c
 	element_t *elt;
 	fenc_attribute_policy *policy;
 	fenc_attribute_list *attribute_list;
-	size_t index, buf_len;
+	size_t index, buf_len, tmp_len;
 	
 	*result_len = 0;
-	
+
 	/* Iterate through the variable-length argument list.	*/
 	va_start(comp_list, fmt);
 	
@@ -148,16 +176,19 @@ export_components_to_buffer(uint8* buffer, size_t max_len, size_t *result_len, c
 			case 'C':
 				/* Compressed element.		*/
 				elt = va_arg(comp_list, element_t*);
-				*result_len += element_length_in_bytes_compressed(*elt);
-				if (buffer != NULL && *result_len <= max_len) {
+				tmp_len = element_length_in_bytes_compressed(*elt);
+				*result_len += tmp_len;
+				if (buffer != NULL && *result_len < max_len) {
 					element_to_bytes_compressed(buf_ptr, *elt);
 				}
+				// printf("len of C = '%zu'\n", *result_len);
+				// printf_buffer_as_hex(buf_ptr, tmp_len);
 				break;
 				
 			case 'P':
 				policy = va_arg(comp_list, fenc_attribute_policy*);
 				index = 0;
-				result = fenc_attribute_policy_to_string(policy->root, buf_ptr, (max_len - *result_len));
+				result = fenc_attribute_policy_to_string(policy->root, (char *)buf_ptr, (max_len - *result_len));
 				*result_len += index + 1;
 				break;
 				
@@ -165,28 +196,29 @@ export_components_to_buffer(uint8* buffer, size_t max_len, size_t *result_len, c
 				attribute_list = va_arg(comp_list, fenc_attribute_list*);
 				fenc_attribute_list_to_buffer(attribute_list, buf_ptr, (max_len - *result_len), &index);
 				*result_len += index + 1;
+				// printf("attribute_list: '%s'\n\tlength: '%zu'\n", (char *)buf_ptr, strlen((char *)buf_ptr));
 				break;
 				
 			case 's':
 				*result_len += strlen(va_arg(comp_list, char *)) + 1;
 				if (buffer != NULL && *result_len <= max_len) {
-					strcpy(buf_ptr, va_arg(comp_list, char *));
+					strcpy((char *)buf_ptr, va_arg(comp_list, char *));
 				}
 				break;
 				
 			case 'd':
 				*result_len += sizeof(int32);
-				if (buffer != NULL && *result_len <= max_len) {
+				if (buffer != NULL && *result_len < max_len) {
 					EXPORT_INT32(buf_ptr, va_arg(comp_list, int32));
 				}
-				break;
-				
+				break;				
+
 			default:
 				/* Unrecognized symbol.	*/
 				result = FENC_ERROR_INVALID_INPUT;
 				break;
 		}
-		
+
 		if (buffer != NULL && *result_len > max_len) {
 			return FENC_ERROR_BUFFER_TOO_SMALL;
 		}
@@ -437,3 +469,4 @@ fenc_decrypt_with_password(uint8 *buffer, size_t data_len, size_t *result_len, u
 	LOG_ERROR("fenc_encrypt_with_password: password encryption is not implemented in this version");
 	return FENC_ERROR_NOT_IMPLEMENTED;
 }
+
