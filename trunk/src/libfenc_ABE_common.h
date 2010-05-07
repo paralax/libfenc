@@ -214,6 +214,14 @@ FENC_ERROR	fenc_attribute_list_copy(fenc_attribute_list *attribute_list_DST, fen
 FENC_ERROR	fenc_attribute_list_to_buffer(fenc_attribute_list *attribute_list, uint8 *buffer, size_t buf_len, size_t *result_len);
 
 /*!
+ * Parse a string of attributes into an fenc_attribute_list structure.
+ * 
+ * @param str_list				Buffer to attribute list string.
+ * @param attribute_list		fenc_attribute_list pointer.
+ */
+FENC_ERROR  fenc_buffer_to_attribute_list(char **str_list, fenc_attribute_list *attribute_list);
+
+/*!
  * Clear an attribute data structure, deallocating memory.
  *
  * @param subtree		fenc_attribute_subtree structure

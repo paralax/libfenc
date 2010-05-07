@@ -102,7 +102,7 @@ libfenc_gen_params_WatersCP(fenc_context *context, fenc_global_params *global_pa
 	/* Validate the global parameters. */
 	err_code = libfenc_validate_global_params_WatersCP(global_params);
 	if (err_code != FENC_ERROR_NONE) {
-		LOG_ERROR("libfenc_gen_params_WatersCP: could not validate global params, error: %s", libfenc_error_to_string(err_code));
+		LOG_ERROR("%s: could not validate global params, error: %s", __func__, libfenc_error_to_string(err_code));
 		result = err_code;
 		goto cleanup;
 	}
@@ -196,7 +196,7 @@ libfenc_extract_key_WatersCP(fenc_context *context, fenc_function_input *input, 
 	attribute_list = SAFE_MALLOC(sizeof(fenc_attribute_list));
 	err_code = libfenc_parse_input_as_attribute_list(input, attribute_list, scheme_context->global_params->pairing);
 	if (err_code != FENC_ERROR_NONE) {
-		LOG_ERROR("libfenc_extract_key_WatersCP: could not parse function input as an attribute list");
+		LOG_ERROR("%s: could not parse function input as an attribute list", __func__);
 		result = FENC_ERROR_INVALID_INPUT;
 		goto cleanup;
 	}
@@ -204,7 +204,7 @@ libfenc_extract_key_WatersCP(fenc_context *context, fenc_function_input *input, 
 	/* Initialize the LSW-specific key data structure and allocate some temporary variables.	*/
 	key_WatersCP = fenc_key_WatersCP_initialize(attribute_list, FALSE, scheme_context->global_params);
 	if (key_WatersCP == NULL) {
-		LOG_ERROR("libfenc_extract_key_WatersCP: could not initialize key structure");
+		LOG_ERROR("%s: could not initialize key structure", __func__);
 		result = FENC_ERROR_INVALID_INPUT;
 		goto cleanup;
 	}
@@ -343,7 +343,7 @@ libfenc_decrypt_WatersCP(fenc_context *context, fenc_ciphertext *ciphertext, fen
 	
 	/* Obtain the WatersCP-specific key data structure and make sure it's correct.	*/
 	if (key->scheme_key == NULL) {
-		LOG_ERROR("libfenc_decrypt_WatersCP: could not obtain scheme-specific decryption key");
+		LOG_ERROR("%s: could not obtain scheme-specific decryption key", __func__);
 		return FENC_ERROR_INVALID_KEY;
 	}
 	key_WatersCP = (fenc_key_WatersCP*)key->scheme_key;
@@ -374,7 +374,7 @@ libfenc_decrypt_WatersCP(fenc_context *context, fenc_ciphertext *ciphertext, fen
 	 * First, initialize a coefficients list:													*/
 	err_code = LSSS_allocate_coefficient_list(&coefficient_list, ciphertext_WatersCP.attribute_list.num_attributes, scheme_context->global_params->pairing);
 	if (err_code != FENC_ERROR_NONE) {
-		LOG_ERROR("libfenc_decrypt_WatersCP: could not allocate coefficients");
+		LOG_ERROR("%s: could not allocate coefficients", __func__);
 		result = err_code;
 		goto cleanup;
 	}
@@ -384,7 +384,7 @@ libfenc_decrypt_WatersCP(fenc_context *context, fenc_ciphertext *ciphertext, fen
 	err_code = fenc_LSSS_calculate_coefficients_from_policy(&policy, &(key_WatersCP->attribute_list), &coefficient_list,
 															scheme_context->global_params->pairing);
 	if (err_code != FENC_ERROR_NONE) {
-		LOG_ERROR("libfenc_decrypt_WatersCP: unable to compute LSSS coefficients");
+		LOG_ERROR("%s: unable to compute LSSS coefficients", __func__);
 		result = FENC_ERROR_INVALID_CIPHERTEXT;
 		goto cleanup;
 	}
@@ -458,7 +458,7 @@ libfenc_decrypt_WatersCP(fenc_context *context, fenc_ciphertext *ciphertext, fen
 			goto cleanup;
 		}
 	} else {
-		LOG_ERROR("libfenc_decrypt_WatersCP: only KEM mode is supported at this point");
+		LOG_ERROR("%s: only KEM mode is supported at this point", __func__);
 		result = FENC_ERROR_NOT_IMPLEMENTED;
 		goto cleanup;
 	}
@@ -538,7 +538,7 @@ encrypt_WatersCP_internal(fenc_context *context, fenc_function_input *input, fen
 	policy = (fenc_attribute_policy*)SAFE_MALLOC(sizeof(fenc_attribute_policy));
 	err_code = libfenc_parse_input_as_attribute_policy(input, policy);
 	if (err_code != FENC_ERROR_NONE) {
-		LOG_ERROR("encrypt_WatersCP_internal: could not parse function input as policy");
+		LOG_ERROR("%s: could not parse function input as policy", __func__);
 		result = FENC_ERROR_INVALID_INPUT;
 		goto cleanup;
 	}
@@ -559,7 +559,7 @@ encrypt_WatersCP_internal(fenc_context *context, fenc_function_input *input, fen
 	strcpy(temp_policy_str, "");
 	err_code = fenc_attribute_policy_to_string(policy->root, temp_policy_str, MAX_POLICY_STR);
 	if (err_code != FENC_ERROR_NONE) {
-		LOG_ERROR("encrypt_WatersCP_internal: could not serialize policy");
+		LOG_ERROR("%s: could not serialize policy", __func__);
 		result = err_code;
 		goto cleanup;
 	}
@@ -580,7 +580,7 @@ encrypt_WatersCP_internal(fenc_context *context, fenc_function_input *input, fen
 	err_code = fenc_LSSS_calculate_shares_from_policy(&(sZ), policy, &attribute_list, 
 													  scheme_context->global_params->pairing);
 	if (err_code != FENC_ERROR_NONE) {
-		LOG_ERROR("encrypt_WatersCP_internal: could not calculate shares");
+		LOG_ERROR("%s: could not calculate shares", __func__);
 		result = FENC_ERROR_INVALID_INPUT;
 		goto cleanup;
 	}
@@ -589,7 +589,7 @@ encrypt_WatersCP_internal(fenc_context *context, fenc_function_input *input, fen
 	err_code = fenc_ciphertext_WatersCP_initialize(&ciphertext_WatersCP, &attribute_list, policy, FENC_CIPHERTEXT_TYPE_KEM_CPA,
 													scheme_context);
 	if (err_code != FENC_ERROR_NONE) {
-		LOG_ERROR("encrypt_WatersCP_internal: could not initialize ciphertext structure");
+		LOG_ERROR("%s: could not initialize ciphertext structure", __func__);
 		result = FENC_ERROR_UNKNOWN;
 		goto cleanup;
 	}
@@ -606,7 +606,7 @@ encrypt_WatersCP_internal(fenc_context *context, fenc_function_input *input, fen
 		ciphertext_WatersCP.kem_key_len = kem_key_len;
 	} else {
 		/* Not in KEM mode.	*/
-		LOG_ERROR("encrypt_WatersCP_internal: KEM mode is currently the only supported form of encryption.");
+		LOG_ERROR("%s: KEM mode is currently the only supported form of encryption.", __func__);
 		result = FENC_ERROR_UNKNOWN;
 		goto cleanup;
 	}
@@ -736,9 +736,9 @@ libfenc_export_secret_params_WatersCP(fenc_context *context, uint8 *buffer, size
 FENC_ERROR
 libfenc_import_public_params_WatersCP(fenc_context *context, uint8 *buffer, size_t buf_len, fenc_global_params *global_params)
 {
-	FENC_ERROR err_code;
+	//FENC_ERROR err_code;
 	fenc_scheme_context_WatersCP* scheme_context;
-	size_t bytes_read = 0;
+	//size_t bytes_read = 0;
 	
 	scheme_context = (fenc_scheme_context_WatersCP*)context->scheme_context;
 	if (scheme_context == NULL) {
@@ -747,7 +747,7 @@ libfenc_import_public_params_WatersCP(fenc_context *context, uint8 *buffer, size
 	
 	/* Sanity check: Make sure that we have initialized group/global parameters.		*/
 	if (scheme_context->global_params == NULL) {
-		LOG_ERROR("libfenc_import_public_params_WatersCP: global/group parameters are not set");
+		LOG_ERROR("%s: global/group parameters are not set", __func__);
 		return FENC_ERROR_INVALID_GLOBAL_PARAMS;
 	}
 	
@@ -775,7 +775,7 @@ libfenc_import_public_params_WatersCP(fenc_context *context, uint8 *buffer, size
 FENC_ERROR
 libfenc_import_secret_params_WatersCP(fenc_context *context, uint8 *buffer, size_t buf_len)
 {
-	FENC_ERROR err_code;
+	// FENC_ERROR err_code;
 	fenc_scheme_context_WatersCP* scheme_context;
 	
 	scheme_context = (fenc_scheme_context_WatersCP*)context->scheme_context;
@@ -816,7 +816,7 @@ libfenc_import_global_params_WatersCP(fenc_context *context, uint8 *buffer, size
 	/* Read the global parameters out of the buffer, if they're in there.	*/
 	err_code = libfenc_load_group_params_from_buf(&(group_params), buffer, buf_len);
 	if (err_code != FENC_ERROR_NONE) {
-		LOG_ERROR("libfenc_import_global_params_WatersCP: could not read group params");
+		LOG_ERROR("%s: could not read group params", __func__);
 		return FENC_ERROR_INVALID_GLOBAL_PARAMS;
 	}
 	
@@ -867,15 +867,33 @@ libfenc_export_global_params_WatersCP(fenc_context *context, uint8 *buffer, size
 FENC_ERROR	
 libfenc_export_secret_key_WatersCP(fenc_context *context, fenc_key *key, uint8 *buffer, size_t buf_len, size_t *result_len)
 {
-	/* JAA: stub for now */
-	return FENC_ERROR_NONE;
+	FENC_ERROR err_code = FENC_ERROR_NONE;
+
+	/* retrieve the key for the WatersCP context */
+	fenc_key_WatersCP *key_WatersCP = (fenc_key_WatersCP *) key->scheme_key;
+	if(key_WatersCP == NULL) {
+		err_code = FENC_ERROR_INVALID_INPUT;
+		LOG_ERROR("%s: fenc_key not existent.", __func__);
+		goto cleanup;
+	}
+	
+	/* serialize key structure to buffer */
+	err_code = libfenc_serialize_key_WatersCP(key_WatersCP, buffer, buf_len, result_len);		
+	if (err_code != FENC_ERROR_NONE) {
+		err_code = FENC_ERROR_INVALID_INPUT;
+		LOG_ERROR("%s: cannot serialize key to buffer. has key been constructed?", __func__);
+		goto cleanup;
+	}
+	
+cleanup:	
+	return err_code;
 }
 
 /*!
  * Deserialize an ABE key structure.
  *
  * @param context		The fenc_context data structure
- * @param key			The fenc_key data structure (pre-allocated).
+ * @param key			The fenc_key data structure (pre-allocated), but not initialized.
  * @param buffer		The buffer which contains the binary contents of key?
  * @param buf_len		The size of the buffer (in bytes).
  * @return				FENC_ERROR_NONE or an error code.
@@ -884,7 +902,65 @@ libfenc_export_secret_key_WatersCP(fenc_context *context, fenc_key *key, uint8 *
 FENC_ERROR	
 libfenc_import_secret_key_WatersCP(fenc_context *context, fenc_key *key, uint8 *buffer, size_t buf_len)
 {
-	/* JAA: stub for now */
+	FENC_ERROR err_code = FENC_ERROR_NONE;
+	fenc_key_WatersCP			*key_WatersCP = NULL;
+	fenc_attribute_list			*attribute_list;
+	uint32						num_components;
+	size_t						import_len;
+	fenc_scheme_context_WatersCP *scheme_context;
+
+	/* Get the scheme-specific context. */
+	scheme_context = (fenc_scheme_context_WatersCP*)context->scheme_context;
+	if (scheme_context == NULL) {
+		return FENC_ERROR_INVALID_CONTEXT;
+	}
+	
+	/* Allocate an attribute list data structure.	*/
+	attribute_list = (fenc_attribute_list*) SAFE_MALLOC(sizeof(fenc_attribute_list));
+	if (attribute_list == NULL) {
+		LOG_ERROR("%s: could not allocate attribute list", __func__);
+		return FENC_ERROR_OUT_OF_MEMORY;
+	}	
+	
+	/* import attributes only -- should be first in buffer */
+	err_code = import_components_from_buffer(buffer, buf_len, &import_len, "%A%d",
+											 attribute_list,
+											 &(num_components));
+	/* sanity check */
+	if(num_components != attribute_list->num_attributes) {
+		LOG_ERROR("%s: mis-match in attributes found in key", __func__);
+		err_code = FENC_ERROR_INVALID_INPUT;
+		goto cleanup;
+	}
+	// printf("import_len => '%zu'\n", import_len);
+	
+	/* Initialize the LSW-specific key data structure and allocate some temporary variables.	*/
+	key_WatersCP = fenc_key_WatersCP_initialize(attribute_list, FALSE, scheme_context->global_params);
+	if (key_WatersCP == NULL) {
+		LOG_ERROR("%s: could not initialize key structure", __func__);
+		return FENC_ERROR_INVALID_INPUT;
+	}
+		
+	/* deserialize remaining buffer into key_watersCP structure -- KTWO, LONE, and KXONE (num_component times) */
+	err_code = libfenc_deserialize_key_WatersCP(key_WatersCP, (uint8 *) (buffer + import_len), (buf_len - import_len));
+	if (err_code != FENC_ERROR_NONE) {
+		LOG_ERROR("%s: could not deserialize into key structure", __func__);
+		err_code = FENC_ERROR_INVALID_INPUT;
+		goto cleanup;
+	}
+	
+	/* Stash the key_WatersCP structure inside of the fenc_key.		*/
+	memset(key, 0, sizeof(fenc_key));
+	key->scheme_type = FENC_SCHEME_WATERSCP;
+	key->valid = TRUE;
+	key->scheme_key = (void*)key_WatersCP;
+		
+	return err_code;
+
+cleanup:
+	/* clean up here */
+	free(attribute_list);
+	
 	return FENC_ERROR_NONE;
 }
 
@@ -983,22 +1059,26 @@ libfenc_serialize_key_WatersCP(fenc_key_WatersCP *key, unsigned char *buffer, si
 {
 	FENC_ERROR err_code = FENC_ERROR_NONE;
 	unsigned char *buf_ptr = (unsigned char*)buffer;
-	char *policy_str;
-	size_t str_index = 0, str_len = MAX_POLICY_STR - 1, result_len = 0;
+//	char *policy_str;
+//	size_t str_index = 0, str_len = MAX_POLICY_STR - 1, 
+	size_t result_len = 0;
 	uint32 i;
-
+	
 	/* Export the attribute list and the number of components in the key, along with KTWO and LTWO.	*/
-	err_code = export_components_to_buffer(buf_ptr, max_len, &result_len, "%A%d%C%C",
-										   &(key->attribute_list),
+    err_code = export_components_to_buffer(buf_ptr, max_len, &result_len, "%A%d%C%C",									   
+										   &(key->attribute_list),										   
 										   key->num_components,
 										   key->KTWO,
 										   key->LTWO);
+//	printf("result len = %zd\n", result_len);
 	if (err_code != FENC_ERROR_NONE) {
 		return err_code;
 	}
+	/* set serialized_len */
+	*serialized_len = 0;
 	*serialized_len += result_len;
 	if (buffer != NULL) {	buf_ptr = buffer + *serialized_len;	}
-	max_len -= result_len;	/* TODO: may be a problem.	*/
+	max_len -= result_len;
 	
 	/* Now output each component KXONE of the key.								*/
 	for (i = 0; i < key->num_components; i++) {
@@ -1011,7 +1091,7 @@ libfenc_serialize_key_WatersCP(fenc_key_WatersCP *key, unsigned char *buffer, si
 		
 		*serialized_len += result_len;
 		if (buffer != NULL) {	buf_ptr = buffer + *serialized_len;	}
-		max_len -= result_len;	/* TODO: may be a problem.	*/
+		max_len -= result_len;
 	}
 	
 	/* All done.	*/
@@ -1036,14 +1116,15 @@ libfenc_deserialize_key_WatersCP(fenc_key_WatersCP *key, unsigned char *buffer, 
 {
 	FENC_ERROR err_code = FENC_ERROR_NONE;
 	unsigned char *buf_ptr = (unsigned char*)buffer;
-	char *policy_str;
-	size_t str_index = 0, str_len = MAX_POLICY_STR - 1, result_len = 0;
+//	char *policy_str;
+//	size_t str_index = 0, str_len = MAX_POLICY_STR - 1, 
+	size_t result_len = 0;
 	uint32 i;
 
 	/* Import the attribute list and the number of components in the key, along with KTWO and LTWO.	*/
-	err_code = import_components_from_buffer(buf_ptr, buf_len, &result_len, "%A%d%C%C",
-										   &(key->attribute_list),
-										   &(key->num_components),
+	err_code = import_components_from_buffer(buf_ptr, buf_len, &result_len, "%C%C",
+//										   &(key->attribute_list),
+//										   &(key->num_components),
 										   &(key->KTWO),
 										   &(key->LTWO));
 	if (err_code != FENC_ERROR_NONE) {
@@ -1054,14 +1135,14 @@ libfenc_deserialize_key_WatersCP(fenc_key_WatersCP *key, unsigned char *buffer, 
 	
 	/* Now import each component KXONE of the key.								*/
 	for (i = 0; i < key->num_components; i++) {
-		/* Export the group element.	*/
+		/* Import the group element.	*/
 		err_code = import_components_from_buffer(buf_ptr, buf_len, &result_len, "%C",
 											   &(key->KXONE[i]));		
 		if (err_code != FENC_ERROR_NONE) {
 			return err_code;
 		}
 		
-		if (buffer != NULL) {	buf_ptr = buffer + result_len;	}
+		if (buffer != NULL) {	buf_ptr += result_len;	}
 		buf_len -= result_len;
 	}
 	
@@ -1188,7 +1269,7 @@ libfenc_serialize_ciphertext_WatersCP(fenc_ciphertext_WatersCP *ciphertext, unsi
 FENC_ERROR
 libfenc_deserialize_ciphertext_WatersCP(unsigned char *buffer, size_t buf_len, fenc_ciphertext_WatersCP *ciphertext, fenc_scheme_context_WatersCP *scheme_context)
 {
-	int i;
+	size_t i;
 	size_t deserialized_len;
 	uint32 num_attributes, type, kem_key_len;
 	fenc_attribute_policy *policy = NULL;
@@ -1225,7 +1306,7 @@ libfenc_deserialize_ciphertext_WatersCP(unsigned char *buffer, size_t buf_len, f
 	/* Initialize the attribute list.	*/
 	err_code = fenc_attribute_list_initialize(&attribute_list, num_attributes);
 	if (err_code != FENC_ERROR_NONE) {
-		LOG_ERROR("lifenc_deserialize_ciphertext_WatersCP: couldn't initialize attribute list");
+		LOG_ERROR("%s: couldn't initialize attribute list", __func__);
 		return err_code;
 	}
 	
@@ -1234,12 +1315,12 @@ libfenc_deserialize_ciphertext_WatersCP(unsigned char *buffer, size_t buf_len, f
 	err_code = fenc_ciphertext_WatersCP_initialize(ciphertext, &attribute_list, policy, type, scheme_context);
 	if (err_code != FENC_ERROR_NONE) {
 		/* Couldn't allocate the structure.  Don't even try to cleanup --- this is a really bad situation! */
-		LOG_ERROR("lifenc_deserialize_ciphertext_WatersCP: couldn't initialize ciphertext");
+		LOG_ERROR("%s: couldn't initialize ciphertext", __func__);
 		return err_code;
 	}
 	ciphertext->kem_key_len = kem_key_len;
 	
-	strncpy(ciphertext->policy_str, buf_ptr, MAX_POLICY_STR);			/* policy string	*/
+	strncpy((char *)ciphertext->policy_str, buf_ptr, MAX_POLICY_STR);			/* policy string	*/
 	deserialized_len += strlen(ciphertext->policy_str) + 1;				/* TODO: This isn't terribly safe.	*/
 	if (deserialized_len <= buf_len) {
 		buf_ptr = buffer + deserialized_len;
@@ -1316,7 +1397,7 @@ fenc_ciphertext_WatersCP_initialize(fenc_ciphertext_WatersCP *ciphertext, fenc_a
 							   fenc_scheme_context_WatersCP *scheme_context)
 {
 	FENC_ERROR err_code = FENC_ERROR_NONE;
-	int i;
+	size_t i;
 	
 	memset(ciphertext, 0, sizeof(fenc_ciphertext_WatersCP));
 
@@ -1329,7 +1410,7 @@ fenc_ciphertext_WatersCP_initialize(fenc_ciphertext_WatersCP *ciphertext, fenc_a
 		err_code = fenc_attribute_policy_to_string(policy->root, ciphertext->policy_str, MAX_POLICY_STR);
 		
 		if (err_code != FENC_ERROR_NONE) {
-			LOG_ERROR("fenc_ciphertext_WatersCP_initialize: policy string is too long");
+			LOG_ERROR("%s: policy string is too long", __func__);
 			return FENC_ERROR_INVALID_INPUT;
 		}
 	}
@@ -1356,7 +1437,7 @@ fenc_ciphertext_WatersCP_initialize(fenc_ciphertext_WatersCP *ciphertext, fenc_a
 FENC_ERROR
 fenc_ciphertext_WatersCP_clear(fenc_ciphertext_WatersCP *ciphertext)
 {
-	int i;
+	size_t i;
 	
 	/* Make sure the number of attributes is reasonable (if not, this is an invalid ciphertext).	*/
 	if (ciphertext->attribute_list.num_attributes < 1 || ciphertext->attribute_list.num_attributes > MAX_CIPHERTEXT_ATTRIBUTES) {
@@ -1397,20 +1478,20 @@ initialize_global_params_WatersCP(fenc_group_params *group_params, fenc_global_p
 	if (global_params == NULL) {	
 		global_params = SAFE_MALLOC(sizeof(fenc_global_params_WatersCP));
 		if (global_params == NULL) {
-			LOG_ERROR("initialize_global_params_WatersCP: out of memory");
+			LOG_ERROR("%s: out of memory", __func__);
 			return NULL;
 		}
 	}
 	
 	err_code = libfenc_copy_group_params(group_params, &(global_params->group_params));
 	if (err_code != FENC_ERROR_NONE) {
-		LOG_ERROR("libfenc_gen_params_WatersCP: could not copy parameters");
+		LOG_ERROR("%s: could not copy parameters", __func__);
 		return NULL;
 	}
 	
 	err_code = libfenc_get_pbc_pairing(group_params, global_params->pairing);
 	if (err_code != FENC_ERROR_NONE) {
-		LOG_ERROR("libfenc_gen_params_WatersCP: could not obtain pairing structure");
+		LOG_ERROR("%s: could not obtain pairing structure", __func__);
 		return NULL;
 	}
 	
@@ -1433,7 +1514,7 @@ fenc_key_WatersCP_initialize(fenc_attribute_list *attribute_list, Bool copy_attr
 				   fenc_global_params_WatersCP *global_params)
 {
 	FENC_ERROR err_code;
-	int i;
+	size_t i;
 	fenc_key_WatersCP *key_WatersCP;
 				
 	/* Initialize and wipe the key structure.	*/
@@ -1481,7 +1562,7 @@ fenc_key_WatersCP_initialize(fenc_attribute_list *attribute_list, Bool copy_attr
 FENC_ERROR
 fenc_key_WatersCP_clear(fenc_key_WatersCP *key_WatersCP)
 {	
-	int i;
+	size_t i;
 	
 	element_clear(key_WatersCP->KTWO);
 	element_clear(key_WatersCP->LTWO);
@@ -1552,7 +1633,7 @@ secret_params_initialize_WatersCP(fenc_secret_params_WatersCP *params, pairing_t
 FENC_ERROR
 libfenc_fprint_ciphertext_WatersCP(fenc_ciphertext_WatersCP *ciphertext, FILE* out_file)
 {
-	int i;
+	size_t i;
 	
 	fprintf(out_file, "number of attributes = %d\n", ciphertext->attribute_list.num_attributes);
 
@@ -1562,8 +1643,8 @@ libfenc_fprint_ciphertext_WatersCP(fenc_ciphertext_WatersCP *ciphertext, FILE* o
 	
 	/* For every attribute in the ciphertext... */
 	for (i = 0; i < ciphertext->attribute_list.num_attributes; i++) {
-		fprintf(out_file, "Attribute #%d:\n", i);
-		if (strlen(ciphertext->attribute_list.attribute[i].attribute_str) > 0) {
+		fprintf(out_file, "Attribute #%zu:\n", i);
+		if (strlen((char *) ciphertext->attribute_list.attribute[i].attribute_str) > 0) {
 			fprintf(out_file, "\tAttribute = \"%s\"\n", ciphertext->attribute_list.attribute[i].attribute_str);
 		}
 		element_fprintf(out_file, "\tAttribute Hash = %B\n", ciphertext->attribute_list.attribute[i].attribute_hash);

@@ -178,7 +178,7 @@ libfenc_create_attribute_list_from_strings(fenc_function_input *input, char **at
 
 	/* Copy the strings into the attribute list.	*/
 	for (i = 0; i < num_attributes; i++) {
-		strcpy(attribute_list->attribute[i].attribute_str, attributes[i]);
+		strcpy((char *) attribute_list->attribute[i].attribute_str, (const char *) attributes[i]);
 	}
 	
 	input->scheme_input = (void*)attribute_list;
@@ -316,6 +316,7 @@ fenc_attribute_list_copy(fenc_attribute_list *attribute_list_DST, fenc_attribute
 FENC_ERROR
 fenc_attribute_list_to_buffer(fenc_attribute_list *attribute_list, uint8 *buffer, size_t buf_len, size_t *result_len)
 {
+	// TODO: JAA cleanup.
 	uint32 i;
 	uint8 *buf_ptr = buffer;
 	char token[300];
@@ -332,7 +333,7 @@ fenc_attribute_list_to_buffer(fenc_attribute_list *attribute_list, uint8 *buffer
 	
 	/* Serialize all of the elements.	*/
 	for (i = 0; i < attribute_list->num_attributes; i++) {
-		printf("%i:%s\n", i, attribute_list->attribute[i].attribute_str);
+		// printf("%i:%s\n", i, attribute_list->attribute[i].attribute_str);
 		
 		/* We prefer the attribute string.	*/
 			if (i != 0) {
@@ -343,8 +344,10 @@ fenc_attribute_list_to_buffer(fenc_attribute_list *attribute_list, uint8 *buffer
 			}
 
 		if (attribute_list->attribute[i].attribute_str[0] != 0)	{
-			if (buffer != NULL) {	buf_ptr += snprintf(buf_ptr, (buf_len - *result_len), "\"%s\"", attribute_list->attribute[i].attribute_str);	}
-			*result_len += strlen(attribute_list->attribute[i].attribute_str) + 2;
+			if (buffer != NULL) {	buf_ptr += snprintf(buf_ptr, (buf_len - *result_len), "%s", attribute_list->attribute[i].attribute_str);	}
+			
+			/* JAA removed quotes around attributes to make parsing straightforward */
+			*result_len += strlen(attribute_list->attribute[i].attribute_str);  // + 2;
 		} else if (attribute_list->attribute[i].is_hashed == TRUE) {
 			element_snprintf(token, 300, "{%B}", attribute_list->attribute[i].attribute_hash);
 			if (buffer != NULL) {	buf_ptr += snprintf(buf_ptr, (buf_len - *result_len), "%s", token);	}
@@ -358,6 +361,57 @@ fenc_attribute_list_to_buffer(fenc_attribute_list *attribute_list, uint8 *buffer
 	(*result_len)++;
 	if (buffer != NULL) {	buf_ptr += snprintf(buf_ptr, (buf_len - *result_len), ")");	}
 	
+	return FENC_ERROR_NONE;
+}
+
+
+/*!
+ * Parse a string of attributes into an fenc_attribute_list structure.
+ * 
+ * @param str_list				Buffer to attribute list string.
+ * @param attribute_list		fenc_attribute_list pointer (not pre-allocated).
+ * @return						FENC_ERROR_NONE or an error code.
+ */
+FENC_ERROR 
+fenc_buffer_to_attribute_list(char **str_list, fenc_attribute_list *attribute_list)
+{
+	// form "( 'ATTR1' , 'ATTRX' )" => token '(' ','
+	FENC_ERROR err_code;
+	int i = 0, token_len;
+	uint32 num_attributes = 0;
+	char delims[] = "(,)";
+	char *list_cpy = strdup(*str_list);
+	char *token = strtok(list_cpy, delims);
+	
+	do {	
+		num_attributes++;
+		token = strtok(NULL, delims);
+	} while(token != NULL);
+		
+	/* Initialize the structure.	*/
+	memset(attribute_list, 0, sizeof(fenc_attribute_list));
+	err_code = fenc_attribute_list_initialize(attribute_list, num_attributes);
+	if (err_code != FENC_ERROR_NONE) {
+		LOG_ERROR("%s: could not initialize attribute list", __func__);
+		return err_code;
+	}	
+	
+	/* tokenize and store in fenc_attribute_list */
+	token = strtok(*str_list, delims);
+	// printf("%s: %i = token = '%s'?\n", __func__, i, token);
+	while (token != NULL && i < MAX_CIPHERTEXT_ATTRIBUTES) {
+		token_len = strlen(token);
+		if (token_len < MAX_ATTRIBUTE_STR) {
+			memset(attribute_list->attribute[i].attribute_str, 0, MAX_ATTRIBUTE_STR);
+			strncpy((char *) attribute_list->attribute[i].attribute_str, token, token_len);
+		}
+		/* retrieve next token */
+		token = strtok(NULL, delims);
+		i++;
+		// printf("%s: %i = token = '%s'?\n", __func__, i, token);
+	}
+	
+	attribute_list->num_attributes = i;
 	return FENC_ERROR_NONE;
 }
 
