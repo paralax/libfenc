@@ -181,7 +181,7 @@ Bool cpabe_decrypt(char *inputfile, char *keyfile)
 	FILE *fp;
 	char c;
 	int pub_len = 0, sec_len = 0, key_len = 0;
-	ssize_t serialized_len = 0;
+	size_t serialized_len = 0;
 	uint8 public_params_buf[SIZE];
 	uint8 secret_params_buf[SIZE];
 	uint8 keyfile_buf[SIZE];
@@ -339,7 +339,23 @@ Bool cpabe_decrypt(char *inputfile, char *keyfile)
 	/* BEGIN TEST: Extract a decryption key. */
 	
 	/* Retrieve secret params */
-	
+	// START -- for decryption
+	/*	
+	 result = libfenc_import_secret_key(&context, &key2, buffer, serialized_len);
+	 report_error("Import secret key", result);
+	 
+	 // print out new buffer 
+	 fenc_key_WatersCP *myKey2 = (fenc_key_WatersCP *) key2.scheme_key;
+	 size_t serialized_len2;
+	 uint8 *buffer2 = malloc(KEYSIZE_MAX);
+	 memset(buffer2, 0, KEYSIZE_MAX);
+	 result = libfenc_serialize_key_WatersCP(myKey2, buffer2, KEYSIZE_MAX, &serialized_len2);		
+	 report_error("Serialize user's key", result);
+	 
+	 printf("Key-len2: '%zu'\n", serialized_len2);
+	 printf("Buffer contents 2:\n");
+	 print_buffer_as_hex(buffer2, serialized_len2);
+	 // END	
 	
 	/* stores user's authorized attributes */
 	memset(&func_list_input, 0, sizeof(fenc_function_input));
@@ -353,8 +369,8 @@ Bool cpabe_decrypt(char *inputfile, char *keyfile)
 	
 	// result = libfenc_import_secret_key(&context, &secret_key, bin_keyfile_buf, keyLength);
 	// report_error("Importing secret key", result);	
-	ssize_t abeLength;
-	char *data = NewBase64Decode((const char *) abe_blob64, strlen(abe_blob64), &abeLength);
+	size_t abeLength;
+	uint8 *data = NewBase64Decode((const char *) abe_blob64, strlen(abe_blob64), &abeLength);
 	ciphertext.data = data;
 	ciphertext.data_len = abeLength;
 	ciphertext.max_len = abeLength;
@@ -372,7 +388,7 @@ Bool cpabe_decrypt(char *inputfile, char *keyfile)
 	print_buffer_as_hex(aes_session_key.data, aes_session_key.data_len);
 
 	/* decode the aesblob64 */
-	ssize_t aesLength;
+	size_t aesLength;
 	char *aesblob = NewBase64Decode((const char *) aes_blob64, strlen(aes_blob64), &aesLength);
 	
 	/* use the PSK to encrypt using openssl functions here */
@@ -385,7 +401,7 @@ Bool cpabe_decrypt(char *inputfile, char *keyfile)
 	AES_cbc_encrypt((uint8 *) aesblob, (uint8 *) aes_result, aesLength, &sk, (unsigned char *) iv, AES_DECRYPT);
 	/* base-64 both ciphertext and write to the stdout -- in XML? */
 	
-	printf("Plaintext: %s\nSize: %i\n", aes_result, aesLength);
+	printf("Plaintext: %s\nSize: %zd\n", aes_result, aesLength);
 	
 	/* Destroy the context. */
 	result = libfenc_destroy_context(&context);
