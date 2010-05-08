@@ -636,7 +636,9 @@ fenc_attribute_policy_to_string(fenc_attribute_subtree *subtree, char *output_st
 			sprintf(token, "or");
 			break;
 		case FENC_ATTRIBUTE_POLICY_NODE_THRESHOLD:
-			sprintf(token, "th{%d}", subtree->threshold_k);
+			// sprintf(token, "th{%d}", subtree->threshold_k);
+			sprintf(token, "%d of ", subtree->threshold_k);
+			strncat(output_str, token, strlen(token));
 			break;
 		default:
 			return FENC_ERROR_INVALID_INPUT;
@@ -652,11 +654,16 @@ fenc_attribute_policy_to_string(fenc_attribute_subtree *subtree, char *output_st
 	
 	/* Recurse from left to right, spitting out the leaves.	*/
 	for (i = 0; i < subtree->num_subnodes; i++) {
-		if (i > 0) {
-			if (output_str != NULL)	{	
+		if (i > 0) {			
+			if (output_str != NULL && subtree->node_type == FENC_ATTRIBUTE_POLICY_NODE_THRESHOLD) {
+				strcat(output_str, ",");
+			}			
+			else {
+				if (output_str != NULL)	{	
 				// snprintf(output_str + *str_index, buf_len - *str_index, ",");	
-				sprintf(tmp, " %s ", token);
-				strncat(output_str, tmp, strlen(tmp));
+					sprintf(tmp, " %s ", token);
+					strncat(output_str, tmp, strlen(tmp));
+				}
 			}
 			// (*str_index) += 1;
 		}
