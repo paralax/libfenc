@@ -41,7 +41,7 @@ void tokenize_inputfile(char* in, char** abe, char** aes);
  */
 int main (int argc, const char * argv[]) {
 	int dflag = TRUE, kflag = TRUE;
-	char *file = "enc_data.txt", *key = "private.key";
+	char *file = "enc_data.txt", *key = "user_priv.key";
 	int c;
 	
 	opterr = 0;
@@ -100,7 +100,7 @@ int main (int argc, const char * argv[]) {
 
 void print_help(void)
 {
-	printf("Usage: ./abe-dec -k [ private-key ] -d [ file-to-decrypt ] \n\n");
+	printf("Usage: ./abe-dec -k [ private-key-file ] -d [ file-to-decrypt ] \n\n");
 }
 
 void report_error(char* action, FENC_ERROR result)
@@ -174,19 +174,16 @@ Bool cpabe_decrypt(char *inputfile, char *keyfile)
 	fenc_ciphertext ciphertext;
 	fenc_function_input func_list_input;
 	fenc_plaintext aes_session_key;
-	fenc_key_WatersCP key;
 	pairing_t pairing;
 	fenc_key secret_key;
 	
 	FILE *fp;
 	char c;
-	int pub_len = 0, sec_len = 0, key_len = 0;
+	int pub_len = 0, sec_len = 0;
 	size_t serialized_len = 0;
 	uint8 public_params_buf[SIZE];
 	uint8 secret_params_buf[SIZE];
-	uint8 keyfile_buf[SIZE];
 	char session_key[SESSION_KEY_LEN];
-	// size_t session_key_len;
 	char output_str[200];
 	int output_str_len = 200;
 	/* Clear data structures. */
@@ -196,14 +193,13 @@ Bool cpabe_decrypt(char *inputfile, char *keyfile)
 	memset(&public_params_buf, 0, SIZE);
 	memset(&ciphertext, 0, sizeof(fenc_ciphertext));
 	memset(&aes_session_key, 0, sizeof(fenc_plaintext));
-	memset(keyfile_buf, 0, SIZE);
 	memset(public_params_buf, 0, SIZE);
 	memset(output_str, 0, output_str_len);
-	// memset(&key, 0, sizeof(fenc_key_WatersCP));
+	memset(&secret_key, 0, sizeof(fenc_key));
 	// all this memory must be free'd 
-	char *input_buf = NULL;
+	char *input_buf = NULL,*keyfile_buf = NULL;
 	char *aes_blob64 = NULL, *abe_blob64 = NULL;
-	ssize_t input_len;
+	ssize_t input_len, key_len;
 	
 	/* Load user's input file */
 	fp = fopen(inputfile, "r");
@@ -299,51 +295,35 @@ Bool cpabe_decrypt(char *inputfile, char *keyfile)
 	}	
 	fclose(fp);
 	
-	uint8 *bin_secret_buf = NewBase64Decode(secret_params_buf, sec_len, &serialized_len);
+	uint8 *bin_secret_buf = NewBase64Decode((const char *)secret_params_buf, sec_len, &serialized_len);
 	result = libfenc_import_secret_params(&context, bin_secret_buf, serialized_len, NULL, 0);
 	report_error("Importing secret parameters", result);
 	
-	/* read input key file (PRIVATE KEY)
+	/* read input key file */ // (PRIVATE KEY)
 	printf("keyfile => '%s'\n", keyfile);
 	fp = fopen(keyfile, "r");
 	if(fp != NULL) {
-		while (TRUE) {
-			c = fgetc(fp);
-			// printf("%c", c);
-			if(c != EOF) {
-				keyfile_buf[key_len] = c;
-				key_len++;
-			}
-			else {
-				break;
-			}
-		}		
+		if((key_len = read_file(fp, &keyfile_buf)) > 0) {
+			// printf("\nYour private-key:\t'%s'\n", keyfile_buf);
+			size_t keyLength;
+			uint8 *bin_keyfile_buf = NewBase64Decode((const char *) keyfile_buf, key_len, &keyLength);
+
+			/* base-64 decode user's private key */
+			printf("Base-64 decoded buffer:\t");
+			print_buffer_as_hex(bin_keyfile_buf, keyLength);
+			
+			result = libfenc_import_secret_key(&context, &secret_key, bin_keyfile_buf, keyLength);
+			report_error("Importing secret key", result);
+			free(keyfile_buf);
+		}			
 	}
 	else {
-		printf("File does not exist.\n");
-		return;
+		fprintf(stderr, "Could not load input file: %s\n", keyfile);
+		return FALSE;
 	}
-	fclose(fp);
+	fclose(fp);	
 	
-	printf("\nYour private-key: '%s'\n", keyfile_buf); */
-	
-	/* base-64 decode user's private key 
-	ssize_t keyLength;
-	uint8 *bin_keyfile_buf = NewBase64Decode((const char *) keyfile_buf, key_len, &keyLength);
-	printf("base-64 decoded: '%s'\n", bin_keyfile_buf, keyLength); */
-	
-	/* deserialize key 	
-	result = libfenc_deserialize_key_WatersCP(&key, bin_keyfile_buf, keyLength);
-	report_error("Deserialize private key", result); */
-
-	/* BEGIN TEST: Extract a decryption key. */
-	
-	/* Retrieve secret params */
-	// START -- for decryption
-	/*	
-	 result = libfenc_import_secret_key(&context, &key2, buffer, serialized_len);
-	 report_error("Import secret key", result);
-	 
+/*	
 	 // print out new buffer 
 	 fenc_key_WatersCP *myKey2 = (fenc_key_WatersCP *) key2.scheme_key;
 	 size_t serialized_len2;
@@ -358,7 +338,7 @@ Bool cpabe_decrypt(char *inputfile, char *keyfile)
 	 // END	
 	
 	/* stores user's authorized attributes */
-	memset(&func_list_input, 0, sizeof(fenc_function_input));
+/*	memset(&func_list_input, 0, sizeof(fenc_function_input));
 	char *attr[9] = {"ONE", "TWO", "THREE", "FOUR", "FIVE", "SIX", "SEVEN", "EIGHT"};
 	libfenc_create_attribute_list_from_strings(&func_list_input, attr, 8);
 	fenc_attribute_list_to_buffer((fenc_attribute_list*)(func_list_input.scheme_input), output_str, 200, &output_str_len);
@@ -366,9 +346,8 @@ Bool cpabe_decrypt(char *inputfile, char *keyfile)
 	
 	result = libfenc_extract_key(&context, &func_list_input, &secret_key);
 	report_error("Extracting a decryption key", result);	
-	
-	// result = libfenc_import_secret_key(&context, &secret_key, bin_keyfile_buf, keyLength);
-	// report_error("Importing secret key", result);	
+*/	
+
 	size_t abeLength;
 	uint8 *data = NewBase64Decode((const char *) abe_blob64, strlen(abe_blob64), &abeLength);
 	ciphertext.data = data;

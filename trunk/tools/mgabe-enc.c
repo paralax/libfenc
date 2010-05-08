@@ -280,11 +280,11 @@ void cpabe_encrypt(char *policy, char *data)
 	/* base-64 both ciphertexts and write to the stdout -- in XML? */
 	size_t abe_length, aes_length;
 	char *ABE_cipher_base64 = NewBase64Encode(ciphertext.data, ciphertext.data_len, FALSE, &abe_length);
-	fprintf(f,"<ABE type='CP'>%s</ABE>", ABE_cipher_base64);
+	fprintf(f,"<Encrypted><ABE type='CP'>%s</ABE>", ABE_cipher_base64);
 	fprintf(f1, ABE_TOKEN":%s:"ABE_TOKEN_END":", ABE_cipher_base64);
 	
 	char *AES_cipher_base64 = NewBase64Encode(aes_ciphertext, data_len, FALSE, &aes_length);
-	fprintf(f,"<EncryptedData>%s</EncryptedData>", AES_cipher_base64);
+	fprintf(f,"<EncryptedData>%s</EncryptedData></Encrypted>", AES_cipher_base64);
 	fprintf(f1, AES_TOKEN":%s:"AES_TOKEN_END, AES_cipher_base64);
 	fclose(f);
 	fclose(f1);

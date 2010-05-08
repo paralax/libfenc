@@ -279,10 +279,10 @@ void generate_keys(char *outfile)
 		perror("Error writing private key.");
 	}
 	fclose(fp);
-/*	
+	
 	printf("Buffer contents:\n");
 	print_buffer_as_hex(buffer, serialized_len);
-	result = libfenc_import_secret_key(&context, &key2, buffer, serialized_len);
+/*	result = libfenc_import_secret_key(&context, &key2, buffer, serialized_len);
 	report_error("Import secret key", result);
 	
 	// print out new buffer 
