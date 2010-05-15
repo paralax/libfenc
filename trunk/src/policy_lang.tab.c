@@ -157,7 +157,7 @@ GString* g_string_new(char *str);
 char* s_string_new(int max);
 void g_string_append_c(GString *left, char right);
 void s_string_append_c(char *left, int max, char right);
-char* g_strnfill(size_t num, char fill);
+char* g_strnfill(size_t length, char fill);
 char* g_strdup_printf(char *, ...);
 
 
@@ -1840,16 +1840,17 @@ void s_string_append_c(char *left, int max, char right)
 }
 
 
-char* g_strnfill(size_t num, char fill)
+char* g_strnfill(size_t length, char fill)
 {
 	char* str;
 	uint32 i;
 	
-	str = SAFE_MALLOC(num + 1);
-	for (i = 0; i < num; i++) {
+	str = SAFE_MALLOC(length + 1);
+	for (i = 0; i < length; i++)
 		str[i] = fill;
-	}
-	str[i] = 0;
+
+	str[i] = '\0';
+	return str;
 }
 
 
@@ -2002,7 +2003,7 @@ bit_marker( char* base, char* tplate, int bit, char val )
 	char* rx;
 	char* s;
 
- 	lx = g_strnfill(64 - bit - 1, 'x');
+	lx = g_strnfill(64 - bit - 1, 'x');
 	rx = g_strnfill(bit, 'x');
 	s = g_strdup_printf(tplate, base, lx, !!val, rx);
 	free(lx);
@@ -2035,14 +2036,14 @@ bit_marker_list( int gt, char* attr, char* tplate, int bits, uint64_t value )
 		i++;
 
 	p = leaf_policy(bit_marker(attr, tplate, i, gt));
-	for( i = i + 1; i < bits; i++ )
+	for( i = i + 1; i < bits; i++) {
 		if( gt )
 			p = kof2_policy(((uint64_t)1<<i & value) ? 2 : 1, p,
 											leaf_policy(bit_marker(attr, tplate, i, gt)));
 		else
 			p = kof2_policy(((uint64_t)1<<i & value) ? 1 : 2, p,
 											leaf_policy(bit_marker(attr, tplate, i, gt)));
-
+	}
 	return p;
 }
 
@@ -2188,7 +2189,7 @@ yylex()
 	else if( isdigit(c) )
 	{
 		// GString* s;
-		int len = 50;
+		int len = 25;
 		char *s = s_string_new(len);
 		// s = g_string_new("");
 		// g_string_append_c(s, c);
@@ -2196,6 +2197,7 @@ yylex()
 		while( isdigit(PEEK_CHAR) )
 			s_string_append_c(s, len, NEXT_CHAR);
 
+		printf("%llu\n", s);
 		sscanf(s, "%llu", &(yylval.nat));
 
 		// s_string_free(s);
