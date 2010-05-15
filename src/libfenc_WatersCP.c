@@ -7,7 +7,7 @@
 
 #include <stdlib.h>
 #include <string.h>
-#include <pbc.h>
+#include <pbc/pbc.h>
 #include "libfenc.h"
 #include "libfenc_group_params.h"
 #include "libfenc_ABE_common.h"
