@@ -2189,7 +2189,7 @@ yylex()
 	else if( isdigit(c) )
 	{
 		// GString* s;
-		int len = 25;
+		int len = 50;
 		char *s = s_string_new(len);
 		// s = g_string_new("");
 		// g_string_append_c(s, c);
@@ -2197,7 +2197,6 @@ yylex()
 		while( isdigit(PEEK_CHAR) )
 			s_string_append_c(s, len, NEXT_CHAR);
 
-		printf("%llu\n", s);
 		sscanf(s, "%llu", &(yylval.nat));
 
 		// s_string_free(s);
