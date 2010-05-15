@@ -1,14 +1,17 @@
 # Note: Change prefix. configure script coming!
-PREFIX = /iPhoneSimulator-build
+PREFIX = /usr/local
 INSTALLDIR = ${PREFIX}/bin
 
 # derived from above parameters
 INCLUDES = -I${PREFIX}/include -I../src
 CCFLAGS = -W -Wfloat-equal -Wpointer-arith -Wcast-align -Wredundant-decls -Wendif-labels -Wshadow -pipe -ffast-math -U__STRICT_ANSI__ -g -O2 ${INCLUDES}
 LIBDIR = ${PREFIX}/lib
-LIBS = ${LIBDIR}/libgmp.a ${LIBDIR}/libpbc.a ${LIBDIR}/libfenc.a
-SSL = $(LIBDIR)/libcrypto.a
-TARGETS = abe-setup abe-keygen abe-enc abe-dec
+#LIBS = ${LIBDIR}/libgmp.a ${LIBDIR}/libpbc.a ../src/libfenc.a
+LIBS = -lpbc -lgmp -lfenc
+#../src/libfenc.a
+#SSL = $(LIBDIR)/libcrypto.a
+SSL = -lcrypto
+TARGETS = abe-setup abe-keygen abe-enc abe-dec policy-test
 
 all: $(TARGETS)
 
@@ -23,6 +26,9 @@ abe-enc: mgabe-enc.o base64.o
 
 abe-dec: mgabe-dec.o base64.o
 	$(CC) $(CCFLAGS) -o $@ $^ $(LIBS) $(SSL)
+
+policy-test: policy-tool.o 
+	$(CC) $(CCFLAGS) -o $@ $^ $(LIBS)	
 
 install:
 	mkdir -p $(INSTALLDIR)
