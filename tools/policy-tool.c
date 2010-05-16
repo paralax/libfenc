@@ -8,7 +8,7 @@
 #include "libfenc_LSSS.h"				
 #include "policy_lang.h"
 
-#define MAX_STR 512
+#define MAX_STR 4096
 
 /* tool to test policy parsing */
 int main(int argc, char *argv[]) {
@@ -39,6 +39,11 @@ int main(int argc, char *argv[]) {
 
 	/* see if they are equivalent? */
 	printf("Output:\t'%s'\n", policy_str);
+	printf("Strlen: %d\n", strlen(policy_str));
+
+	char *test = parse_policy_lang_as_str(policy_str);
+	printf("\nOriginal? '%s'\n", test);
+
 	return 0;
 }
 

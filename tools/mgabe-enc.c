@@ -168,8 +168,8 @@ void cpabe_encrypt(char *policy, char *data)
 	uint8 public_params_buf[SIZE];
 	char session_key[SESSION_KEY_LEN];
 	// size_t session_key_len;
-	char pol_str[200];
-	int pol_str_len = 200;
+	char pol_str[MAX_POLICY_STR];
+	int pol_str_len = MAX_POLICY_STR;
 	/* Clear data structures. */
 	memset(&context, 0, sizeof(fenc_context));
 	memset(&group_params, 0, sizeof(fenc_group_params));
