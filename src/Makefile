@@ -23,7 +23,7 @@ libfenc: ${LIBRARYOBJ} ${LIBRARYH}
 	 # static
 	 ${AR} ${ARARGS} ${LIBRARY}.a ${LIBRARYOBJ}
 	 # dynamic (linux)
-	 # $(CC) -shared -W1,-soname -o ${LIBRARY}.so ${LIBRARYOBJ}
+	 #$(CC) -shared -W1,-soname -o ${LIBRARY}.so ${LIBRARYOBJ}
 
 test_libfenc: libfenc test_libfenc.c
 	${CC} -o test_libfenc ${CCFLAGS} -L. -lfenc test_libfenc.c ${PBCLIBS}

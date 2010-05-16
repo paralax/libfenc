@@ -1831,7 +1831,7 @@ void g_string_append_c(GString *left, char right)
 void s_string_append_c(char *left, int max, char right)
 {
 	size_t len;
-	
+
 	len = strlen(left);
 	if ( len < (max - 1) ) {
 		left[len] = right;
@@ -2052,12 +2052,8 @@ flexint_leader( int gt, char* attr, uint64_t value )
 {
 	fenc_attribute_subtree* p;
 	int k;
-	fenc_attribute_subtree* attributes[200];
+	fenc_attribute_subtree* attributes[256];
 	uint32 index = 0;
-
-	//p = (fenc_attribute_subtree*) malloc(sizeof(fenc_attribute_subtree));
-	//p->attr = 0;
-	///p->children = g_ptr_array_new();
 
 	for( k = 2; k <= 32; k *= 2 )
 		if( ( gt && ((uint64_t)1<<k) >  value) ||
@@ -2199,7 +2195,7 @@ yylex()
 
 		sscanf(s, "%llu", &(yylval.nat));
 
-		// s_string_free(s);
+		free(s);
 		r = INTLIT;
 	}
 	else if( isalpha(c) )
