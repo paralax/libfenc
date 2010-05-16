@@ -27,7 +27,7 @@ typedef enum _FENC_ATTRIBUTE_NODE_TYPE {
 #define MAX_ATTRIBUTE_STR	256
 
 /* Maximum serialized policy string in bytes (this includes a NULL termination byte.) */
-#define	MAX_POLICY_STR		1024
+#define	MAX_POLICY_STR		2048
 
 /**
  *  Attribute structure.  Contains a null-terminated string (or NULL) and/or a hashed attribute
