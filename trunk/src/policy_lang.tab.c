@@ -2050,16 +2050,17 @@ bit_marker_list( int gt, char* attr, char* tplate, int bits, uint64_t value )
 fenc_attribute_subtree*
 flexint_leader( int gt, char* attr, uint64_t value )
 {
+	// printf("called flexint_leader: gt=%d, attr=%s, value=%d\n", gt, attr, value);
 	fenc_attribute_subtree* p;
 	int k;
 	fenc_attribute_subtree* attributes[256];
 	uint32 index = 0;
 
 	for( k = 2; k <= 32; k *= 2 )
-		if( ( gt && ((uint64_t)1<<k) >  value) ||
-				(!gt && ((uint64_t)1<<k) >= value) )
+		if( ( gt && ((uint64_t)1<<k) >  value) ||(!gt && ((uint64_t)1<<k) >= value) )
 			attributes[index] = leaf_policy
-				 (g_strdup_printf(gt ? "%s_ge_2^%02d" : "%s_lt_2^%02d", attr, k));
+				 // (g_strdup_printf(gt ? "%s_ge_2^%02d" : "%s_lt_2^%02d", attr, k));
+				 (g_strdup_printf("%s_flexint_uint" , attr));
 			index++;
 
 	//p->k = gt ? 1 : p->children->len;
@@ -2406,7 +2407,7 @@ parse_policy_lang( char* s )
 	cur_string = s;
 	
 	yyparse();
-	printf("Parsing... '%s'\n", s);
+	printf("Bison-Parsing... '%s'\n", s);
  	fenc_policy_compact(final_policy);
  	//tidy(final_policy);
 	

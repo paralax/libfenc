@@ -931,6 +931,6 @@ fenc_policy_from_string(fenc_attribute_policy *policy, char *policy_str)
 	
 	subtree = parse_policy_lang( policy_str );
 	policy->root = subtree;
-	
+	policy->string = policy_str;
 	return FENC_ERROR_NONE;
 }
