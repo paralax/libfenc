@@ -563,9 +563,9 @@ encrypt_WatersCP_internal(fenc_context *context, fenc_function_input *input, fen
 		result = err_code;
 		goto cleanup;
 	}
-	fenc_policy_from_string(policy, temp_policy_str);
+	// fenc_policy_from_string(policy, temp_policy_str);
 	
-	
+	// printf("Original policy string: '%s'\n", policy->string);
 	//strcpy(temp_policy_str, "");
 	//err_code = fenc_attribute_policy_to_string(policy->root, temp_policy_str, MAX_POLICY_STR);
 	//printf("Revised policy string: %s\n", temp_policy_str);
@@ -593,7 +593,9 @@ encrypt_WatersCP_internal(fenc_context *context, fenc_function_input *input, fen
 		result = FENC_ERROR_UNKNOWN;
 		goto cleanup;
 	}
-	strcpy(ciphertext_WatersCP.policy_str, temp_policy_str); 
+	//strcpy(ciphertext_WatersCP.policy_str, temp_policy_str);
+	// TODO: JAA wrap a helper function around policy->string
+	strcpy(ciphertext_WatersCP.policy_str, policy->string);
 
 	/* If we're in KEM mode, the returned key is the hash of eggalphasT.	*/
 	if (kem_mode == TRUE) {

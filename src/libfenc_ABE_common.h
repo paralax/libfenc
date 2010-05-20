@@ -73,6 +73,7 @@ typedef struct _fenc_attribute_subtree {
 
 typedef struct _fenc_attribute_policy {
 	fenc_attribute_subtree		*root;
+	char 						*string;
 } fenc_attribute_policy;
 
 /* Prototypes			*/
