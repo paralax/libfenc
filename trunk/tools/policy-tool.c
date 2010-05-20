@@ -41,8 +41,8 @@ int main(int argc, char *argv[]) {
 	printf("Output:\t'%s'\n", policy_str);
 	printf("Strlen: %d\n", strlen(policy_str));
 
-	char *test = parse_policy_lang_as_str(policy_str);
-	printf("\nOriginal? '%s'\n", test);
+	//char *test = parse_policy_lang_as_str(policy_str);
+	//printf("\nOriginal? '%s'\n", test);
 
 	return 0;
 }
