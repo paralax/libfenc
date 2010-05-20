@@ -40,18 +40,18 @@ void tokenize_inputfile(char* in, char** abe, char** aes);
  produces a file w/ the contents of the plaintext.
  */
 int main (int argc, const char * argv[]) {
-	int dflag = TRUE, kflag = TRUE;
+	int fflag = FALSE, kflag = FALSE;
 	char *file = "enc_data.txt", *key = "user_priv.key";
 	int c;
 	
 	opterr = 0;
-/*	
-	while ((c = getopt (argc, argv, "d:k:")) != -1) {
+
+	while ((c = getopt (argc, argv, "f:k:")) != -1) {
 		
 		switch (c)
 		{
-			case 'd': // file that holds encrypted data 
-				dflag = TRUE;				
+			case 'f': // file that holds encrypted data
+				fflag = TRUE;
 				file = optarg;
 				printf("encrypted file = '%s'\n", key);
 				break;
@@ -65,7 +65,7 @@ int main (int argc, const char * argv[]) {
 				exit(0);
 				break;
 			case '?':
-				if (optopt == 'd' || optopt == 'k')
+				if (optopt == 'f' || optopt == 'k')
 					fprintf (stderr, "Option -%c requires an argument.\n", optopt);
 				else if (isprint (optopt))
 					fprintf (stderr, "Unknown option `-%c'.\n", optopt);
@@ -78,8 +78,8 @@ int main (int argc, const char * argv[]) {
 				abort ();
 		}
 	}
-	*/
-	if(dflag == FALSE) {
+
+	if(fflag == FALSE) {
 		fprintf(stderr, "No file to decrypt!\n");
 		print_help();
 		exit(1);
@@ -100,7 +100,7 @@ int main (int argc, const char * argv[]) {
 
 void print_help(void)
 {
-	printf("Usage: ./abe-dec -k [ private-key-file ] -d [ file-to-decrypt ] \n\n");
+	printf("Usage: ./abe-dec -k [ private-key-file ] -f [ file-to-decrypt ] \n\n");
 }
 
 void report_error(char* action, FENC_ERROR result)
@@ -275,7 +275,7 @@ Bool cpabe_decrypt(char *inputfile, char *keyfile)
 	result = libfenc_import_public_params(&context, bin_public_buf, serialized_len);
 	report_error("Importing public parameters", result);
 	
-	/* read file */
+	/* read file
 	fp = fopen(secret_params_file, "r");
 	if(fp != NULL) {
 		while (TRUE) {
@@ -298,7 +298,7 @@ Bool cpabe_decrypt(char *inputfile, char *keyfile)
 	uint8 *bin_secret_buf = NewBase64Decode((const char *)secret_params_buf, sec_len, &serialized_len);
 	result = libfenc_import_secret_params(&context, bin_secret_buf, serialized_len, NULL, 0);
 	report_error("Importing secret parameters", result);
-	
+*/
 	/* read input key file */ // (PRIVATE KEY)
 	printf("keyfile => '%s'\n", keyfile);
 	fp = fopen(keyfile, "r");

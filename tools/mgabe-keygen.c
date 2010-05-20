@@ -5,6 +5,7 @@
 #include <errno.h>
 #include <ctype.h>
 #include <getopt.h>
+#include <math.h>
 #include "libfenc.h"
 #include "libfenc_group_params.h"
 #include "libfenc_ABE_common.h"
@@ -21,6 +22,7 @@
 #define SIZE 2048
 #define SESSION_KEY_LEN 16
 #define DEFAULT_KEYFILE "private.key"
+#define BITS 64
 char *attributes[MAX_CIPHERTEXT_ATTRIBUTES];
 int attributes_len = 0;
 char *public_params_file = "public.param";
@@ -28,16 +30,16 @@ char *secret_params_file = "master_secret.param";
 void report_error(char* action, FENC_ERROR result);
 void print_help(void);
 void print_buffer_as_hex(uint8* data, size_t len);
-void parse_attributes(char *input);
+int parse_attributes(char *input);
 void generate_keys(char *outfile);
-
+int ret_num_bits(int value1);
 /* Description: mgabe-keygen takes the outfile to write the users keys, and the .
  
  */
 int main (int argc, char* argv[]) {
 	int oflag = FALSE, aflag = FALSE;
 	char *keyfile = NULL, *string = NULL;
-	int  c;	
+	int  c,err;
 	opterr = 0;
 	
 	while ((c = getopt (argc, argv, "a:o:h")) != -1) {
@@ -48,7 +50,7 @@ int main (int argc, char* argv[]) {
 			  aflag = TRUE;
 			  printf("Generating list of attributes....\n");
 			  string = strdup(optarg);
-			  parse_attributes(string);
+			  err = parse_attributes(string);
 			  break;
 		case 'o':
 			  oflag = TRUE;
@@ -87,12 +89,13 @@ int main (int argc, char* argv[]) {
 	printf("Generating your private-key...\n");
 	generate_keys(keyfile);
 
+	printf("Deallocate memory...\n");
 	free(string);
 	free(keyfile);
 	// free attribute list 
 	for (c = 0; c < attributes_len; c++) {
 		free(attributes[c]);
-	}	
+	}
 	return 0;
 }
 
@@ -116,20 +119,69 @@ void print_buffer_as_hex(uint8* data, size_t len)
 	printf("\n");
 }
 
-void parse_attributes(char *input)
+int parse_attributes(char *input)
 {
 	printf("%s\n", input);
+	char *s;
 	char *token = strtok(input, ",");
-	int ctr = 0, i = 0;
+	int ctr = 0, i = 0, j, bin_attrs = 0;
+	char tmp[BITS];
 	
-	while (token != NULL) {		
-		if((attributes[ctr] = malloc(MAX_ATTRIBUTE_STR)) != NULL) {
-			memset(attributes[ctr], 0, MAX_ATTRIBUTE_STR);
-			strncpy(attributes[ctr], token, MAX_ATTRIBUTE_STR);			
-			token = strtok(NULL, ",");
+	while (token != NULL) {
+		// check if token has '=' operator
+		if((s = strchr(token, '=')) != NULL) {
+			/* convert to binary form */
+			char *attr = strndup(token, (s - token));
+			char *value = strndup(s+1, strlen(token));
+			/* add code to remove whitespace */
+
+			int v = atoi(value);
+			if(v < 0) {
+				// report error?
+				free(attr);
+				free(value);
+				fprintf(stderr, "Numerical attribute must be non-negative.\n");
+				return -1;
+			}
+			//printf("attr => '%s'\n", attr);
+			bin_attrs = ret_num_bits(v);
+			//printf("bin_attrs = '%d'\n", bin_attrs);
+			//printf("bit rep of '%d'\n", v);
+			/* convert v into n-bit attributes */
+		    attributes[ctr] = malloc(MAX_ATTRIBUTE_STR);
+	    	memset(attributes[ctr], 0, MAX_ATTRIBUTE_STR);
+			sprintf(attributes[ctr], "%s_flexint_uint", attr);
 			ctr++;
+
+		    for(j = 0; j < bin_attrs; j++)
+		    {
+		    	memset(tmp, 'x', BITS);
+		    	if (v & (1 << j))
+		    		tmp[BITS-j-1] = '1';
+				else
+					tmp[BITS-j-1] = '0';
+		    	attributes[ctr] = malloc(MAX_ATTRIBUTE_STR);
+		    	memset(attributes[ctr], 0, MAX_ATTRIBUTE_STR);
+		    	sprintf(attributes[ctr], "%s_flexint_%s", attr, tmp);
+		    	// printf("Attribute '%d' = '%s'\n", ctr, attributes[ctr]);
+		    	ctr++;
+			}
+
+			free(attr);
+			free(value);
+			// move on to next token
+			token = strtok(NULL, ",");
 		}
-		
+		else {
+		// else case for regular attributes?
+			if((attributes[ctr] = malloc(MAX_ATTRIBUTE_STR)) != NULL) {
+				memset(attributes[ctr], 0, MAX_ATTRIBUTE_STR);
+				strncpy(attributes[ctr], token, MAX_ATTRIBUTE_STR);
+				token = strtok(NULL, ",");
+				ctr++;
+			}
+		}
+
 		if(ctr >= MAX_CIPHERTEXT_ATTRIBUTES) /* if we've reached max attributes */
 			break;
 	}
@@ -138,7 +190,23 @@ void parse_attributes(char *input)
 	for (i = 0; i < attributes_len; i++) {
 		printf("Attribute '%i' = '%s'\n", i, attributes[i]);
 	}
-	return;
+	return 0;
+}
+
+int ret_num_bits(int value1)
+{
+	int j;
+
+	for(j = 0; j < BITS; j++) {
+		if(value1 < pow(2,j)) {
+			double x = (double)j;
+			// round to nearest multiple of 4
+			int newj = (int) ceil(x/4)*4;
+			printf("numberOfBits => '%d'\n", newj);
+			return newj;
+		}
+	}
+	return 0;
 }
 
 void generate_keys(char *outfile)
@@ -158,7 +226,7 @@ void generate_keys(char *outfile)
 	uint8 public_params_buf[SIZE];
 	uint8 secret_params_buf[SIZE];
 	// char session_key[SESSION_KEY_LEN];
-	uint8 output_str[200];
+	uint8 output_str[SIZE];
 	size_t output_str_len = 0;
 	// size_t session_key_len;
 	
@@ -168,7 +236,7 @@ void generate_keys(char *outfile)
 	memset(&global_params, 0, sizeof(fenc_global_params));	
 	memset(&public_params_buf, 0, SIZE);
 	memset(&secret_params_buf, 0, SIZE);
-	memset(output_str, 0, 200);
+	memset(output_str, 0, SIZE);
 	/* stores user's authorized attributes */
 	memset(&func_list_input, 0, sizeof(fenc_function_input));
 	/* stores the user's private key */
@@ -256,7 +324,7 @@ void generate_keys(char *outfile)
 	// char *attr[5] = {"ONE", "TWO", "THREE", "FOUR=100"};
 	libfenc_create_attribute_list_from_strings(&func_list_input, attributes, attributes_len);
 	// libfenc_create_attribute_list_from_strings(&func_list_input, attr, 4);
-	fenc_attribute_list_to_buffer((fenc_attribute_list*)(func_list_input.scheme_input), output_str, 200, &output_str_len);
+	fenc_attribute_list_to_buffer((fenc_attribute_list*)(func_list_input.scheme_input), output_str, SIZE, &output_str_len);
 	printf("Attribute list: %s\n", output_str);
 
 	result = libfenc_extract_key(&context, &func_list_input, &key);
