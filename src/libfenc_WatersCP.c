@@ -594,8 +594,7 @@ encrypt_WatersCP_internal(fenc_context *context, fenc_function_input *input, fen
 		goto cleanup;
 	}
 	//strcpy(ciphertext_WatersCP.policy_str, temp_policy_str);
-	// TODO: JAA wrap a helper function around policy->string
-	strcpy(ciphertext_WatersCP.policy_str, policy->string);
+	strcpy(ciphertext_WatersCP.policy_str, fenc_get_policy_string(policy));
 
 	/* If we're in KEM mode, the returned key is the hash of eggalphasT.	*/
 	if (kem_mode == TRUE) {
@@ -1617,7 +1616,7 @@ public_params_initialize_WatersCP(fenc_public_params_WatersCP *params, pairing_t
 FENC_ERROR
 secret_params_initialize_WatersCP(fenc_secret_params_WatersCP *params, pairing_t pairing)
 {
-	memset(params, 0, sizeof(fenc_secret_params_WatersCP));
+	memset(params, 0, sizeof(...also if you think of anything related tofenc_secret_params_WatersCP));
 
 	element_init_Zr(params->alphaZ, pairing);
 	
