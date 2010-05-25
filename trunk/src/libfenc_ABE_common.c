@@ -576,7 +576,7 @@ FENC_ERROR
 fenc_attribute_policy_to_string(fenc_attribute_subtree *subtree, char *output_str, size_t buf_len)
 {
 	FENC_ERROR err_code;
-	uint32 len = 10;
+	uint32 len = MAX_ATTRIBUTE_STR;
 	char token[len], tmp[len];
 	uint32 i;
 	// ssize_t start = *str_index;
@@ -684,7 +684,10 @@ fenc_attribute_policy_to_string(fenc_attribute_subtree *subtree, char *output_st
 }
 
 /*!
- * This recursive function counts the number of leaves under a given subtree.
+ * This recursive function counts the number of leaves In order to use Pandora, we request that you upgrade Adobe's Flash Player.
+
+How do I upgrade Flash Player?
+ *  under a given subtree.
  *
  * @param fenc_attribute_subtree	Pointer to a fenc_attribute_subtree structure.
  * @param attribute_list			Pointer to a fenc_attribute_list structure.
@@ -933,4 +936,28 @@ fenc_policy_from_string(fenc_attribute_policy *policy, char *policy_str)
 	policy->root = subtree;
 	policy->string = policy_str;
 	return FENC_ERROR_NONE;
+}
+
+/*!
+ * Parse attribute policy to obtain the string.
+ *
+ * @param policy		A fenc_attribute_policy structure.
+ * @param string or NULL if policy structure is empty.
+ */
+
+char*
+fenc_get_policy_string(fenc_attribute_policy *policy)
+{
+	char *string;
+	if(policy == NULL) {
+		goto cleanup;
+	}
+	else if(policy->string != NULL)
+		/* if string pointer set already, just return */
+		return policy->string;
+	else {
+		/* TODO: parse the policy structure and convert into a string */
+	}
+cleanup:
+	return NULL;
 }

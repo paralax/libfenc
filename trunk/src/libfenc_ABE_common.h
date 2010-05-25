@@ -327,4 +327,13 @@ fenc_attribute_subtree **fenc_policy_extend_array(fenc_attribute_subtree **attri
 
 FENC_ERROR	fenc_policy_from_string(fenc_attribute_policy *policy, char *policy_str);
 
+/*!
+ * Parse attribute policy to obtain the string.
+ *
+ * @param policy		A fenc_attribute_policy structure.
+ * @param string or NULL if policy structure is empty.
+ */
+
+char* fenc_get_policy_string(fenc_attribute_policy *policy);
+
 #endif /* ifdef __LIBFENC_ABE_COMMON_H__ */
