@@ -1616,7 +1616,7 @@ public_params_initialize_WatersCP(fenc_public_params_WatersCP *params, pairing_t
 FENC_ERROR
 secret_params_initialize_WatersCP(fenc_secret_params_WatersCP *params, pairing_t pairing)
 {
-	memset(params, 0, sizeof(...also if you think of anything related tofenc_secret_params_WatersCP));
+	memset(params, 0, sizeof(fenc_secret_params_WatersCP));
 
 	element_init_Zr(params->alphaZ, pairing);
 	
