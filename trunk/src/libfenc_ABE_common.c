@@ -684,10 +684,8 @@ fenc_attribute_policy_to_string(fenc_attribute_subtree *subtree, char *output_st
 }
 
 /*!
- * This recursive function counts the number of leaves In order to use Pandora, we request that you upgrade Adobe's Flash Player.
-
-How do I upgrade Flash Player?
- *  under a given subtree.
+ * This recursive function counts the number of leaves
+ * under a given subtree.
  *
  * @param fenc_attribute_subtree	Pointer to a fenc_attribute_subtree structure.
  * @param attribute_list			Pointer to a fenc_attribute_list structure.
