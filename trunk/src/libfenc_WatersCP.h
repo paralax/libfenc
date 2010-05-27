@@ -170,6 +170,12 @@ FENC_ERROR	libfenc_decrypt_WatersCP(fenc_context *context, fenc_ciphertext *ciph
 							fenc_plaintext *plaintext);
 
 /*!
+ *	For demo purposes only.
+ */
+FENC_ERROR
+libfenc_retrieve_attribute_policy(fenc_context *context, fenc_ciphertext *ciphertext, uint8 *buffer, size_t buf_len);
+
+/*!
  * Export the public parameters (MPK) to a binary buffer.  Calling this function with buffer 
  * set to NULL will return the length of the exported material.
  *

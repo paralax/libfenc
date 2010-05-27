@@ -344,13 +344,13 @@ fenc_attribute_list_to_buffer(fenc_attribute_list *attribute_list, uint8 *buffer
 			}
 
 		if (attribute_list->attribute[i].attribute_str[0] != 0)	{
-			if (buffer != NULL) {	buf_ptr += snprintf(buf_ptr, (buf_len - *result_len), "%s", attribute_list->attribute[i].attribute_str);	}
+			if (buffer != NULL) {	buf_ptr += snprintf((char *) buf_ptr, (buf_len - *result_len), "%s", attribute_list->attribute[i].attribute_str);	}
 			
 			/* JAA removed quotes around attributes to make parsing straightforward */
-			*result_len += strlen(attribute_list->attribute[i].attribute_str);  // + 2;
+			*result_len += strlen((char *) attribute_list->attribute[i].attribute_str);  // + 2;
 		} else if (attribute_list->attribute[i].is_hashed == TRUE) {
 			element_snprintf(token, 300, "{%B}", attribute_list->attribute[i].attribute_hash);
-			if (buffer != NULL) {	buf_ptr += snprintf(buf_ptr, (buf_len - *result_len), "%s", token);	}
+			if (buffer != NULL) {	buf_ptr += snprintf((char *) buf_ptr, (buf_len - *result_len), "%s", token);	}
 			*result_len += strlen(token) + 2;
 		} else {
 			return FENC_ERROR_INVALID_INPUT;
@@ -359,7 +359,7 @@ fenc_attribute_list_to_buffer(fenc_attribute_list *attribute_list, uint8 *buffer
 	
 	/* End with another paren.	*/
 	(*result_len)++;
-	if (buffer != NULL) {	buf_ptr += snprintf(buf_ptr, (buf_len - *result_len), ")");	}
+	if (buffer != NULL) {	buf_ptr += snprintf((char *) buf_ptr, (buf_len - *result_len), ")");	}
 	
 	return FENC_ERROR_NONE;
 }
@@ -431,12 +431,12 @@ libfenc_get_attribute_index_in_list(fenc_attribute *attribute, fenc_attribute_li
 	int32 i;
 	
 	//if (attribute->is_hashed) { element_printf("looking for: %B\n", attribute->attribute_hash); }
-	for (i = 0; i < attribute_list->num_attributes; i++) {
+	for (i = 0; i < (int32) attribute_list->num_attributes; i++) {
 		/* Start by looking for matching attribute strings (if both attributes have a string.) */
 		if (attribute->attribute_str[0] != 0 && attribute_list->attribute[i].attribute_str[0] != 0) {
 			//printf("found: %s\n", attribute->attribute_str);
 			/* If both contain a string, look for a match in the attribute string.	*/
-			if (strcmp(attribute->attribute_str, attribute_list->attribute[i].attribute_str) == 0) {
+			if (strcmp((char *) attribute->attribute_str, (char *) attribute_list->attribute[i].attribute_str) == 0) {
 				/* Found a match.	*/
 				return i;
 			}
@@ -537,7 +537,7 @@ fenc_attribute_subtree_clear(fenc_attribute_subtree *subtree)
 FENC_ERROR
 fenc_attribute_copy(fenc_attribute *attribute_DST, fenc_attribute *attribute_SRC, pairing_t pairing)
 {
-	FENC_ERROR err_code;
+	// FENC_ERROR err_code;
 	element_t test;
 	
 	memset(attribute_DST, 0, sizeof(fenc_attribute));
@@ -611,7 +611,7 @@ fenc_attribute_policy_to_string(fenc_attribute_subtree *subtree, char *output_st
 				strncat(output_str, tmp, strlen(tmp));
 			}
 			// (*str_index) += strlen(token) + 2;
-		} else if (strlen(subtree->attribute.attribute_str) > 0) {
+		} else if (strlen((char *)subtree->attribute.attribute_str) > 0) {
 			if (output_str != NULL)	{	
 				// snprintf((output_str+*str_index), buf_len - *str_index, "\"%s\"", subtree->attribute.attribute_str);
 				sprintf(tmp, "%s", subtree->attribute.attribute_str);

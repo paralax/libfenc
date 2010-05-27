@@ -28,7 +28,7 @@ FENC_ERROR
 libfenc_setup_from_pbc_params(fenc_group_params *group_params, 
 										  char *param_buf, size_t param_len)
 {
-	FENC_ERROR result;
+	// FENC_ERROR result;
 	
 	LOG_ERROR("libfenc_setup_from_pbc_params: function not implemented");
 	return FENC_ERROR_NOT_IMPLEMENTED;

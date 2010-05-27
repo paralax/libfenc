@@ -11,6 +11,7 @@
 #include <string.h>
 #include <stdlib.h>
 #include <stdio.h>
+#define PBC_DEBUG
 #include <pbc/pbc.h>
 #include "libfenc.h"
 #include "libfenc_group_params.h"

@@ -14,7 +14,7 @@
 #include "libfenc_utils.h"
 #include "libfenc_WatersCP.h"
 #include "libfenc_LSSS.h"
-
+#include "libfenc_LSW.h"
 /********************************************************************************
  * Waters Ciphertext-Policy Implementation
  ********************************************************************************/
@@ -352,17 +352,20 @@ libfenc_decrypt_WatersCP(fenc_context *context, fenc_ciphertext *ciphertext, fen
 	/* Deserialize the ciphertext.	*/
 	err_code = libfenc_deserialize_ciphertext_WatersCP(ciphertext->data, ciphertext->data_len, &ciphertext_WatersCP, scheme_context);
 	if (err_code != FENC_ERROR_NONE) {
-		LOG_ERROR("libfenc_decrypt_WatersCP: unable to deserialize ciphertext");
+		LOG_ERROR("%s: unable to deserialize ciphertext", __func__);
 		result = err_code;
 		goto cleanup;
 	}
+#ifdef FENC_DEBUG	
 	libfenc_fprint_ciphertext_WatersCP(&ciphertext_WatersCP, stdout); 
-		
+#endif		
 	/* Now deserialize the policy string into a data structure and make sure all attributes are hashed.	*/
 	fenc_policy_from_string(&policy, ciphertext_WatersCP.policy_str);
 	strcpy(test_str, "");
 	fenc_attribute_policy_to_string(policy.root, test_str, MAX_POLICY_STR);
+#ifdef FENC_DEBUG	
 	printf("PARSED ATTRIBUTE STRING: %s\n", test_str);
+#endif
 	err_code = attribute_tree_compute_hashes(policy.root, scheme_context->global_params->pairing);
 
 	
@@ -425,7 +428,7 @@ libfenc_decrypt_WatersCP(fenc_context *context, fenc_ciphertext *ciphertext, fen
 				DEBUG_ELEMENT_PRINTF("ciphertext element %d=%B\n", index_ciph, ciphertext_WatersCP.attribute_list.attribute[i].attribute_hash);
 				DEBUG_ELEMENT_PRINTF("ciphertext element %d=%s\n", index_ciph, ciphertext_WatersCP.attribute_list.attribute[i].attribute_str);
 
-				LOG_ERROR("libfenc_decrypt_WatersCP: could not find attribute in key and ciphertext (k=%d,c=%d)", index_key, index_ciph);
+				LOG_ERROR("%s: could not find attribute in key and ciphertext (k=%d,c=%d)", __func__, index_key, index_ciph);
 				/*DEBUG_ELEMENT_PRINTF("attribute(%s)=%B\n", attribute_list.attribute[i].attribute_str, attribute_list.attribute[i].attribute_hash);*/
 				result = FENC_ERROR_INVALID_INPUT;
 				goto cleanup;
@@ -493,6 +496,33 @@ cleanup:
 	}
 	
 	return result;
+}
+
+FENC_ERROR
+libfenc_retrieve_attribute_policy(fenc_context *context, fenc_ciphertext *ciphertext, uint8 *buffer, size_t buf_len)
+{
+	FENC_ERROR result = FENC_ERROR_NONE, err_code;
+	fenc_ciphertext_WatersCP		ciphertext_WatersCP;
+	fenc_scheme_context_WatersCP	*scheme_context = NULL;
+	
+	/* Get the scheme-specific context. */
+	scheme_context = (fenc_scheme_context_WatersCP*)context->scheme_context;
+	if (scheme_context == NULL) {
+		return FENC_ERROR_INVALID_CONTEXT;
+	}
+		
+	/* Deserialize the ciphertext.	*/
+	err_code = libfenc_deserialize_ciphertext_WatersCP(ciphertext->data, ciphertext->data_len, &ciphertext_WatersCP, scheme_context);
+	if (err_code != FENC_ERROR_NONE) {
+		LOG_ERROR("%s: unable to deserialize ciphertext", __func__);
+		result = err_code;
+		return FENC_ERROR_INVALID_CIPHERTEXT;
+	}
+	
+	if(strlen(ciphertext_WatersCP.policy_str) < buf_len) {
+		memcpy(buffer, ciphertext_WatersCP.policy_str, strlen(ciphertext_WatersCP.policy_str));
+	}
+	return FENC_ERROR_NONE;
 }
 
 /*!
@@ -636,10 +666,11 @@ encrypt_WatersCP_internal(fenc_context *context, fenc_function_input *input, fen
 		element_pow_zn(temp2ONE, scheme_context->public_params.gaONE, attribute_list.attribute[i].share);	/* temp2ONE = gaONE^{share_i}		*/
 		element_mul(ciphertext_WatersCP.CONE[i], tempONE, temp2ONE);											/* CONE = tempONE * temp2ONE.	*/
 	}
-	
+
+#ifdef FENC_DEBUG
 	/* DEBUG: Print out the ciphertext.	*/
 	libfenc_fprint_ciphertext_WatersCP(&ciphertext_WatersCP, stdout);
-	
+#endif	
 	/* Serialize the WatersCP ciphertext structure into a fenc_ciphertext container 
 	 * (which is essentially just a binary buffer).  First we get the length, then we 
 	 * allocate the ciphertext buffer, then we serialize.	*/
