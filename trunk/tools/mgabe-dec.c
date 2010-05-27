@@ -39,7 +39,7 @@ void tokenize_inputfile(char* in, char** abe, char** aes);
 /* Description: abe-dec takes two inputs: an encrypted file and a private key and
  produces a file w/ the contents of the plaintext.
  */
-int main (int argc, const char * argv[]) {
+int main (int argc, char *argv[]) {
 	int fflag = FALSE, kflag = FALSE;
 	char *file = "enc_data.txt", *key = "user_priv.key";
 	int c;
@@ -110,7 +110,7 @@ void report_error(char* action, FENC_ERROR result)
 
 void print_buffer_as_hex(uint8* data, size_t len)
 {
-	int i;
+	size_t i;
 	
 	for (i = 0; i < len; i++) {
 		printf("%02x ", data[i]);
@@ -207,8 +207,10 @@ Bool cpabe_decrypt(char *inputfile, char *keyfile)
 		if((input_len = read_file(fp, &input_buf)) > 0) {
 			// printf("Input file: %s\n", input_buf);
 			tokenize_inputfile(input_buf, &abe_blob64, &aes_blob64);
+#ifdef DEBUG 			
 			printf("abe_blob64 = '%s'\n", abe_blob64);
-			printf("aes_blob64 = '%s'\n", aes_blob64);			
+			printf("aes_blob64 = '%s'\n", aes_blob64);
+#endif
 			free(input_buf);
 		}			
 	}
@@ -308,10 +310,11 @@ Bool cpabe_decrypt(char *inputfile, char *keyfile)
 			size_t keyLength;
 			uint8 *bin_keyfile_buf = NewBase64Decode((const char *) keyfile_buf, key_len, &keyLength);
 
+#ifdef DEBUG			
 			/* base-64 decode user's private key */
 			printf("Base-64 decoded buffer:\t");
 			print_buffer_as_hex(bin_keyfile_buf, keyLength);
-			
+#endif			
 			result = libfenc_import_secret_key(&context, &secret_key, bin_keyfile_buf, keyLength);
 			report_error("Importing secret key", result);
 			free(keyfile_buf);
@@ -353,6 +356,7 @@ Bool cpabe_decrypt(char *inputfile, char *keyfile)
 	ciphertext.data = data;
 	ciphertext.data_len = abeLength;
 	ciphertext.max_len = abeLength;
+	
 	
 	/* Descrypt the resulting ciphertext. */
 	result = libfenc_decrypt(&context, &ciphertext, &secret_key, &aes_session_key);

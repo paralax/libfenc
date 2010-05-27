@@ -111,7 +111,7 @@ void report_error(char* action, FENC_ERROR result)
 
 void print_buffer_as_hex(uint8* data, size_t len)
 {
-	int i;
+	size_t i;
 	
 	for (i = 0; i < len; i++) {
 		printf("%02x ", data[i]);
@@ -125,16 +125,18 @@ int parse_attributes(char *input)
 	char *s;
 	char *token = strtok(input, ",");
 	int ctr = 0, i = 0, j, bin_attrs = 0;
-	char tmp[BITS];
+	char tmp[BITS+1];
 	
 	while (token != NULL) {
 		// check if token has '=' operator
 		if((s = strchr(token, '=')) != NULL) {
 			/* convert to binary form */
-			char *attr = strndup(token, (s - token));
-			char *value = strndup(s+1, strlen(token));
+			char *attr = malloc(s - token);
+			char *value = malloc(strlen(s+1));
+			strncpy(attr, token, (s - token));
+			strncpy(value, s+1, strlen(s+1));
 			/* add code to remove whitespace */
-
+			// printf("attr = '%s', value = '%s'\n", attr, value);
 			int v = atoi(value);
 			if(v < 0) {
 				// report error?
@@ -163,7 +165,7 @@ int parse_attributes(char *input)
 		    	attributes[ctr] = malloc(MAX_ATTRIBUTE_STR);
 		    	memset(attributes[ctr], 0, MAX_ATTRIBUTE_STR);
 		    	sprintf(attributes[ctr], "%s_flexint_%s", attr, tmp);
-		    	// printf("Attribute '%d' = '%s'\n", ctr, attributes[ctr]);
+				//printf("Attribute '%d' = '%s'\n", ctr, attributes[ctr]);
 		    	ctr++;
 			}
 

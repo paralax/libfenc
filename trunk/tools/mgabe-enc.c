@@ -27,27 +27,31 @@
 
 #define MAX_ATTRIBUTES 100
 #define SIZE 2048
+#define SIZE_MAX 4096
 #define SESSION_KEY_LEN 16
 char *public_params_file = "public.param";
 // char *secret_params_file = "master_secret.param";
 void report_error(char* action, FENC_ERROR result);
 void print_help(void);
 void parse_attributes(char *input);
-void cpabe_encrypt(char *policy, char *data);
+void cpabe_encrypt(char *policy, char *data, char *enc_file);
 void print_buffer_as_hex(uint8* data, size_t len);
 fenc_attribute_policy *construct_test_policy();
+ssize_t read_file(FILE *f, char** out);
 
 /* Description: mgabe-keygen takes the outfile to write the users keys, and the .
  
  */
-int main (int argc, const char * argv[]) {
-	int pflag = FALSE, dflag = FALSE;
-	char *policy = NULL, *data = NULL;
-	int c;
+int main (int argc, char *argv[]) {
+	int pflag = FALSE, dflag = FALSE, oflag = FALSE, iflag = FALSE;
+	char *policy = NULL, *data = NULL, *enc_file = NULL;
+	ssize_t data_len;
+	FILE *fp;
+	int c, exit_status = 0;
 		
 	opterr = 0;
 	
-	while ((c = getopt (argc, argv, "p:d:")) != -1) {
+	while ((c = getopt (argc, argv, "d:i:o:p:")) != -1) {
 		
 		switch (c)
 		{
@@ -59,7 +63,24 @@ int main (int argc, const char * argv[]) {
 				}
 				strncpy(policy, optarg, strlen(optarg));			  
 				break;
+			case 'i':
+				if(dflag == TRUE) /* i or d option, but not both */
+					break;
+				
+				iflag = TRUE;
+				fp = fopen(optarg, "r");
+				if(fp != NULL) {
+				  data_len = read_file(fp, &data);
+				}
+				else {
+					perror("failed to read input file");
+					exit(1);
+				}
+
+				break;
 			case 'd': /* data to encrypt */
+				if(iflag == TRUE) /* i or d */
+					break;
 				dflag = TRUE;
 				// printf("optarg = '%s'\n", optarg);
 				if((data = malloc(strlen(optarg)+1)) == NULL) {
@@ -68,11 +89,16 @@ int main (int argc, const char * argv[]) {
 				}
 				strncpy(data, optarg, strlen(optarg));
 				break;
+				
+			case 'o': /* output file */
+				oflag = TRUE;
+				enc_file = optarg;
+				break;
 			case 'h':
 				print_help();
 				exit(1);
 			case '?':
-				if (optopt == 'p')
+				if (optopt == 'p' || optopt == 'd' || optopt == 'o')
 					fprintf (stderr, "Option -%c requires an argument.\n", optopt);
 				else if (isprint (optopt))
 					fprintf (stderr, "Unknown option `-%c'.\n", optopt);
@@ -86,24 +112,36 @@ int main (int argc, const char * argv[]) {
 		}
 	}
 	
-	if(pflag == FALSE) {
-		fprintf(stderr, "No attributes to generate key!\n");
+	if(dflag == FALSE && iflag == FALSE) {
+		fprintf(stderr, "Need some data to encrypt!\n");
+		print_help();
 		exit(1);
-	}
+	}	
 	
-	if(dflag == FALSE) {
-		fprintf(stderr, "Need some data");
+	if(pflag == FALSE) {
+		fprintf(stderr, "No policy specified to encrypt data!\n");
+		print_help();
+		exit_status = -1;
+		goto clean;
+	}	
+
+	if(oflag == FALSE) {
+		fprintf(stderr, "Specify file to store ciphertext!\n");
+		print_help();
+		exit_status = -1;
+		goto clean;
 	}
-	
 	
 	// printf("Setting up encryption.\n");
-	cpabe_encrypt(policy, data);
-	return 0;
+	cpabe_encrypt(policy, data, enc_file);
+clean:	
+	free(data);
+	return exit_status;
 }
 
 void print_help(void)
 {
-	printf("Usage: ./abe-enc -d \"data\" -p '((ATTR1 and ATTR2) or ATT3)'\n\n");
+	printf("Usage: ./abe-enc -d [ \"data\" ] -i [ input-filename ] -p '((ATTR1 and ATTR2) or ATT3) -o [ output-filename ]'\n\n");
 }
 
 void report_error(char* action, FENC_ERROR result)
@@ -111,39 +149,9 @@ void report_error(char* action, FENC_ERROR result)
 	printf("%s...\n\t%s (%d)\n", action, libfenc_error_to_string(result), result);
 }
 
-/* must free memory when done 
-void parse_attributes(char *input)
-{
-	printf("%s\n", input);
-	char *token = strtok(input, ",");
-	int ctr = 0, MAX_CHAR = 30;
-	
-	attributes = (char**)calloc(sizeof(char**),MAX_ATTRIBUTES);
-	if (attributes == NULL) {
-		printf("Error allocating filename array\n");
-		exit(1);
-	}
-	
-	while (token != NULL) {
-		// printf("token %i: %s\n", ctr, token);
-		//strncpy(attributes[ctr], token, MAX_CHAR);
-		attributes[ctr] = token; 
-		token = strtok(NULL, ",");
-		ctr++;
-	}
-	
-	attribute_count = ctr;
-	for (int i = 0; i < attribute_count; i++) {
-		printf("token '%i' = '%s'\n", i, attributes[i]);
-	}
-	
-	free(input);
-	// free(attributes);
-} */
-
 void print_buffer_as_hex(uint8* data, size_t len)
 {
-	int i;
+	size_t i;
 	
 	for (i = 0; i < len; i++) {
 		printf("%02x ", data[i]);
@@ -151,8 +159,26 @@ void print_buffer_as_hex(uint8* data, size_t len)
 	printf("\n");
 }
 
+ssize_t read_file(FILE *f, char** out) {
+	
+	if(f != NULL) {
+		/* See how big the file is */
+		fseek(f, 0L, SEEK_END);
+		ssize_t out_len = ftell(f);
+		printf("out_len: %zd\n", out_len);
+		if(out_len <= SIZE_MAX) {
+			/* allocate that amount of memory only */
+			if((*out = (char *) malloc(out_len)) != NULL) {
+				fseek(f, 0L, SEEK_SET);
+				fread(*out, sizeof(char), out_len, f);
+				return out_len;
+			}
+		}
+	}
+	return 0;
+}
 
-void cpabe_encrypt(char *policy, char *data)
+void cpabe_encrypt(char *policy, char *data, char *enc_file)
 {
 	FENC_ERROR result;
 	fenc_context context;
@@ -231,7 +257,7 @@ void cpabe_encrypt(char *policy, char *data)
 	fenc_policy_from_string(parsed_policy, policy);
 	// test_policy = construct_simple_test_policy();
 	// printf("Address at 0x%x\n", &(parsed_policy->root));
-	result = fenc_attribute_policy_to_string(parsed_policy->root, pol_str, pol_str_len);
+	// result = fenc_attribute_policy_to_string(parsed_policy->root, pol_str, pol_str_len);
 	// report_error("Fenc_policy_to_string", result);
 	// printf("\noutput policy: %s\n", pol_str); 	
 	func_policy_input.input_type = FENC_INPUT_NM_ATTRIBUTE_POLICY;
@@ -276,7 +302,7 @@ void cpabe_encrypt(char *policy, char *data)
 	
 	printf("\n\n<====  Base-64 encode ciphertext  ====> \n\n");
 	FILE *f = fopen("enc_data.xml", "w");
-	FILE *f1 = fopen("enc_data.txt", "w");
+	FILE *f1 = fopen(enc_file, "w");
 	/* base-64 both ciphertexts and write to the stdout -- in XML? */
 	size_t abe_length, aes_length;
 	char *ABE_cipher_base64 = NewBase64Encode(ciphertext.data, ciphertext.data_len, FALSE, &abe_length);
