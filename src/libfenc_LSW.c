@@ -1487,7 +1487,7 @@ attribute_list_compute_hashes(fenc_attribute_list *attribute_list, pairing_t pai
 {
 	int i;
 	
-	for (i = 0; i < attribute_list->num_attributes; i++) {
+	for (i = 0; i < (int) attribute_list->num_attributes; i++) {
 		hash_attribute(&(attribute_list->attribute[i]), pairing);
 	}
 	
