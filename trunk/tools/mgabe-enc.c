@@ -23,7 +23,7 @@
 #define AES_TOKEN_END "AES_END"
 #define ABE_TOKEN "ABE_CP"
 #define ABE_TOKEN_END "ABE_CP_END"
-
+#define BYTES 4
 
 #define MAX_ATTRIBUTES 100
 #define SIZE 2048
@@ -303,10 +303,20 @@ void cpabe_encrypt(char *policy, char *data, char *enc_file)
 	printf("\n\n<====  Base-64 encode ciphertext  ====> \n\n");
 	FILE *f = fopen("enc_data.xml", "w");
 	FILE *f1 = fopen(enc_file, "w");
+	
+	/* generate the random unique id */
+	uint8 *rand_id[BYTES+1];
+	if(RAND_bytes(rand_id, BYTES) == 0) {
+		perror("Unusual failure.\n");
+		strcpy((char *)rand_id, "0123");
+	}
+	
 	/* base-64 both ciphertexts and write to the stdout -- in XML? */
 	size_t abe_length, aes_length;
 	char *ABE_cipher_base64 = NewBase64Encode(ciphertext.data, ciphertext.data_len, FALSE, &abe_length);
-	fprintf(f,"<Encrypted><ABE type='CP'>%s</ABE>", ABE_cipher_base64);
+	fprintf(f,"<Encrypted id='");
+	fprintf(f, "%08x", (unsigned int) rand_id[0]);
+	fprintf(f,"'><ABE type='CP'>%s</ABE>", ABE_cipher_base64);
 	fprintf(f1, ABE_TOKEN":%s:"ABE_TOKEN_END":", ABE_cipher_base64);
 	
 	char *AES_cipher_base64 = NewBase64Encode(aes_ciphertext, data_len, FALSE, &aes_length);
