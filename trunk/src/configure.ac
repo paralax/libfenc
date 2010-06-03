@@ -10,8 +10,11 @@ AC_PROG_LIBTOOL
 # Preparing for the automake.
 AM_INIT_AUTOMAKE([libfenc], [0.1.2])
 
+# Clean start for CFLAGS.
+CFLAGS=
+
 # If macosx, than check for macports or fink default installation.
-default_macports_path=/opt
+default_macports_path=/opt/local
 default_fink_path=/sw
 case $host_os in
      darwin*) 
@@ -121,4 +124,3 @@ echo "CFLAGS:           $CFLAGS"
 echo "-----------------------------------------"
 echo -ne "\n"
 
-#syscmd(bison -d -b policy_lang.y)
