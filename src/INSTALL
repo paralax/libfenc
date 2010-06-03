@@ -1,3 +1,27 @@
+INSTALLING THE FENC LIBRARY
+===========================
+
+The FENC library needs the GMP, and PBC library, which can be found at
+
+    GMP http://www.swox.com/gmp/
+    PBC http://crypto.stanford.edu/pbc/news.html 
+
+This build system has been tested and works on Linux and Mac OS X with a
+fink/macports installation.  You may need to specify paths via LDFLAGS and
+CPPFLAGS if libraries are located in places other than the default
+assumed in configure.ac.  See ./configure --help for more information.
+
+./configure
+make
+make install
+
+For Linux installs, you will want to run the mod-linux-ld_so_conf.sh 
+found in ./scripts post installing.  This will make a libfenc.conf
+entry so that the compiler can find libfenc.
+
+For the standard configure installation instructions, see the below.
+
+
 Installation Instructions
 *************************
 
