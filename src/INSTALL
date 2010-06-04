@@ -16,8 +16,9 @@ make
 make install
 
 For Linux installs, you will want to run the mod-linux-ld_so_conf.sh 
-found in ./scripts post installing.  This will make a libfenc.conf
-entry so that the compiler can find libfenc.
+found in ./scripts post installing.  This will make a 
+/etc/ld.so.conf.d/libfenc.conf entry so that the compiler can find 
+the dynamic lib.
 
 For the standard configure installation instructions, see the below.
 
