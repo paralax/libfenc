@@ -8,7 +8,7 @@ AC_CONFIG_SRCDIR([./])
 AC_PROG_LIBTOOL
 
 # Set the default directory to /usr/.
-AC_PREFIX_DEFAULT([/usr/])
+#AC_PREFIX_DEFAULT([/usr/])
 
 # Preparing for the automake.
 AM_INIT_AUTOMAKE([libfenc], [0.1.2])
