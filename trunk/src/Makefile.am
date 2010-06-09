@@ -18,16 +18,16 @@ maintainer-clean-local:
 lib_LTLIBRARIES = libfenc.la
 
 # Includes.
-#library_includedir = $(includedir)/fenc
-#library_include_HEADERS = config.h \
-#libfenc_ABE_common.h \
-#libfenc_group_params.h \
-#libfenc.h \
-#libfenc_LSSS.h \
-#libfenc_LSW.h \
-#libfenc_utils.h \
-#libfenc_WatersCP.h \
-#policy_lang.h
+library_includedir = $(includedir)/fenc
+library_include_HEADERS = config.h \
+libfenc_ABE_common.h \
+libfenc_group_params.h \
+libfenc.h \
+libfenc_LSSS.h \
+libfenc_LSW.h \
+libfenc_utils.h \
+libfenc_WatersCP.h \
+policy_lang.h
 
 libfenc_la_SOURCES = libfenc.c libfenc_LSW.c libfenc_WatersCP.c \
 	libfenc_ABE_common.c libfenc_LSSS.c \
