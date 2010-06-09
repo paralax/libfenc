@@ -4,7 +4,7 @@ If your name is missing, please contact us to ensure it is added!
 
 Matthew D. Green <mgreen at cs dot jhu dot edu> (Main author)
 
-Joseph Ayo Akinyele
+Joseph Ayo Akinyele <waldoayo at gmail dot com>
     Miscellaneous bug, memory leak fixes.  
     Miscellaneous bison parser, error handling fixes.
     Mac OS X build (XCode).
@@ -13,9 +13,9 @@ Joseph Ayo Akinyele
     Tools implementation (ciphertext policy).
     Added encryption tags.
 
-Michael A. Rushanan
+Michael A. Rushanan <micharu123 at gmail dot com>
     Autotools.
-    Mac OS X build (macports).
+    Mac OS X build (macports/fink).
     Miscellaneous documentation.
     Miscellaneous build shell scripts (environment specific).
     Test shell script to utilize ciphertext policy.

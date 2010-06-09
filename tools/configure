@@ -557,6 +557,7 @@ PACKAGE_BUGREPORT='__@gmail.com'
 PACKAGE_URL=''
 
 ac_unique_file="mgabe-enc.c"
+ac_default_prefix=/usr/
 # Factoring default headers for most tests.
 ac_includes_default="\
 #include <stdio.h>
@@ -2667,6 +2668,9 @@ am__tar='${AMTAR} chof - "$$tardir"'; am__untar='${AMTAR} xf -'
 
 
 
+# Set the default directory to /usr/.
+
+
 # Checks for programs.
 ac_ext=c
 ac_cpp='$CPP $CPPFLAGS'
@@ -3888,6 +3892,8 @@ else
 
 	      echo "************************"
 	      echo "libfenc library not found"
+              echo "  Have you tried ldconfig to
+              echo "  update your ld.so.cache?
 	      echo -e $lib_err_msg
 	      echo "************************"
 	      exit -1

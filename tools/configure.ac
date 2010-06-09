@@ -69,6 +69,8 @@ AC_CHECK_LIB( [gmp], [__gmpz_init], [],[
 AC_CHECK_LIB( [fenc], [libfenc_init], [],[
 	      echo "************************"
 	      echo "libfenc library not found"
+              echo "  Have you tried ldconfig to
+              echo "  update your ld.so.cache?
 	      echo -e $lib_err_msg
 	      echo "************************"
 	      exit -1
