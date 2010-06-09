@@ -9,6 +9,9 @@ AC_CONFIG_HEADERS([config.h])
 # Prepairing for the automake.
 AM_INIT_AUTOMAKE([tools], [0.1.0])
 
+# Set the default directory to /usr/.
+AC_PREFIX_DEFAULT([/usr/])
+
 # Checks for programs.
 AC_PROG_CC
 AC_PROG_INSTALL
