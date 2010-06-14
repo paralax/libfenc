@@ -19,8 +19,7 @@ lib_LTLIBRARIES = libfenc.la
 
 # Includes.
 library_includedir = $(includedir)/fenc
-library_include_HEADERS = config.h \
-libfenc_ABE_common.h \
+library_include_HEADERS = libfenc_ABE_common.h \
 libfenc_group_params.h \
 libfenc.h \
 libfenc_LSSS.h \

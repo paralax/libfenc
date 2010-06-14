@@ -127,3 +127,6 @@ echo "CFLAGS:           $CFLAGS"
 echo "-----------------------------------------"
 echo -ne "\n"
 
+# When we create our own bison parser, this may need to be re-visited.
+#syscmd(bison -d -b policy_tab policy_tab.y)
+
