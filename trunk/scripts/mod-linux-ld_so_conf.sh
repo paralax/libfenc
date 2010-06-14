@@ -1,6 +1,6 @@
 #!/bin/bash
-sudo touch /etc/ld.so.conf.d/libfenc.conf
-sudo sh -c "echo '/usr/local/lib' > /etc/ld.so.conf.d/libfenc.conf"
+#sudo touch /etc/ld.so.conf.d/libfenc.conf
+#sudo sh -c "echo '/usr/local/lib' > /etc/ld.so.conf.d/libfenc.conf"
 
 
 # This was tested on Ubuntu 10.04 LTS.  To get this working for another
