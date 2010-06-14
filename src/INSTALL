@@ -15,10 +15,20 @@ assumed in configure.ac.  See ./configure --help for more information.
 make
 make install
 
-For Linux installs, you will want to run the mod-linux-ld_so_conf.sh 
-found in ./scripts post installing.  This will make a 
-/etc/ld.so.conf.d/libfenc.conf entry so that the compiler can find 
-the dynamic lib.
+For Linux installs, you will want to execute ldconfig post installing PBC
+and FENC.  This will ensure that the dynamic libraries are found and linkable.
+To be sure that these libraries are now in the ld cache, type ldconfig -p | 
+grep fenc or pbc.  Also, you can run the script mod-linux-ld_so_conf.sh to
+do this for you.
+
+You can also build the deb binary packages for PBC/FENC by running the script,
+build-pbc-deb.sh, in the scripts directory.  
+
+You may also receive some autotools versioning errors.  Please allow the 
+the tools to reconfigure and make.  ** For now, we believe this to be an
+SVN maintainer error.
+
+
 
 For the standard configure installation instructions, see the below.
 
