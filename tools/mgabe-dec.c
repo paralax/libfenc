@@ -1,18 +1,6 @@
-#include <stdio.h>
-#include <string.h>
-#include <stdlib.h>
-#include <stdio.h>
-#include <errno.h>
 #include <ctype.h>
 #include <getopt.h>
-#include "libfenc.h"
-#include "libfenc_group_params.h"
-#include "libfenc_ABE_common.h"			
-#include "libfenc_LSSS.h"
-#include "libfenc_WatersCP.h"
-#include "policy_lang.h"
-#include <pbc/pbc_test.h>
-#include "base64.h"
+#include "common.h"
 #include "openssl/aes.h"
 #include "openssl/sha.h"
 #include "openssl/evp.h"
@@ -20,20 +8,8 @@
 #include "openssl/rand.h"
 
 /* test encryption of "hello world" under policy of "ONE or TWO" */
-#define AES_TOKEN "AES"
-#define ABE_TOKEN "ABE_CP"
-
 #define MAX_ATTRIBUTES 100
-#define SIZE 2048
-#define SIZE_MAX 4096
-#define SESSION_KEY_LEN 16
-char *public_params_file = "public.param";
-char *secret_params_file = "master_secret.param";
-void report_error(char* action, FENC_ERROR result);
-void print_help(void);
 Bool cpabe_decrypt(char *inputfile, char *keyfile);
-void print_buffer_as_hex(uint8* data, size_t len);
-ssize_t read_file(FILE *f, char** out);
 void tokenize_inputfile(char* in, char** abe, char** aes);
 
 /* Description: abe-dec takes two inputs: an encrypted file and a private key and
@@ -53,12 +29,12 @@ int main (int argc, char *argv[]) {
 			case 'f': // file that holds encrypted data
 				fflag = TRUE;
 				file = optarg;
-				printf("encrypted file = '%s'\n", key);
+				printf("encrypted file = '%s'\n", file);
 				break;
 			case 'k': // input of private key 
 				kflag = TRUE;
 				key = optarg;
-				printf("private-key file = '%s'\n", file);
+				printf("private-key file = '%s'\n", key);
 				break;
 			case 'h': // print usage 
 				print_help();
@@ -102,41 +78,6 @@ void print_help(void)
 {
 	printf("Usage: ./abe-dec -k [ private-key-file ] -f [ file-to-decrypt ] \n\n");
 }
-
-void report_error(char* action, FENC_ERROR result)
-{
-	printf("%s...\n\t%s (%d)\n", action, libfenc_error_to_string(result), result);
-}
-
-void print_buffer_as_hex(uint8* data, size_t len)
-{
-	size_t i;
-	
-	for (i = 0; i < len; i++) {
-		printf("%02x ", data[i]);
-	}
-	printf("\n");
-}
-
-ssize_t read_file(FILE *f, char** out) {
-	
-	if(f != NULL) {
-		/* See how big the file is */
-		fseek(f, 0L, SEEK_END);
-		ssize_t out_len = ftell(f);
-		printf("out_len: %zd\n", out_len);
-		if(out_len <= SIZE_MAX) {
-			/* allocate that amount of memory only */
-			if((*out = (char *) malloc(out_len)) != NULL) {
-				fseek(f, 0L, SEEK_SET);
-				fread(*out, sizeof(char), out_len, f);
-				return out_len;
-			}
-		}
-	}
-	return 0;
-}
-
 /* This function tokenizes the input file with the 
 expected format: "ABE_TOKEN : base-64 : ABE_TOKEN_END : 
   			      AES_TOKEN : base-64 : AES_TOKEN_END"
