@@ -12,8 +12,11 @@
 Bool cpabe_decrypt(char *inputfile, char *keyfile);
 void tokenize_inputfile(char* in, char** abe, char** aes);
 
-/* Description: abe-dec takes two inputs: an encrypted file and a private key and
+/* 
+ Description: abe-dec takes two inputs: an encrypted file and a private key and
  produces a file w/ the contents of the plaintext.
+ NOTE: an exit code of 0 means ABE decryption was successful, 1 not successful, 
+	   and -1 an ERROR with either the input file and/or command line arguments.
  */
 int main (int argc, char *argv[]) {
 	int fflag = FALSE, kflag = FALSE;
@@ -48,30 +51,26 @@ int main (int argc, char *argv[]) {
 				else
 					fprintf (stderr,
 							 "Unknown option character `\\x%x'.\n", optopt);
-				return 1;
+				return -1;
 			default:
 				print_help();
-				abort ();
+				exit(-1);
 		}
 	}
 
 	if(fflag == FALSE) {
 		fprintf(stderr, "No file to decrypt!\n");
 		print_help();
-		exit(1);
+		exit(-1);
 	}
 	
 	if(kflag == FALSE) {
 		fprintf(stderr, "Decrypt without a key? c'mon!\n");
 		print_help();
-		exit(1);
+		exit(-1);
 	}
 	
-	
-	printf("Ok. Decrypting data.\n");
-	cpabe_decrypt(file, key);
-	printf("Complete!\n");
-	return 0;
+	return cpabe_decrypt(file, key);
 }
 
 void print_help(void)
@@ -127,6 +126,7 @@ Bool cpabe_decrypt(char *inputfile, char *keyfile)
 	char session_key[SESSION_KEY_LEN];
 	char output_str[200];
 	int output_str_len = 200;
+	int magic_failed;
 	/* Clear data structures. */
 	memset(&context, 0, sizeof(fenc_context));
 	memset(&group_params, 0, sizeof(fenc_group_params));
@@ -218,30 +218,6 @@ Bool cpabe_decrypt(char *inputfile, char *keyfile)
 	result = libfenc_import_public_params(&context, bin_public_buf, serialized_len);
 	report_error("Importing public parameters", result);
 	
-	/* read file
-	fp = fopen(secret_params_file, "r");
-	if(fp != NULL) {
-		while (TRUE) {
-			c = fgetc(fp);
-			if(c != EOF) {
-				secret_params_buf[sec_len] = c;
-				sec_len++;
-			}
-			else {
-				break;
-			}
-		}
-	}
-	else {
-		fprintf(stderr, "File does not exist: %s\n", secret_params_file);
-		return FALSE;
-	}	
-	fclose(fp);
-	
-	uint8 *bin_secret_buf = NewBase64Decode((const char *)secret_params_buf, sec_len, &serialized_len);
-	result = libfenc_import_secret_params(&context, bin_secret_buf, serialized_len, NULL, 0);
-	report_error("Importing secret parameters", result);
-*/
 	/* read input key file */ // (PRIVATE KEY)
 	printf("keyfile => '%s'\n", keyfile);
 	fp = fopen(keyfile, "r");
@@ -266,31 +242,6 @@ Bool cpabe_decrypt(char *inputfile, char *keyfile)
 		return FALSE;
 	}
 	fclose(fp);	
-	
-/*	
-	 // print out new buffer 
-	 fenc_key_WatersCP *myKey2 = (fenc_key_WatersCP *) key2.scheme_key;
-	 size_t serialized_len2;
-	 uint8 *buffer2 = malloc(KEYSIZE_MAX);
-	 memset(buffer2, 0, KEYSIZE_MAX);
-	 result = libfenc_serialize_key_WatersCP(myKey2, buffer2, KEYSIZE_MAX, &serialized_len2);		
-	 report_error("Serialize user's key", result);
-	 
-	 printf("Key-len2: '%zu'\n", serialized_len2);
-	 printf("Buffer contents 2:\n");
-	 print_buffer_as_hex(buffer2, serialized_len2);
-	 // END	
-	
-	/* stores user's authorized attributes */
-/*	memset(&func_list_input, 0, sizeof(fenc_function_input));
-	char *attr[9] = {"ONE", "TWO", "THREE", "FOUR", "FIVE", "SIX", "SEVEN", "EIGHT"};
-	libfenc_create_attribute_list_from_strings(&func_list_input, attr, 8);
-	fenc_attribute_list_to_buffer((fenc_attribute_list*)(func_list_input.scheme_input), output_str, 200, &output_str_len);
-	printf("Attribute list: %s\n", output_str);
-	
-	result = libfenc_extract_key(&context, &func_list_input, &secret_key);
-	report_error("Extracting a decryption key", result);	
-*/	
 
 	size_t abeLength;
 	uint8 *data = NewBase64Decode((const char *) abe_blob64, strlen(abe_blob64), &abeLength);
@@ -325,7 +276,20 @@ Bool cpabe_decrypt(char *inputfile, char *keyfile)
 	AES_cbc_encrypt((uint8 *) aesblob, (uint8 *) aes_result, aesLength, &sk, (unsigned char *) iv, AES_DECRYPT);
 	/* base-64 both ciphertext and write to the stdout -- in XML? */
 	
-	printf("Plaintext: %s\nSize: %zd\n", aes_result, aesLength);
+	char magic[strlen(MAGIC)+1];
+	memset(magic, 0, strlen(MAGIC)+1);
+	strncpy(magic, aes_result, strlen(MAGIC));
+	
+	if(strcmp(magic, MAGIC) == 0) {
+		printf("Recovered magic: '%s'\n", magic);		
+		printf("Plaintext: %s\n", (char *) (aes_result + strlen(MAGIC)));
+		magic_failed = FALSE;
+	}
+	else {
+		fprintf(stderr, "ERROR: ABE Decryption unsuccessful!!!\n");
+		magic_failed = TRUE;
+	}
+
 	
 	/* Destroy the context. */
 	result = libfenc_destroy_context(&context);
@@ -334,6 +298,6 @@ Bool cpabe_decrypt(char *inputfile, char *keyfile)
 	/* Shutdown the library. */
 	result = libfenc_shutdown();
 	report_error("Shutting down library", result);
-	return TRUE;
+	return magic_failed;
 }
 

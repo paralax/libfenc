@@ -11,23 +11,25 @@
 
 #define BYTES 4
 void parse_attributes(char *input);
-void cpabe_encrypt(char *policy, char *data, char *enc_file);
+void cpabe_encrypt(char *policy, char *data, char *enc_file, int isXML);
 fenc_attribute_policy *construct_test_policy();
-ssize_t read_file(FILE *f, char** out);
 
 /* Description: mgabe-keygen takes the outfile to write the users keys, and the .
  
  */
 int main (int argc, char *argv[]) {
-	int pflag = FALSE, dflag = FALSE, oflag = FALSE, iflag = FALSE;
+	int pflag,dflag,oflag,iflag,xflag;
 	char *policy = NULL, *data = NULL, *enc_file = NULL;
 	ssize_t data_len;
 	FILE *fp;
 	int c, exit_status = 0;
 		
 	opterr = 0;
+	// default
+	pflag = dflag = oflag = iflag = xflag = FALSE;
+
 	
-	while ((c = getopt (argc, argv, "d:i:o:p:")) != -1) {
+	while ((c = getopt (argc, argv, "d:i:o:p:x")) != -1) {
 		
 		switch (c)
 		{
@@ -70,6 +72,9 @@ int main (int argc, char *argv[]) {
 				oflag = TRUE;
 				enc_file = optarg;
 				break;
+			case 'x': /* output format: xml format */
+				xflag = TRUE;
+				break;
 			case 'h':
 				print_help();
 				exit(1);
@@ -108,8 +113,7 @@ int main (int argc, char *argv[]) {
 		goto clean;
 	}
 	
-	// printf("Setting up encryption.\n");
-	cpabe_encrypt(policy, data, enc_file);
+	cpabe_encrypt(policy, data, enc_file, xflag);
 clean:	
 	free(data);
 	return exit_status;
@@ -120,7 +124,7 @@ void print_help(void)
 	printf("Usage: ./abe-enc -d [ \"data\" ] -i [ input-filename ] -p '((ATTR1 and ATTR2) or ATT3) -o [ output-filename ]'\n\n");
 }
 
-void cpabe_encrypt(char *policy, char *data, char *enc_file)
+void cpabe_encrypt(char *policy, char *data, char *enc_file, int isXML)
 {
 	FENC_ERROR result;
 	fenc_context context;
@@ -219,7 +223,7 @@ void cpabe_encrypt(char *policy, char *data, char *enc_file)
 	result = libfenc_kem_encrypt(&context, &func_policy_input, SESSION_KEY_LEN, (uint8 *)session_key, &ciphertext);	
 	
 	/* generated PSK from policy string */
-	// printf("\tSession key is: ");
+	printf("\tSession key is: ");
 	print_buffer_as_hex((uint8 *) session_key, SESSION_KEY_LEN);
 
 	/* encrypted blob that belongs in the <ABED></ABE> tags */
@@ -230,43 +234,56 @@ void cpabe_encrypt(char *policy, char *data, char *enc_file)
 	AES_KEY key;
 	char iv[AES_BLOCK_SIZE*4];
 	int data_len = strlen(data)*5; // consider padding?
-	char aes_ciphertext[data_len];
+	char aes_ciphertext[data_len], data_magic[strlen(data)+6];
 	
 	memset(iv, 0, AES_BLOCK_SIZE*4);
 	memset(aes_ciphertext, 0, data_len);
 	AES_set_encrypt_key((uint8 *) session_key, 8*SESSION_KEY_LEN, &key);
 	printf("\tPlaintext is => '%s'\n", data);
-	// print_buffer_as_hex((uint8 *)data, data_len);
+	sprintf(data_magic, MAGIC"%s", data);
+	// printf("\tPlaintext is => '%s'\n", data_magic);
 	
-	AES_cbc_encrypt((uint8 *)data, (uint8 *) aes_ciphertext, data_len, &key, (uint8 *) iv, AES_ENCRYPT);
+	AES_cbc_encrypt((uint8 *)data_magic, (uint8 *) aes_ciphertext, data_len, &key, (uint8 *) iv, AES_ENCRYPT);
 	// printf("\tAES Ciphertext base 64: ");
 	// print_buffer_as_hex((uint8 *) aes_ciphertext, data_len);
 	
-	printf("\n\n<====  Base-64 encode ciphertext  ====> \n\n");
-	FILE *f = fopen("enc_data.xml", "w");
-	FILE *f1 = fopen(enc_file, "w");
-	
-	/* generate the random unique id */
+	char filename[strlen(enc_file)+10];
+	memset(filename, 0, strlen(enc_file)+9);
 	uint8 *rand_id[BYTES+1];
-	if(RAND_bytes(rand_id, BYTES) == 0) {
-		perror("Unusual failure.\n");
-		strcpy((char *)rand_id, "0123");
+	if(isXML) {
+		sprintf(filename, "%s.abe.xml", enc_file);
+		fp = fopen(filename, "w");
+		/* generate the random unique id */
+		if(RAND_bytes((char *) rand_id, BYTES) == 0) {
+			perror("Unusual failure.\n");
+			strcpy((char *)rand_id, "0123");
+		}		
 	}
-	
+	else {
+		sprintf(filename, "%s.abe", enc_file);
+		fp = fopen(filename, "w");
+	}
+	printf("\tCiphertext stored in '%s'.\n", filename);
+		
 	/* base-64 both ciphertexts and write to the stdout -- in XML? */
 	size_t abe_length, aes_length;
 	char *ABE_cipher_base64 = NewBase64Encode(ciphertext.data, ciphertext.data_len, FALSE, &abe_length);
-	fprintf(f,"<Encrypted id='");
-	fprintf(f, "%08x", (unsigned int) rand_id[0]);
-	fprintf(f,"'><ABE type='CP'>%s</ABE>", ABE_cipher_base64);
-	fprintf(f1, ABE_TOKEN":%s:"ABE_TOKEN_END":", ABE_cipher_base64);
+	char *AES_cipher_base64 = NewBase64Encode(aes_ciphertext, data_len, FALSE, &aes_length);	
 	
-	char *AES_cipher_base64 = NewBase64Encode(aes_ciphertext, data_len, FALSE, &aes_length);
-	fprintf(f,"<EncryptedData>%s</EncryptedData></Encrypted>", AES_cipher_base64);
-	fprintf(f1, AES_TOKEN":%s:"AES_TOKEN_END, AES_cipher_base64);
-	fclose(f);
-	fclose(f1);
-		
+	/* output ciphertext to disk: either xml or custom format */
+	if(isXML) {
+		fprintf(fp,"<Encrypted id='");
+		fprintf(fp, "%08x", (unsigned int) rand_id[0]);
+		fprintf(fp,"'><ABE type='CP'>%s</ABE>", ABE_cipher_base64);
+		fprintf(fp,"<EncryptedData>%s</EncryptedData></Encrypted>", AES_cipher_base64);
+		fclose(fp);
+	}
+	else {
+		fprintf(fp, ABE_TOKEN":%s:"ABE_TOKEN_END":", ABE_cipher_base64);
+		fprintf(fp, AES_TOKEN":%s:"AES_TOKEN_END, AES_cipher_base64);
+		fclose(fp);		
+	}
+			
 	free(ABE_cipher_base64);
 	free(AES_cipher_base64);
 	free(parsed_policy);
