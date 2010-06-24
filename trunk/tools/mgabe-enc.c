@@ -1,17 +1,6 @@
-#include <stdio.h>
-#include <string.h>
-#include <stdlib.h>
-#include <stdio.h>
-#include <errno.h>
 #include <ctype.h>
 #include <getopt.h>
-#include "libfenc.h"
-#include "libfenc_group_params.h"
-#include "libfenc_ABE_common.h"			
-#include "libfenc_LSSS.h"				
-#include "policy_lang.h"
-#include <pbc/pbc_test.h>
-#include "base64.h"
+#include "common.h"
 #include "openssl/aes.h"
 #include "openssl/sha.h"
 #include "openssl/evp.h"
@@ -19,23 +8,10 @@
 #include "openssl/rand.h"
 
 /* include code that creates policy by hand */
-#define AES_TOKEN "AES"
-#define AES_TOKEN_END "AES_END"
-#define ABE_TOKEN "ABE_CP"
-#define ABE_TOKEN_END "ABE_CP_END"
-#define BYTES 4
 
-#define MAX_ATTRIBUTES 100
-#define SIZE 2048
-#define SIZE_MAX 4096
-#define SESSION_KEY_LEN 16
-char *public_params_file = "public.param";
-// char *secret_params_file = "master_secret.param";
-void report_error(char* action, FENC_ERROR result);
-void print_help(void);
+#define BYTES 4
 void parse_attributes(char *input);
 void cpabe_encrypt(char *policy, char *data, char *enc_file);
-void print_buffer_as_hex(uint8* data, size_t len);
 fenc_attribute_policy *construct_test_policy();
 ssize_t read_file(FILE *f, char** out);
 
@@ -142,40 +118,6 @@ clean:
 void print_help(void)
 {
 	printf("Usage: ./abe-enc -d [ \"data\" ] -i [ input-filename ] -p '((ATTR1 and ATTR2) or ATT3) -o [ output-filename ]'\n\n");
-}
-
-void report_error(char* action, FENC_ERROR result)
-{
-	printf("%s...\n\t%s (%d)\n", action, libfenc_error_to_string(result), result);
-}
-
-void print_buffer_as_hex(uint8* data, size_t len)
-{
-	size_t i;
-	
-	for (i = 0; i < len; i++) {
-		printf("%02x ", data[i]);
-	}
-	printf("\n");
-}
-
-ssize_t read_file(FILE *f, char** out) {
-	
-	if(f != NULL) {
-		/* See how big the file is */
-		fseek(f, 0L, SEEK_END);
-		ssize_t out_len = ftell(f);
-		printf("out_len: %zd\n", out_len);
-		if(out_len <= SIZE_MAX) {
-			/* allocate that amount of memory only */
-			if((*out = (char *) malloc(out_len)) != NULL) {
-				fseek(f, 0L, SEEK_SET);
-				fread(*out, sizeof(char), out_len, f);
-				return out_len;
-			}
-		}
-	}
-	return 0;
 }
 
 void cpabe_encrypt(char *policy, char *data, char *enc_file)
@@ -293,7 +235,7 @@ void cpabe_encrypt(char *policy, char *data, char *enc_file)
 	memset(iv, 0, AES_BLOCK_SIZE*4);
 	memset(aes_ciphertext, 0, data_len);
 	AES_set_encrypt_key((uint8 *) session_key, 8*SESSION_KEY_LEN, &key);
-	// printf("\tPlaintext is => '%s'\n", data);
+	printf("\tPlaintext is => '%s'\n", data);
 	// print_buffer_as_hex((uint8 *)data, data_len);
 	
 	AES_cbc_encrypt((uint8 *)data, (uint8 *) aes_ciphertext, data_len, &key, (uint8 *) iv, AES_ENCRYPT);

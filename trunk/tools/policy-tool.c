@@ -1,12 +1,5 @@
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
 #include <ctype.h>
-#include "libfenc.h"
-#include "libfenc_group_params.h"
-#include "libfenc_ABE_common.h"			
-#include "libfenc_LSSS.h"				
-#include "policy_lang.h"
+#include "common.h"
 
 #define MAX_STR 4096
 

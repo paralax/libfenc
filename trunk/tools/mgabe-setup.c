@@ -1,17 +1,4 @@
-#include <stdio.h>
-#include <string.h>
-#include <stdlib.h>
-#include <stdio.h>
-#include <errno.h>
-#include "libfenc.h"
-#include "libfenc_group_params.h"
-#include "libfenc_ABE_common.h"			/* Used for internal tests, not a standard include.	*/
-#include "libfenc_LSSS.h"				/* Used for internal tests, not a standard include.	*/
-#include "policy_lang.h"
-#include <pbc/pbc_test.h>
-#include "base64.h"
-
-void report_error(char* action, FENC_ERROR result);
+#include "common.h"
 
 /* Description: mgabe-setup takes no arguments and simply reads in the global parameters from the filesystem,
  and generates the public parameters (or public key) and the master secret parameters (or master secret key).
@@ -19,7 +6,7 @@ void report_error(char* action, FENC_ERROR result);
  It serializes and writes to disk the public parameters and the master secret key.
  
  */
-int main (int argc, const char * argv[]) {
+int main (int argc, char * argv[]) {
 	FENC_ERROR result;
 	fenc_context context;
 	fenc_group_params group_params;
@@ -80,7 +67,7 @@ int main (int argc, const char * argv[]) {
 	printf("'%s'\n", publicBuffer);
 			
 	/* base-64 encode the pub params and write to disk */
-	fp = fopen("public.param", "w");
+	fp = fopen(public_params_file, "w");
 	if(fp != NULL) {
 		fprintf(fp, "%s", publicBuffer);
 	}
@@ -106,7 +93,7 @@ int main (int argc, const char * argv[]) {
 	printf("'%s'\n", secretBuffer);
 	
 	/* base-64 encode the pub params and write to disk */
-	fp = fopen("master_secret.param", "w");
+	fp = fopen(secret_params_file, "w");
 	if(fp != NULL) {
 		fprintf(fp, "%s", secretBuffer);
 	}
@@ -126,8 +113,4 @@ int main (int argc, const char * argv[]) {
     return 0;
 }
 
-void report_error(char* action, FENC_ERROR result)
-{
-	printf("%s...\n\t%s (%d)\n", action, libfenc_error_to_string(result), result);
-}
 

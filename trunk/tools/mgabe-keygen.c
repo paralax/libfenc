@@ -1,35 +1,12 @@
-#include <stdio.h>
-#include <string.h>
-#include <stdlib.h>
-#include <stdio.h>
-#include <errno.h>
 #include <ctype.h>
 #include <getopt.h>
 #include <math.h>
-#include "libfenc.h"
-#include "libfenc_group_params.h"
-#include "libfenc_ABE_common.h"
-#include "libfenc_WatersCP.h"
-#include "libfenc_LSSS.h"				
-#include "policy_lang.h"
-#include <pbc/pbc_test.h>
-#include "base64.h"
+#include "common.h"
 
-/* need to specify command line limit on key size */
-// #define MAX_ATTRIBUTES 50
-/* will this be enough */
-#define KEYSIZE_MAX 4096
-#define SIZE 2048
-#define SESSION_KEY_LEN 16
 #define DEFAULT_KEYFILE "private.key"
 #define BITS 64
 char *attributes[MAX_CIPHERTEXT_ATTRIBUTES];
 int attributes_len = 0;
-char *public_params_file = "public.param";
-char *secret_params_file = "master_secret.param";
-void report_error(char* action, FENC_ERROR result);
-void print_help(void);
-void print_buffer_as_hex(uint8* data, size_t len);
 int parse_attributes(char *input);
 void generate_keys(char *outfile);
 int ret_num_bits(int value1);
@@ -102,21 +79,6 @@ int main (int argc, char* argv[]) {
 void print_help(void)
 {
 	printf("Usage: ./abe-keygen -o key_file -a ATTR1,ATTR2,ATT3,etc\n\n");
-}
-
-void report_error(char* action, FENC_ERROR result)
-{
-	printf("%s...\n\t%s (%d)\n", action, libfenc_error_to_string(result), result);
-}
-
-void print_buffer_as_hex(uint8* data, size_t len)
-{
-	size_t i;
-	
-	for (i = 0; i < len; i++) {
-		printf("%02x ", data[i]);
-	}
-	printf("\n");
 }
 
 int parse_attributes(char *input)

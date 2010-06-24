@@ -50,19 +50,23 @@ CONFIG_HEADER = config.h
 CONFIG_CLEAN_FILES =
 CONFIG_CLEAN_VPATH_FILES =
 PROGRAMS = $(noinst_PROGRAMS)
-am_abe_dec_OBJECTS = mgabe-dec.$(OBJEXT) base64.$(OBJEXT)
+am_abe_dec_OBJECTS = mgabe-dec.$(OBJEXT) base64.$(OBJEXT) \
+	common.$(OBJEXT)
 abe_dec_OBJECTS = $(am_abe_dec_OBJECTS)
 abe_dec_LDADD = $(LDADD)
-am_abe_enc_OBJECTS = mgabe-enc.$(OBJEXT) base64.$(OBJEXT)
+am_abe_enc_OBJECTS = mgabe-enc.$(OBJEXT) base64.$(OBJEXT) \
+	common.$(OBJEXT)
 abe_enc_OBJECTS = $(am_abe_enc_OBJECTS)
 abe_enc_LDADD = $(LDADD)
-am_abe_keygen_OBJECTS = mgabe-keygen.$(OBJEXT) base64.$(OBJEXT)
+am_abe_keygen_OBJECTS = mgabe-keygen.$(OBJEXT) base64.$(OBJEXT) \
+	common.$(OBJEXT)
 abe_keygen_OBJECTS = $(am_abe_keygen_OBJECTS)
 abe_keygen_LDADD = $(LDADD)
-am_abe_setup_OBJECTS = mgabe-setup.$(OBJEXT) base64.$(OBJEXT)
+am_abe_setup_OBJECTS = mgabe-setup.$(OBJEXT) base64.$(OBJEXT) \
+	common.$(OBJEXT)
 abe_setup_OBJECTS = $(am_abe_setup_OBJECTS)
 abe_setup_LDADD = $(LDADD)
-am_policy_test_OBJECTS = policy-tool.$(OBJEXT)
+am_policy_test_OBJECTS = policy-tool.$(OBJEXT) common.$(OBJEXT)
 policy_test_OBJECTS = $(am_policy_test_OBJECTS)
 policy_test_LDADD = $(LDADD)
 DEFAULT_INCLUDES = -I.@am__isrc@
@@ -225,12 +229,12 @@ CLEANFILES = *~
 
 # Link in those libraries.
 AM_LDFLAGS = -lgmp -lpbc -lcrypto -lfenc
-AM_CPPFLAGS = -I../src
-abe_setup_SOURCES = mgabe-setup.c base64.c
-abe_keygen_SOURCES = mgabe-keygen.c base64.c
-abe_enc_SOURCES = mgabe-enc.c base64.c
-abe_dec_SOURCES = mgabe-dec.c base64.c
-policy_test_SOURCES = policy-tool.c
+AM_CPPFLAGS = -I/usr/local/include -I/usr/include
+abe_setup_SOURCES = mgabe-setup.c base64.c common.c
+abe_keygen_SOURCES = mgabe-keygen.c base64.c common.c
+abe_enc_SOURCES = mgabe-enc.c base64.c common.c
+abe_dec_SOURCES = mgabe-dec.c base64.c common.c
+policy_test_SOURCES = policy-tool.c common.c
 all: config.h
 	$(MAKE) $(AM_MAKEFLAGS) all-recursive
 
@@ -313,6 +317,7 @@ distclean-compile:
 	-rm -f *.tab.c
 
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/base64.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/common.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/mgabe-dec.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/mgabe-enc.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/mgabe-keygen.Po@am__quote@
