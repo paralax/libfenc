@@ -21,6 +21,7 @@
 #define MAX_ATTRIBUTES 100
 #define SESSION_KEY_LEN 16
 
+#define MAGIC "ABE|"
 #define AES_TOKEN "AES"
 #define AES_TOKEN_END "AES_END"
 #define ABE_TOKEN "ABE_CP"

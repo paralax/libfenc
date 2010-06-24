@@ -5,12 +5,16 @@
 ./abe-setup 
 
 # Generate a key based on a user's attribute list. 
-(for now, requires secret and public params in same dir)
+#(for now, requires secret and public params in same dir)
 ./abe-keygen -a ONE,TWO,THREE,FOUR,FIVE -o usr_priv.key
 
 # How to encrypt
-(for now, requires public params in same dir).
-./abe-enc -d "some text here" -p "((ONE and TWO) or THREE)"
+#(for now, requires public params in same dir).
+./abe-enc -d "some text here" -p "((ONE and TWO) or THREE)" -o outfile 
 
 # How to decrypt
-./abe-dec 
+./abe-dec -k usr_priv.key -f outfile.abe
+
+echo "Exit code: $?"
+
+exit 0
