@@ -1,25 +1,35 @@
-#                                               -*- Autoconf -*-
-# Process this file with autoconf to produce a configure script.
+# -*- Autoconf -*-
+dnl  Process this file with autoconf to produce a configure script.
+
+define(TOOLS_COPYRIGHT,[[
+
+FENC Tools Copyright is blank for now.  Licensing information coming soon.
+
+]])
+AC_COPYRIGHT(TOOLS_COPYRIGHT)
+AH_TOP(/*TOOLS_COPYRIGHT*/)
+
 
 AC_PREREQ([2.65])
-AC_INIT(tools, 0.1.0, __@gmail.com)
+AC_INIT([tools], [0.2], [mgreen at cs dot jhu dot edu])
 AC_CONFIG_SRCDIR([mgabe-enc.c])
 AC_CONFIG_HEADERS([config.h])
 
 # Prepairing for the automake.
-AM_INIT_AUTOMAKE([tools], [0.1.0])
+AM_INIT_AUTOMAKE
 
-# Set the default directory to /usr/.
-AC_PREFIX_DEFAULT([/usr/])
+# Set the default directory to /usr/.  Let's keep it @ /usr/local
+#AC_PREFIX_DEFAULT([/usr/])
 
-# Checks for programs.
+# Checks for programs; shouldn't need to check for all of these, 
+# but will leave intact.
 AC_PROG_CC
 AC_PROG_INSTALL
 AC_PROG_LN_S
 AC_PROG_MAKE_SET
 
 # If macosx, than check for macports or fink default installation.
-default_macports_path=/opt
+default_macports_path=/opt/local
 default_fink_path=/sw
 case $host_os in
      darwin*) 
@@ -69,8 +79,9 @@ AC_CHECK_LIB( [gmp], [__gmpz_init], [],[
 AC_CHECK_LIB( [fenc], [libfenc_init], [],[
 	      echo "************************"
 	      echo "libfenc library not found"
-              echo "  Have you tried ldconfig to
-              echo "  update your ld.so.cache?
+              echo "   Linux?  Have you tried sudo"
+              echo "   ldconfig to update your"
+              echo "   ld.so.cache?"
 	      echo -e $lib_err_msg
 	      echo "************************"
 	      exit -1
@@ -82,8 +93,16 @@ AC_CHECK_LIB( [crypto], [DES_xcbc_encrypt], [],[
 	      echo "************************"
 	      exit -1
 	      ])
-dnl Reset libs because most programs do not need to link against all of these libs.
-LIBS=
+AC_CHECK_LIB( [pbc], [pbc_set_msg_to_stderr], [],[
+	      echo "************************"
+	      echo "pbc library not found"
+              echo "   Linux?  Have you tried sudo"
+              echo "   ldconfig to update your"
+              echo "   ld.so.cache?"
+	      echo -e $lib_err_msg
+	      echo "************************"
+	      exit -1
+	      ])
 
 dnl setup CFLAGS
 with_enable_optimized="no"
