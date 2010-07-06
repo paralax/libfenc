@@ -336,4 +336,16 @@ FENC_ERROR	fenc_policy_from_string(fenc_attribute_policy *policy, char *policy_s
 
 char* fenc_get_policy_string(fenc_attribute_policy *policy);
 
+/*!
+ * Hash an attribute string to a value in Zr.  The result is stored within the
+ * attribute structure.  Note that this hash may already have been stored,
+ * in which case this routine will avoid redundant computation.
+ *
+ * @param attribute			Pointer to a fenc_attribute data structure.
+ * @param global_params		Pointer to a fenc_group_parameters data structure.
+ * @return					FENC_ERROR_NONE or an error code.
+ */
+
+FENC_ERROR hash_attribute_string_to_Zr(fenc_attribute *attribute, pairing_t pairing);
+
 #endif /* ifdef __LIBFENC_ABE_COMMON_H__ */

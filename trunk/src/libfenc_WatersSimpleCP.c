@@ -1501,10 +1501,9 @@ fenc_ciphertext_WatersSimpleCP_initialize(fenc_ciphertext_WatersSimpleCP *cipher
 	
 	element_init_GT(ciphertext->CT, scheme_context->global_params->pairing);
 	element_set1(ciphertext->CT);
-	element_init_G1(ciphertext->CprimeONE, scheme_context->global_params->pairing);
+	element_init_G2(ciphertext->CprimeTWO, scheme_context->global_params->pairing);
 	for (i = 0; i < attribute_list->num_attributes; i++) {
 		element_init_G1(ciphertext->CONE[i], scheme_context->global_params->pairing);
-		element_init_G2(ciphertext->DTWO[i], scheme_context->global_params->pairing);
 	}
 	ciphertext->type = type;
 	
@@ -1531,10 +1530,9 @@ fenc_ciphertext_WatersSimpleCP_clear(fenc_ciphertext_WatersSimpleCP *ciphertext)
 	
 	/* Release all of the internal elements.  Let's hope the ciphertext was correctly inited! */
 	element_clear(ciphertext->CT);
-	element_clear(ciphertext->CprimeONE);
+	element_clear(ciphertext->CprimeTWO);
 	for (i = 0; i < ciphertext->attribute_list.num_attributes; i++) {
 		element_clear(ciphertext->CONE[i]);
-		element_clear(ciphertext->DTWO[i]);
 	}
 	
 	/* Release the attribute list if one has been allocated. */
@@ -1723,7 +1721,7 @@ libfenc_fprint_ciphertext_WatersSimpleCP(fenc_ciphertext_WatersSimpleCP *ciphert
 
 	fprintf(out_file, "policy = %s\n", ciphertext->policy_str);
 	element_fprintf(out_file, "CT = %B\n", ciphertext->CT);
-	element_fprintf(out_file, "CprimeONE = %B\n", ciphertext->CprimeONE);
+	element_fprintf(out_file, "CprimeTWO = %B\n", ciphertext->CprimeTWO);
 	
 	/* For every attribute in the ciphertext... */
 	for (i = 0; i < ciphertext->attribute_list.num_attributes; i++) {
@@ -1734,7 +1732,6 @@ libfenc_fprint_ciphertext_WatersSimpleCP(fenc_ciphertext_WatersSimpleCP *ciphert
 		element_fprintf(out_file, "\tAttribute Hash = %B\n", ciphertext->attribute_list.attribute[i].attribute_hash);
 		
 		element_fprintf(out_file, "\tCONE[%d] = %B\n", i, ciphertext->CONE[i]);
-		element_fprintf(out_file, "\tDTWO[%d] = %B\n", i, ciphertext->DTWO[i]);
 	}
 	
 	/* Return success. */
