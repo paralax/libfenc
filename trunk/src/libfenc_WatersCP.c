@@ -229,7 +229,7 @@ libfenc_extract_key_WatersCP(fenc_context *context, fenc_function_input *input, 
 	/* For every share/attribute, create one component of the secret key.	*/
 	for (i = 0; i < (signed int)key_WatersCP->attribute_list.num_attributes; i++) {		
 		/* Hash the attribute string to Zr, if it hasn't already been.	*/
-		hash_attribute_string_to_Zr(&(key_WatersCP->attribute_list.attribute[i]), scheme_context->global_params);
+		hash_attribute_string_to_Zr(&(key_WatersCP->attribute_list.attribute[i]), scheme_context->global_params->pairing);
 		
 		/* Now hash the result into an element of G1 (tempONE).	*/
 		err_code = hash2_attribute_element_to_G1(&(key_WatersCP->attribute_list.attribute[i].attribute_hash), &tempONE);	/* result in tempONE  */
@@ -649,7 +649,7 @@ encrypt_WatersCP_internal(fenc_context *context, fenc_function_input *input, fen
 	/* For every share/attribute, create one component of the secret key.	*/
 	for (i = 0; i < ciphertext_WatersCP.attribute_list.num_attributes; i++) {		
 		/* Hash the attribute string to Zr, if it hasn't already been.	*/
-		hash_attribute_string_to_Zr(&(ciphertext_WatersCP.attribute_list.attribute[i]), scheme_context->global_params);
+		hash_attribute_string_to_Zr(&(ciphertext_WatersCP.attribute_list.attribute[i]), scheme_context->global_params->pairing);
 		
 		/* Pick a random value r_i (rZ).	*/
 		element_random(rZ);
