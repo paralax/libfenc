@@ -239,7 +239,7 @@ libfenc_extract_key_LSW(fenc_context *context, fenc_function_input *input, fenc_
 	/* For every share/attribute, create one component of the secret key.	*/
 	for (i = 0; i < (signed int)key_LSW->attribute_list.num_attributes; i++) {		
 		/* Hash the attribute string to Zr, if it hasn't already been.	*/
-		hash_attribute_string_to_Zr(&(key_LSW->attribute_list.attribute[i]), scheme_context->global_params);
+		hash_attribute_string_to_Zr(&(key_LSW->attribute_list.attribute[i]), scheme_context->global_params->pairing);
 		
 		/* Pick a random value r_i (rZ).	*/
 		element_random(rZ);
@@ -355,7 +355,10 @@ FENC_ERROR
 libfenc_encrypt_LSW(fenc_context *context, fenc_function_input *input, fenc_plaintext *plaintext,
 					fenc_ciphertext *ciphertext)
 {
-	return encrypt_LSW_internal(context, input, plaintext, FALSE, NULL, 0, ciphertext);
+	LOG_ERROR("libfenc_encrypt_LSW: standard encryption not supported, use libfenc_kem_encrypt");
+	return FENC_ERROR_NOT_IMPLEMENTED;
+	
+	/*return encrypt_LSW_internal(context, input, plaintext, FALSE, NULL, 0, ciphertext); */
 }
 
 /*!
@@ -583,7 +586,7 @@ libfenc_decrypt_LSW(fenc_context *context, fenc_ciphertext *ciphertext, fenc_key
 	/* Final computation: this depends on whether this is a KEM or a standard encryption.	*/
 	if (ciphertext_LSW.type == FENC_CIPHERTEXT_TYPE_KEM_CPA) {
 		/* If its a KEM, hash prodT and that's the resulting session key.	*/
-		err_code = derive_session_key_from_element(plaintext, &prodT, ciphertext_LSW.kem_key_len, scheme_context->global_params->pairing);
+		err_code = derive_session_key_from_element(plaintext, prodT, ciphertext_LSW.kem_key_len, scheme_context->global_params->pairing);
 		if (err_code != FENC_ERROR_NONE) {
 			result = err_code;
 			goto cleanup;
@@ -751,7 +754,7 @@ encrypt_LSW_internal(fenc_context *context, fenc_function_input *input, fenc_pla
 		 * two distinct hash functions.
 		 *
 		 * First, compute the attribute ciphertext_LSW.attribute[i] = H1(attribute_i) */
-		err_code = hash_attribute_string_to_Zr(&(attribute_list.attribute[i]), scheme_context->global_params);
+		err_code = hash_attribute_string_to_Zr(&(attribute_list.attribute[i]), scheme_context->global_params->pairing);
 		if (err_code != FENC_ERROR_NONE) { result = err_code; goto cleanup; }
 		
 		/* Now compute the group element hashONE = H2(ciphertext_LSW.attribute[i]) */
@@ -1542,7 +1545,7 @@ hash_attribute(fenc_attribute *attribute, pairing_t pairing)
 	/* If there is an attribute string and no hash is present, perform the hashing.	*/
 	if (attribute->attribute_str[0] != 0 && attribute->is_hashed == FALSE) {
 		element_init_Zr(attribute->attribute_hash, pairing);
-		hash1_attribute_string_to_Zr(attribute->attribute_str, attribute->attribute_hash);
+		hash1_attribute_string_to_Zr((uint8*)attribute->attribute_str, &(attribute->attribute_hash));
 		attribute->is_hashed = TRUE;
 	}
 	
@@ -1566,7 +1569,7 @@ hash1_attribute_string_to_Zr(uint8 *attribute_str, element_t *hashed_attr)
 	uint8	hash_buf[HASH_TARGET_LEN];
 	
 	/* TODO: HASH_TARGET_LEN must be replaced with something more sophisticated.	*/
-	err_code = hash_to_bytes(attribute_str, strlen(attribute_str), HASH_TARGET_LEN, hash_buf, HASH_FUNCTION_STR_TO_Zr_CRH);
+	err_code = hash_to_bytes(attribute_str, strlen((char*)attribute_str), HASH_TARGET_LEN, hash_buf, HASH_FUNCTION_STR_TO_Zr_CRH);
 	if (err_code != FENC_ERROR_NONE) { return err_code; }
 	element_from_hash(*hashed_attr, hash_buf, HASH_TARGET_LEN); 
 	
@@ -1756,35 +1759,6 @@ secret_params_initialize_LSW(fenc_secret_params_LSW *params, pairing_t pairing)
 }
 
 /*!
- * Hash an attribute string to a value in Zr.  The result is stored within the
- * attribute structure.  Note that this hash may already have been stored,
- * in which case this routine will avoid redundant computation.
- *
- * @param attribute			Pointer to a fenc_attribute data structure.
- * @param global_params		Pointer to a fenc_group_parameters data structure.
- * @return					FENC_ERROR_NONE or an error code.
- */
-
-FENC_ERROR
-hash_attribute_string_to_Zr(fenc_attribute *attribute, fenc_global_params_LSW *global_params)
-{
-	FENC_ERROR err_code;
-	
-	if (attribute->is_hashed == FALSE) {
-		element_init_Zr(attribute->attribute_hash, global_params->pairing);
-		err_code = hash1_attribute_string_to_Zr(attribute->attribute_str, &(attribute->attribute_hash));
-		DEBUG_ELEMENT_PRINTF("Hashed %s to %B\n", attribute->attribute_str, attribute->attribute_hash);
-		if (err_code != FENC_ERROR_NONE) {
-			element_clear(attribute->attribute_hash);
-			return err_code;
-		}
-		attribute->is_hashed = TRUE;
-	}
-	
-	return FENC_ERROR_NONE;
-}
-
-/*!
  * Print a ciphertext to a file as ASCII.
  *
  * @param ciphertext		The ciphertext to serialize.
@@ -1805,7 +1779,7 @@ libfenc_fprint_ciphertext_LSW(fenc_ciphertext_LSW *ciphertext, FILE* out_file)
 	/* For every attribute in the ciphertext... */
 	for (i = 0; i < ciphertext->attribute_list.num_attributes; i++) {
 		fprintf(out_file, "Attribute #%d:\n", i);
-		if (strlen(ciphertext->attribute_list.attribute[i].attribute_str) > 0) {
+		if (strlen((char*)ciphertext->attribute_list.attribute[i].attribute_str) > 0) {
 			fprintf(out_file, "\tAttribute = \"%s\"\n", ciphertext->attribute_list.attribute[i].attribute_str);
 		}
 		element_fprintf(out_file, "\tAttribute Hash = %B\n", ciphertext->attribute_list.attribute[i].attribute_hash);
