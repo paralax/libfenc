@@ -106,6 +106,9 @@ libfenc_create_context(fenc_context *context, FENC_SCHEME_TYPE scheme_type)
 		case FENC_SCHEME_WATERSCP:
 			result = libfenc_create_context_WatersCP(context);
 			break;
+		case FENC_SCHEME_WATERSSIMPLECP:
+			result = libfenc_create_context_WatersSimpleCP(context);
+			break;
 		default:
 			result = FENC_ERROR_UNKNOWN_SCHEME;
 	}
