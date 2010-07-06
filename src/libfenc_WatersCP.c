@@ -15,6 +15,7 @@
 #include "libfenc_WatersCP.h"
 #include "libfenc_LSSS.h"
 #include "libfenc_LSW.h"
+
 /********************************************************************************
  * Waters Ciphertext-Policy Implementation
  ********************************************************************************/
@@ -455,7 +456,7 @@ libfenc_decrypt_WatersCP(fenc_context *context, fenc_ciphertext *ciphertext, fen
 	/* Finally, hash this result to obtain the KEM decryption.  Full encryption is for the future.	*/
 	if (ciphertext_WatersCP.type == FENC_CIPHERTEXT_TYPE_KEM_CPA) {
 		/* If its a KEM, hash prodT and that's the resulting session key.	*/
-		err_code = derive_session_key_from_element(plaintext, &prodT, ciphertext_WatersCP.kem_key_len, scheme_context->global_params->pairing);
+		err_code = derive_session_key_from_element(plaintext, prodT, ciphertext_WatersCP.kem_key_len, scheme_context->global_params->pairing);
 		if (err_code != FENC_ERROR_NONE) {
 			result = err_code;
 			goto cleanup;

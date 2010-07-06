@@ -488,18 +488,6 @@ FENC_ERROR	public_params_initialize_LSW(fenc_public_params_LSW *params, pairing_
 FENC_ERROR	secret_params_initialize_LSW(fenc_secret_params_LSW *params, pairing_t pairing);
 
 /*!
- * Hash an attribute string to a value in Zr.  The result is stored within the
- * attribute structure.  Note that this hash may already have been stored,
- * in which case this routine will avoid redundant computation.
- *
- * @param attribute			Pointer to a fenc_attribute data structure.
- * @param global_params		Pointer to a fenc_group_parameters data structure.
- * @return					FENC_ERROR_NONE or an error code.
- */
-
-FENC_ERROR	hash_attribute_string_to_Zr(fenc_attribute *attribute, fenc_global_params_LSW *global_params);
-
-/*!
  * Print a ciphertext to a file as ASCII.
  *
  * @param ciphertext		The ciphertext to serialize.

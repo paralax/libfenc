@@ -329,7 +329,7 @@ fenc_attribute_list_to_buffer(fenc_attribute_list *attribute_list, uint8 *buffer
 	
 	/* Begin with a paren.	*/
 	(*result_len)++;
-	if (buffer != NULL) {	buf_ptr += snprintf(buf_ptr, (buf_len - *result_len), "("); 	}
+	if (buffer != NULL) {	buf_ptr += snprintf((char*)buf_ptr, (buf_len - *result_len), "("); 	}
 	
 	/* Serialize all of the elements.	*/
 	for (i = 0; i < attribute_list->num_attributes; i++) {
@@ -338,7 +338,8 @@ fenc_attribute_list_to_buffer(fenc_attribute_list *attribute_list, uint8 *buffer
 		/* We prefer the attribute string.	*/
 			if (i != 0) {
 				if (buffer != NULL) {	
-					buf_ptr += snprintf(buf_ptr, (buf_len - *result_len), ",", attribute_list->attribute[i].attribute_str); 
+					/* MDG: 7/4/2010 commented out what look like unnecessary agruments.	*/
+					buf_ptr += snprintf((char*) buf_ptr, (buf_len - *result_len), ",");/*, attribute_list->attribute[i].attribute_str); */
 				}
 				(*result_len)++;
 			}
@@ -756,7 +757,7 @@ fenc_policy_create_leaf(char *attribute_str)
 	memset(leaf, 0, sizeof(fenc_attribute_subtree));
 	
 	/* Copy the string into the attribute and set up the node.	*/
-	strcpy(leaf->attribute.attribute_str, attribute_str);
+	strcpy((char*)leaf->attribute.attribute_str, attribute_str);
 	leaf->node_type = FENC_ATTRIBUTE_POLICY_NODE_LEAF;
 	
 	return leaf;
@@ -958,4 +959,33 @@ fenc_get_policy_string(fenc_attribute_policy *policy)
 	}
 cleanup:
 	return NULL;
+}
+
+/*!
+ * Hash an attribute string to a value in Zr.  The result is stored within the
+ * attribute structure.  Note that this hash may already have been stored,
+ * in which case this routine will avoid redundant computation.
+ *
+ * @param attribute			Pointer to a fenc_attribute data structure.
+ * @param global_params		Pointer to a fenc_group_parameters data structure.
+ * @return					FENC_ERROR_NONE or an error code.
+ */
+
+FENC_ERROR
+hash_attribute_string_to_Zr(fenc_attribute *attribute, pairing_t pairing)
+{
+	FENC_ERROR err_code;
+	
+	if (attribute->is_hashed == FALSE) {
+		element_init_Zr(attribute->attribute_hash, pairing);
+		err_code = hash1_attribute_string_to_Zr(attribute->attribute_str, &(attribute->attribute_hash));
+		DEBUG_ELEMENT_PRINTF("Hashed %s to %B\n", attribute->attribute_str, attribute->attribute_hash);
+		if (err_code != FENC_ERROR_NONE) {
+			element_clear(attribute->attribute_hash);
+			return err_code;
+		}
+		attribute->is_hashed = TRUE;
+	}
+	
+	return FENC_ERROR_NONE;
 }
