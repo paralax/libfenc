@@ -1,12 +1,3 @@
-/*
- *  base64.h
- *  mg-cpabe
- *
- *  Created by Joseph Ayo Akinyele on 4/16/10.
- *  Copyright 2010 __MyCompanyName__. All rights reserved.
- *
- */
-
 #ifndef __BASE64_H__
 #define __BASE_64_H__
 
