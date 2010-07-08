@@ -1,0 +1,21 @@
+The functional encryption library is an extensible library implementing several functional encryption schemes. Functional encryption is a new class of encryption that includes Attribute-Based (ABE) and Identity-Based encryption (IBE).
+
+The library known as libfenc has a few dependencies: the Pairing-based Crypto (PBC) library which you can download at http://crypto.stanford.edu/pbc/download.html, the GNU Multi-Precision (GMP) library which you can download at http://gmplib.org/. Follow the README documents found within the libraries to install on your system.
+
+Within the sub-directories you will find very useful tools and documentation to help you get acclimated with the libfenc source code. The following describes what is contained in each directory:
+
+	- manual:
+
+	- papers:
+
+	- scripts:
+
+	- src:
+	
+	- tools:
+
+	- benchmarks:
+
+The build.sh script in the current directory will allow you to build all components of the library and is the quickest way to get libfenc working on your system. Currently, the library is still in pre-release stage and still have much work to do. It works well on 32-bit systems but currently have some bugs on 64-bit systems. If you have feature suggestions, bug reports, questions, or want to let us know how your using the library, you can reach us at waldoayo AT gmail DOT com or mgreen AT cs DOT jhu DOT edu.
+
+To build everything, simply run: sh build.sh all

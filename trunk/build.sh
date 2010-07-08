@@ -21,12 +21,14 @@ elif [ $cmd == "src" ]; then
    echo "Building src..." 
 elif [ $cmd == "tools" ]; then
    echo "Building tools..." 
+elif [ $cmd == "docs" ]; then
+   echo "Building documentation..."
 elif [ $cmd == "clean" ]; then
    make -C src/ clean
    make -C tools/ clean
 else
    echo "$0: [ option ]"
-   echo "\toptions: help, all, src, tools"
+   echo "\toptions: help, all, src, tools, docs"
 fi
 
 exit 0
