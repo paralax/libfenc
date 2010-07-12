@@ -32,7 +32,7 @@ int main(int argc, char *argv[]) {
 
 	/* see if they are equivalent? */
 	printf("Output:\t'%s'\n", policy_str);
-	printf("Strlen: %d\n", strlen(policy_str));
+	printf("Strlen: %zu\n", strlen(policy_str));
 
 	//char *test = parse_policy_lang_as_str(policy_str);
 	//printf("\nOriginal? '%s'\n", test);
