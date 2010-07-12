@@ -23,7 +23,7 @@ def gen_policies():
 
 def gen_private_key():
     attrs = gen_attributes()
-    cmd = "./abe-keygen -a %s" % attrs[0]
+    cmd = "../tools/abe-keygen -a %s" % attrs[0]
     for i in range(len(attrs)):
 	cmd += ",%s" % attrs[i] 
     cmd += " -o private.key"
