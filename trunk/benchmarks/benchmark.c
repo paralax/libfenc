@@ -3,7 +3,6 @@
 #include <fenc/libfenc_LSW.h>
 
 char *abe_priv_keyfile = "private.key";
-// different schemes to benchmark under
 void benchmark_schemes(void);
 int get_key(char *keyfile, fenc_context *context, fenc_key *secret_key);
 void apply_LSW(void);
@@ -179,12 +178,6 @@ void apply_WatersCP(char *policy, char *outfile)
 	// retrieve decryption key 
 	/* Descrypt the resulting ciphertext. */
 	result = libfenc_decrypt(&context, &ciphertext, &master_key, &rec_session_key);
-/*	if (result == FENC_ERROR_NONE) {
-		if (memcmp(rec_session_key.data, session_key, rec_session_key.data_len) != 0) {
-			result = FENC_ERROR_UNKNOWN;
-		}
-	}
-*/
 	report_error("Decrypting the ciphertext", result);
 	
 	printf("Recovered session key:\t");
