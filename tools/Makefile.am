@@ -11,7 +11,7 @@ maintainer-clean-local:
 AM_LDFLAGS = -lgmp -lpbc -lcrypto -lfenc
 AM_CPPFLAGS = -I/usr/local/include -I/usr/include
 
-noinst_PROGRAMS = abe-setup abe-keygen abe-enc abe-dec policy-test
+bin_PROGRAMS = abe-setup abe-keygen abe-enc abe-dec policy-test
 
 abe_setup_SOURCES = mgabe-setup.c base64.c common.c
 abe_keygen_SOURCES = mgabe-keygen.c base64.c common.c

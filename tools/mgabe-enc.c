@@ -273,7 +273,7 @@ void cpabe_encrypt(char *policy, char *data, char *enc_file, int isXML)
 	/* output ciphertext to disk: either xml or custom format */
 	if(isXML) {
 		fprintf(fp,"<Encrypted id='");
-		fprintf(fp, "%08x", (unsigned int) rand_id[0]);
+		fprintf(fp, "%08x", (unsigned int)* rand_id[0]);
 		fprintf(fp,"'><ABE type='CP'>%s</ABE>", ABE_cipher_base64);
 		fprintf(fp,"<EncryptedData>%s</EncryptedData></Encrypted>", AES_cipher_base64);
 		fclose(fp);
