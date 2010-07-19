@@ -445,7 +445,7 @@ libfenc_get_attribute_index_in_list(fenc_attribute *attribute, fenc_attribute_li
 		}
 		/* If both don't have a string, but /do/ have hashes, compare them.		*/
 		else if (attribute->is_hashed == TRUE && attribute_list->attribute[i].is_hashed == TRUE) {
-			if (attribute->is_hashed) { element_printf("\tfound: %B\n", attribute_list->attribute[i].attribute_hash); }
+			if (attribute->is_hashed) { DEBUG_ELEMENT_PRINTF("\tfound: %B\n", attribute_list->attribute[i].attribute_hash); }
 			if (element_cmp(attribute->attribute_hash, attribute_list->attribute[i].attribute_hash) == 0) {
 				/* Found a match.	*/
 				return i;

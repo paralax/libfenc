@@ -132,18 +132,17 @@ AC_TYPE_SSIZE_T
 AC_TYPE_UINT64_T
 
 dnl setup CFLAGS
-with_enable_optimized="no"
+# with_enable_optimized="yes"
 AC_ARG_ENABLE( optimized, 
 	       [AC_HELP_STRING([--enable-optimized],
-			[Enable optimized build])],
-         [with_enable_optimized="$withval"],
+			[Enables an optimized build [default=no]])],
+         [with_enable_optimized="yes"],
 	 [with_enable_optimized="no"])
 
-CFLAGS="$CFLAGS -Wall -W -Wfloat-equal -Wpointer-arith -Wcast-align -Wredundant-decls -Wendif-labels -Wshadow -pipe -ffast-math \
-	-U__STRICT_ANSI__"
+CFLAGS="-Wall -W -Wfloat-equal -Wpointer-arith -Wcast-align -Wredundant-decls -Wendif-labels -Wshadow -pipe -ffast-math -U__STRICT_ANSI__"
 
-if test "x$with_enable_optimized" != "no"; then
-   	CFLAGS="$CFLAGS -g -O2"
+if test "$with_enable_optimized" = "no"; then
+   	CFLAGS="$CFLAGS -g -O2 -DDEBUG"
 else
 	CFLAGS="$CFLAGS -fomit-frame-pointer -O3"
 fi
