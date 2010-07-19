@@ -3,7 +3,7 @@
 import string, sys
 import os
 
-max_attrs = 15
+max_attrs = 75
 
 def gen_attributes():
     attrs = []
