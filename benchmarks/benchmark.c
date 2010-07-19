@@ -8,13 +8,18 @@ int get_key(char *keyfile, fenc_context *context, fenc_key *secret_key);
 void apply_LSW(void);
 void apply_WatersCP(char *policy, char *outfile);
 void apply_WatersSimpleCP(void);
+void test_secret_sharing(fenc_attribute_policy *policy, pairing_t pairing);
+void test_libfenc(char *policy);
+fenc_attribute_policy *construct_test_policy();
+fenc_attribute_policy *construct_test_policy1();
+fenc_attribute_policy *construct_test_policy2();
 
 int main(int argc, char *argv[])
 {
 	// argv[1] => policy string
 	// argv[2] => scheme type
 	// argv[3] => outfile name
-	if(argc != 4) {
+	if(argc != 4) {	
 		printf("Usage %s: [ policy ] [ scheme ] [ outfile ]", argv[0]);
 		exit(1);
 	}
@@ -22,8 +27,6 @@ int main(int argc, char *argv[])
 	char *string = argv[1];
 	char *scheme = argv[2];
 	char *outfile = argv[3];
-	
-	// setup getopt for now hardcode
 	printf("Benchmarking libfenc ABE schemes...\n");
 	if(strcmp(scheme, "WCP") == 0) {
 		apply_WatersCP(string, outfile);
@@ -35,7 +38,8 @@ int main(int argc, char *argv[])
 		// apply_LSW(string, outfile);
 	}
 	else {
-		// print error...
+		// run some tests
+		test_libfenc(string);
 	}
 
 
@@ -147,17 +151,18 @@ void apply_WatersCP(char *policy, char *outfile)
 	fclose(fp);
 		
 	/* encrypt under given policy */ 
+	// fenc_attribute_policy *parsed_policy = construct_test_policy2();
 	fenc_attribute_policy *parsed_policy = (fenc_attribute_policy *) malloc(sizeof(fenc_attribute_policy));
-	memset(parsed_policy, 0, sizeof(fenc_attribute_policy)); 
+	memset(parsed_policy, 0, sizeof(fenc_attribute_policy));
 
-	fenc_policy_from_string(parsed_policy, policy);
+	fenc_policy_from_string(parsed_policy, policy); 
 	policy_input.input_type = FENC_INPUT_NM_ATTRIBUTE_POLICY;
 	policy_input.scheme_input = (void *) parsed_policy;
 	
-	/* store the policy for future reference? */
-	char policy_str[512];
-	memset(policy_str, 0, 512);
-	fenc_attribute_policy_to_string(parsed_policy->root, policy_str, 512);	
+	/* store the policy for future reference */
+	char policy_str[1024];
+	memset(policy_str, 0, 1024);
+	fenc_attribute_policy_to_string(parsed_policy->root, policy_str, 1024);	
 	
 	/* perform encryption */
 	result = libfenc_kem_encrypt(&context, &policy_input, SESSION_KEY_LEN, (uint8 *) session_key, &ciphertext);	
@@ -170,24 +175,19 @@ void apply_WatersCP(char *policy, char *outfile)
 	
 	fenc_key_WatersCP *key_WatersCP = (fenc_key_WatersCP *) master_key.scheme_key;	
 	uint32 num_leaves = prune_tree(parsed_policy->root, &(key_WatersCP->attribute_list));
-	
+
+	printf("Start timer.\n");
 	/* start timer */
 	start = clock();
-	printf("Starting timer...\n");
-
-	// retrieve decryption key 
 	/* Descrypt the resulting ciphertext. */
-	result = libfenc_decrypt(&context, &ciphertext, &master_key, &rec_session_key);
-	report_error("Decrypting the ciphertext", result);
-	
-	printf("Recovered session key:\t");
-	print_buffer_as_hex(rec_session_key.data, rec_session_key.data_len);	
-		
+	result = libfenc_decrypt(&context, &ciphertext, &master_key, &rec_session_key);	
 	/* stop timer */
 	stop = clock();
-	printf("Stopping timer...\n\n");
+	printf("Stop timer.\n");
 	double diff = ((double)(stop - start))/CLOCKS_PER_SEC;
-	
+
+	printf("Recovered session key:\t");
+	print_buffer_as_hex(rec_session_key.data, rec_session_key.data_len);		
 	
 	if(memcmp(rec_session_key.data, session_key, rec_session_key.data_len) == 0) {
 		printf("\nDECRYPTION TIME => %f secs.\n", diff);
@@ -203,3 +203,441 @@ void apply_WatersCP(char *policy, char *outfile)
 	result = libfenc_shutdown();
 	report_error("Shutting down library", result);		
 }
+
+fenc_attribute_policy *construct_test_policy()
+{
+	fenc_attribute_policy *policy;
+	fenc_attribute_subtree *subtree_AND, *subtree_AND1, *subtree_AND2, *subtree_AND3, *subtree_AND4, *subtree_AND5;
+	fenc_attribute_subtree *subtree_L1, *subtree_L2, *subtree_L3, *subtree_L4, *subtree_L5;
+	fenc_attribute_subtree *subtree_L6, *subtree_L7, *subtree_L8, *subtree_L9, *subtree_L10, *subtree_L11;
+	
+	policy = (fenc_attribute_policy*)SAFE_MALLOC(sizeof(fenc_attribute_policy));
+	memset(policy, 0, sizeof(fenc_attribute_policy));
+	
+	/* Add a simple one-level 3-out-of-3 policy.  Eventually we'll have helper routines to
+	 * do this work.	*/
+	subtree_AND = (fenc_attribute_subtree*)SAFE_MALLOC(sizeof(fenc_attribute_subtree));
+	subtree_AND1 = (fenc_attribute_subtree*)SAFE_MALLOC(sizeof(fenc_attribute_subtree));
+	subtree_AND2 = (fenc_attribute_subtree*)SAFE_MALLOC(sizeof(fenc_attribute_subtree));
+	subtree_AND3 = (fenc_attribute_subtree*)SAFE_MALLOC(sizeof(fenc_attribute_subtree));
+	subtree_AND4 = (fenc_attribute_subtree*)SAFE_MALLOC(sizeof(fenc_attribute_subtree));
+	subtree_AND5 = (fenc_attribute_subtree*)SAFE_MALLOC(sizeof(fenc_attribute_subtree));
+	subtree_L1 = (fenc_attribute_subtree*)SAFE_MALLOC(sizeof(fenc_attribute_subtree));
+	subtree_L2 = (fenc_attribute_subtree*)SAFE_MALLOC(sizeof(fenc_attribute_subtree));
+	subtree_L3 = (fenc_attribute_subtree*)SAFE_MALLOC(sizeof(fenc_attribute_subtree));
+	subtree_L4 = (fenc_attribute_subtree*)SAFE_MALLOC(sizeof(fenc_attribute_subtree));
+	subtree_L5 = (fenc_attribute_subtree*)SAFE_MALLOC(sizeof(fenc_attribute_subtree));
+	subtree_L6 = (fenc_attribute_subtree*)SAFE_MALLOC(sizeof(fenc_attribute_subtree));
+	subtree_L7 = (fenc_attribute_subtree*)SAFE_MALLOC(sizeof(fenc_attribute_subtree));
+	subtree_L8 = (fenc_attribute_subtree*)SAFE_MALLOC(sizeof(fenc_attribute_subtree));
+	subtree_L9 = (fenc_attribute_subtree*)SAFE_MALLOC(sizeof(fenc_attribute_subtree));
+	subtree_L10 = (fenc_attribute_subtree*)SAFE_MALLOC(sizeof(fenc_attribute_subtree));
+	subtree_L11 = (fenc_attribute_subtree*)SAFE_MALLOC(sizeof(fenc_attribute_subtree));
+	
+	// subtree_OR = (fenc_attribute_subtree*)SAFE_MALLOC(sizeof(fenc_attribute_subtree));
+	memset(subtree_AND, 0, sizeof(fenc_attribute_subtree));
+	memset(subtree_AND1, 0, sizeof(fenc_attribute_subtree));
+	memset(subtree_AND2, 0, sizeof(fenc_attribute_subtree));	
+	memset(subtree_AND3, 0, sizeof(fenc_attribute_subtree));	
+	memset(subtree_AND4, 0, sizeof(fenc_attribute_subtree));	
+	memset(subtree_AND5, 0, sizeof(fenc_attribute_subtree));		
+	memset(subtree_L1, 0, sizeof(fenc_attribute_subtree));
+	memset(subtree_L2, 0, sizeof(fenc_attribute_subtree));
+	memset(subtree_L3, 0, sizeof(fenc_attribute_subtree));
+	memset(subtree_L4, 0, sizeof(fenc_attribute_subtree));
+	memset(subtree_L5, 0, sizeof(fenc_attribute_subtree));
+	memset(subtree_L6, 0, sizeof(fenc_attribute_subtree));
+	memset(subtree_L7, 0, sizeof(fenc_attribute_subtree));
+	memset(subtree_L8, 0, sizeof(fenc_attribute_subtree));
+	memset(subtree_L9, 0, sizeof(fenc_attribute_subtree));
+	memset(subtree_L10, 0, sizeof(fenc_attribute_subtree));	
+	memset(subtree_L11, 0, sizeof(fenc_attribute_subtree));	
+	
+	subtree_L1->node_type = FENC_ATTRIBUTE_POLICY_NODE_LEAF;
+	strcpy((char*)subtree_L1->attribute.attribute_str, "attr_aa");
+	
+	subtree_L2->node_type = FENC_ATTRIBUTE_POLICY_NODE_LEAF;
+	strcpy((char*)subtree_L2->attribute.attribute_str, "attr_ab");
+	
+	subtree_L3->node_type = FENC_ATTRIBUTE_POLICY_NODE_LEAF;
+	strcpy((char*)subtree_L3->attribute.attribute_str, "attr_ac");
+	
+	subtree_L4->node_type = FENC_ATTRIBUTE_POLICY_NODE_LEAF;
+	strcpy((char*)subtree_L4->attribute.attribute_str, "attr_ad");
+	
+	subtree_L5->node_type = FENC_ATTRIBUTE_POLICY_NODE_LEAF;
+	strcpy((char*)subtree_L5->attribute.attribute_str, "attr_ae");
+
+	subtree_L6->node_type = FENC_ATTRIBUTE_POLICY_NODE_LEAF;
+	strcpy((char*)subtree_L6->attribute.attribute_str, "attr_af");
+	
+	subtree_L7->node_type = FENC_ATTRIBUTE_POLICY_NODE_LEAF;
+	strcpy((char*)subtree_L7->attribute.attribute_str, "attr_ag");
+	
+	subtree_L8->node_type = FENC_ATTRIBUTE_POLICY_NODE_LEAF;
+	strcpy((char*)subtree_L8->attribute.attribute_str, "attr_ah");
+	
+	subtree_L9->node_type = FENC_ATTRIBUTE_POLICY_NODE_LEAF;
+	strcpy((char*)subtree_L9->attribute.attribute_str, "attr_ai");
+	
+	subtree_L10->node_type = FENC_ATTRIBUTE_POLICY_NODE_LEAF;
+	strcpy((char*)subtree_L10->attribute.attribute_str, "attr_aj");			  
+	
+    subtree_L11->node_type = FENC_ATTRIBUTE_POLICY_NODE_LEAF;
+	strcpy((char*)subtree_L11->attribute.attribute_str, "attr_ak");	
+	
+	subtree_AND->node_type = FENC_ATTRIBUTE_POLICY_NODE_AND;
+	// subtree_AND->threshold_k = 3;
+	subtree_AND->num_subnodes = 3;
+	subtree_AND->subnode = SAFE_MALLOC(sizeof(fenc_attribute_subtree*) * 3);
+	subtree_AND->subnode[0] = subtree_L1;
+	subtree_AND->subnode[1] = subtree_L2;
+	subtree_AND->subnode[2] = subtree_AND1;
+	
+	subtree_AND1->node_type = FENC_ATTRIBUTE_POLICY_NODE_AND;
+	subtree_AND1->subnode = SAFE_MALLOC(sizeof(fenc_attribute_subtree*) * 3);
+	subtree_AND1->num_subnodes = 3;
+	subtree_AND1->subnode[0] = subtree_L3;
+	subtree_AND1->subnode[1] = subtree_L4;
+	subtree_AND1->subnode[2] = subtree_AND2;
+
+	subtree_AND2->node_type = FENC_ATTRIBUTE_POLICY_NODE_AND;
+	subtree_AND2->subnode = SAFE_MALLOC(sizeof(fenc_attribute_subtree*) * 3);
+	subtree_AND2->num_subnodes = 3;
+	subtree_AND2->subnode[0] = subtree_L5;
+	subtree_AND2->subnode[1] = subtree_L6;
+	subtree_AND2->subnode[2] = subtree_AND3;	
+	
+	subtree_AND3->node_type = FENC_ATTRIBUTE_POLICY_NODE_AND;
+	subtree_AND3->subnode = SAFE_MALLOC(sizeof(fenc_attribute_subtree*) * 3);
+	subtree_AND3->num_subnodes = 3;	
+	subtree_AND3->subnode[0] = subtree_L7;	
+	subtree_AND3->subnode[1] = subtree_L8;	
+	subtree_AND3->subnode[2] = subtree_AND4;	
+
+	subtree_AND4->node_type = FENC_ATTRIBUTE_POLICY_NODE_AND;
+	subtree_AND4->subnode = SAFE_MALLOC(sizeof(fenc_attribute_subtree*) * 2);
+	subtree_AND4->num_subnodes = 2;
+	subtree_AND4->subnode[0] = subtree_L9;
+	// subtree_AND4->subnode[1] = subtree_L5;	
+	subtree_AND4->subnode[1] = subtree_AND5;
+	
+	subtree_AND5->node_type = FENC_ATTRIBUTE_POLICY_NODE_AND;
+	subtree_AND5->subnode = SAFE_MALLOC(sizeof(fenc_attribute_subtree*) * 2);
+	subtree_AND5->num_subnodes = 2;
+	subtree_AND5->subnode[0] = subtree_L10;
+	subtree_AND5->subnode[1] = subtree_L11;	
+	
+	policy->root = subtree_AND;
+	
+	return policy;
+}
+
+fenc_attribute_policy *construct_test_policy1()
+{
+	fenc_attribute_policy *policy;
+	fenc_attribute_subtree *subtree_AND, *subtree_L1, *subtree_L2, *subtree_L3, *subtree_L4, *subtree_L5, *subtree_OR;
+	
+	policy = (fenc_attribute_policy*)SAFE_MALLOC(sizeof(fenc_attribute_policy));
+	memset(policy, 0, sizeof(fenc_attribute_policy));
+	
+	/* Add a simple one-level 3-out-of-3 policy.  Eventually we'll have helper routines to
+	 * do this work.	*/
+	subtree_AND = (fenc_attribute_subtree*)SAFE_MALLOC(sizeof(fenc_attribute_subtree));
+	subtree_L1 = (fenc_attribute_subtree*)SAFE_MALLOC(sizeof(fenc_attribute_subtree));
+	subtree_L2 = (fenc_attribute_subtree*)SAFE_MALLOC(sizeof(fenc_attribute_subtree));
+	subtree_L3 = (fenc_attribute_subtree*)SAFE_MALLOC(sizeof(fenc_attribute_subtree));
+	subtree_L4 = (fenc_attribute_subtree*)SAFE_MALLOC(sizeof(fenc_attribute_subtree));
+	subtree_L5 = (fenc_attribute_subtree*)SAFE_MALLOC(sizeof(fenc_attribute_subtree));
+	subtree_OR = (fenc_attribute_subtree*)SAFE_MALLOC(sizeof(fenc_attribute_subtree));
+	memset(subtree_AND, 0, sizeof(fenc_attribute_subtree));
+	memset(subtree_L1, 0, sizeof(fenc_attribute_subtree));
+	memset(subtree_L2, 0, sizeof(fenc_attribute_subtree));
+	memset(subtree_L3, 0, sizeof(fenc_attribute_subtree));
+	memset(subtree_L4, 0, sizeof(fenc_attribute_subtree));
+	memset(subtree_L5, 0, sizeof(fenc_attribute_subtree));
+	memset(subtree_OR, 0, sizeof(fenc_attribute_subtree));
+	
+	subtree_L1->node_type = FENC_ATTRIBUTE_POLICY_NODE_LEAF;
+	strcpy((char*)subtree_L1->attribute.attribute_str, "ONE");
+	
+	subtree_L2->node_type = FENC_ATTRIBUTE_POLICY_NODE_LEAF;
+	strcpy((char*)subtree_L2->attribute.attribute_str, "TWO");
+	
+	subtree_L3->node_type = FENC_ATTRIBUTE_POLICY_NODE_LEAF;
+	strcpy((char*)subtree_L3->attribute.attribute_str, "THREE");
+	
+	subtree_L4->node_type = FENC_ATTRIBUTE_POLICY_NODE_LEAF;
+	strcpy((char*)subtree_L4->attribute.attribute_str, "FOUR");
+	
+	subtree_L5->node_type = FENC_ATTRIBUTE_POLICY_NODE_LEAF;
+	strcpy((char*)subtree_L5->attribute.attribute_str, "FIVE");
+	
+	subtree_AND->node_type = FENC_ATTRIBUTE_POLICY_NODE_OR;
+	subtree_AND->threshold_k = 2;
+	subtree_AND->num_subnodes = 3;
+	subtree_AND->subnode = SAFE_MALLOC(sizeof(fenc_attribute_subtree*) * 5);
+	subtree_AND->subnode[0] = subtree_L1;
+	subtree_AND->subnode[1] = subtree_L2;
+	subtree_AND->subnode[2] = subtree_OR;
+	
+	subtree_OR->node_type = FENC_ATTRIBUTE_POLICY_NODE_AND;
+	subtree_OR->subnode = SAFE_MALLOC(sizeof(fenc_attribute_subtree*) * 3);
+	subtree_OR->num_subnodes = 3;
+	subtree_OR->subnode[0] = subtree_L3;
+	subtree_OR->subnode[1] = subtree_L4;
+	subtree_OR->subnode[2] = subtree_L5;
+	
+	policy->root = subtree_AND;
+	
+	return policy;
+}
+
+fenc_attribute_policy *construct_test_policy2()
+{
+	fenc_attribute_policy *policy;
+	fenc_attribute_subtree *subtree_AND,*subtree_L1,*subtree_L2,*subtree_L3,*subtree_L4,*subtree_L5,*subtree_L6,*subtree_L7,*subtree_L8,*subtree_L9,*subtree_L10,*subtree_L11;
+	
+	policy = (fenc_attribute_policy *) SAFE_MALLOC(sizeof(fenc_attribute_policy));
+	subtree_AND = (fenc_attribute_subtree*)SAFE_MALLOC(sizeof(fenc_attribute_subtree));
+	subtree_L1 = (fenc_attribute_subtree*)SAFE_MALLOC(sizeof(fenc_attribute_subtree));
+	subtree_L2 = (fenc_attribute_subtree*)SAFE_MALLOC(sizeof(fenc_attribute_subtree));
+	subtree_L3 = (fenc_attribute_subtree*)SAFE_MALLOC(sizeof(fenc_attribute_subtree));
+	subtree_L4 = (fenc_attribute_subtree*)SAFE_MALLOC(sizeof(fenc_attribute_subtree));
+	subtree_L5 = (fenc_attribute_subtree*)SAFE_MALLOC(sizeof(fenc_attribute_subtree));
+    subtree_L6 = (fenc_attribute_subtree*)SAFE_MALLOC(sizeof(fenc_attribute_subtree));
+	subtree_L7 = (fenc_attribute_subtree*)SAFE_MALLOC(sizeof(fenc_attribute_subtree));
+	subtree_L8 = (fenc_attribute_subtree*)SAFE_MALLOC(sizeof(fenc_attribute_subtree));
+	subtree_L9 = (fenc_attribute_subtree*)SAFE_MALLOC(sizeof(fenc_attribute_subtree));
+	subtree_L10 = (fenc_attribute_subtree*)SAFE_MALLOC(sizeof(fenc_attribute_subtree));
+    subtree_L11 = (fenc_attribute_subtree*)SAFE_MALLOC(sizeof(fenc_attribute_subtree));
+			  
+	memset(subtree_AND, 0, sizeof(fenc_attribute_subtree));
+	memset(subtree_L1, 0, sizeof(fenc_attribute_subtree));
+	memset(subtree_L2, 0, sizeof(fenc_attribute_subtree));
+	memset(subtree_L3, 0, sizeof(fenc_attribute_subtree));
+	memset(subtree_L4, 0, sizeof(fenc_attribute_subtree));
+	memset(subtree_L5, 0, sizeof(fenc_attribute_subtree));
+	memset(subtree_L6, 0, sizeof(fenc_attribute_subtree));
+	memset(subtree_L7, 0, sizeof(fenc_attribute_subtree));
+	memset(subtree_L8, 0, sizeof(fenc_attribute_subtree));
+	memset(subtree_L9, 0, sizeof(fenc_attribute_subtree));
+	memset(subtree_L10, 0, sizeof(fenc_attribute_subtree));
+	memset(subtree_L11, 0, sizeof(fenc_attribute_subtree));	
+	
+	subtree_L1->node_type = FENC_ATTRIBUTE_POLICY_NODE_LEAF;
+	strcpy((char*)subtree_L1->attribute.attribute_str, "attr_aa");
+			  
+	subtree_L2->node_type = FENC_ATTRIBUTE_POLICY_NODE_LEAF;
+	strcpy((char*)subtree_L2->attribute.attribute_str, "attr_ab");
+			  
+	subtree_L3->node_type = FENC_ATTRIBUTE_POLICY_NODE_LEAF;
+	strcpy((char*)subtree_L3->attribute.attribute_str, "attr_ac");
+			  
+	subtree_L4->node_type = FENC_ATTRIBUTE_POLICY_NODE_LEAF;
+	strcpy((char*)subtree_L4->attribute.attribute_str, "attr_ad");
+			  
+	subtree_L5->node_type = FENC_ATTRIBUTE_POLICY_NODE_LEAF;
+	strcpy((char*)subtree_L5->attribute.attribute_str, "attr_ae");
+	
+	subtree_L6->node_type = FENC_ATTRIBUTE_POLICY_NODE_LEAF;
+	strcpy((char*)subtree_L6->attribute.attribute_str, "attr_af");
+			  
+	subtree_L7->node_type = FENC_ATTRIBUTE_POLICY_NODE_LEAF;
+	strcpy((char*)subtree_L7->attribute.attribute_str, "attr_ag");
+			  
+	subtree_L8->node_type = FENC_ATTRIBUTE_POLICY_NODE_LEAF;
+	strcpy((char*)subtree_L8->attribute.attribute_str, "attr_ah");
+			  
+	subtree_L9->node_type = FENC_ATTRIBUTE_POLICY_NODE_LEAF;
+	strcpy((char*)subtree_L9->attribute.attribute_str, "attr_ai");
+			  
+	subtree_L10->node_type = FENC_ATTRIBUTE_POLICY_NODE_LEAF;
+	strcpy((char*)subtree_L10->attribute.attribute_str, "attr_aj");			  
+
+    subtree_L11->node_type = FENC_ATTRIBUTE_POLICY_NODE_LEAF;
+	strcpy((char*)subtree_L11->attribute.attribute_str, "attr_ak");
+			  
+	subtree_AND->node_type = FENC_ATTRIBUTE_POLICY_NODE_AND;
+	subtree_AND->num_subnodes = 11;
+    subtree_AND->threshold_k = 2;
+	subtree_AND->subnode = SAFE_MALLOC(sizeof(fenc_attribute_subtree*) * 11);
+	
+    subtree_AND->subnode[0] = subtree_L1;
+	subtree_AND->subnode[1] = subtree_L2;
+    subtree_AND->subnode[2] = subtree_L3;
+	subtree_AND->subnode[3] = subtree_L4;
+	subtree_AND->subnode[4] = subtree_L5;
+	subtree_AND->subnode[5] = subtree_L6;
+	subtree_AND->subnode[6] = subtree_L7;
+	subtree_AND->subnode[7] = subtree_L8;
+    subtree_AND->subnode[8] = subtree_L9;
+	subtree_AND->subnode[9] = subtree_L10;
+	subtree_AND->subnode[10] = subtree_L11;			  
+			  
+	policy->root = subtree_AND;
+			  
+	return policy;
+}
+
+
+void test_secret_sharing(fenc_attribute_policy *policy, pairing_t pairing)
+{
+	element_t secret, recovered_secret, tempZ, temp2Z;
+	FENC_ERROR err_code;
+	fenc_attribute_list attribute_list;
+	fenc_lsss_coefficient_list coefficient_list;
+	int i;
+	char *policy_str;
+	size_t str_len = 2048, index = 0;
+	
+	/* Print the policy.	*/
+	//fenc_attribute_policy_to_string(policy->root, NULL, &str_len, 100000);
+	fenc_attribute_policy_to_string(policy->root, NULL, 100000);
+	policy_str = (char*)SAFE_MALLOC(str_len);
+	fenc_attribute_policy_to_string(policy->root, policy_str, str_len);
+	//fenc_attribute_policy_to_string(policy->root, policy_str, &index, str_len);
+	printf("%s\n", policy_str);
+	
+	/* Pick a random secret value.	*/
+	element_init_Zr(secret, pairing);
+	element_init_Zr(recovered_secret, pairing);
+	element_random(secret);
+	element_printf("Original secret: %B\n", secret);
+	
+	/* Share the secret.  The shares are placed within a newly-initialized attribute_list.	*/
+	memset(&attribute_list, 0, sizeof(fenc_attribute_list));
+	err_code =  fenc_LSSS_calculate_shares_from_policy(&secret, policy, &attribute_list, pairing);
+	if (err_code != FENC_ERROR_NONE) {
+		printf("could not share secrets!\n");
+		return;
+	}
+	
+	printf("\nCreated %d shares:\n", attribute_list.num_attributes); 
+	for (i = 0; i < attribute_list.num_attributes; i++) {
+		element_printf("\t share %d:\t%B\n", i, attribute_list.attribute[i].share);
+	}
+	
+	/* Take the resulting attribute_list and feed it as input to the coefficient recovery mechanism.
+	 * Note that the coefficient recovery doesn't use the shares as input, it just looks at the
+	 * attributes.	*/
+	err_code = LSSS_allocate_coefficient_list(&coefficient_list, attribute_list.num_attributes, pairing);
+	if (err_code != FENC_ERROR_NONE) {
+		printf("could not allocate coefficient list!\n");
+		return;
+	}
+	
+	err_code = fenc_LSSS_calculate_coefficients_from_policy(policy, &attribute_list, &coefficient_list, pairing);
+	if (err_code != FENC_ERROR_NONE) {
+		printf("could not compute coefficients!\n");
+		return;
+	}
+	
+	printf("\nComputed %d coefficients:\n", attribute_list.num_attributes); 
+	for (i = 0; i < attribute_list.num_attributes; i++) {
+		if (coefficient_list.coefficients[i].is_set == TRUE) {
+			element_printf("\t coefficient %d: %B\n", i, coefficient_list.coefficients[i].coefficient);
+		} else {
+			printf("\t coefficient %d: <pruned>\n", i);
+		}
+	}
+	
+	/* Now let's manually try to recover the secret.  Unfortunately this requires some messy
+	 * element arithmetic.	*/
+	printf("How many attributes in policy?: '%d'\n", attribute_list.num_attributes);
+	element_init_Zr(tempZ, pairing);
+	element_init_Zr(temp2Z, pairing);
+	element_set0(recovered_secret);
+	for (i = 0; i < attribute_list.num_attributes; i++) {
+		if (coefficient_list.coefficients[i].is_set == TRUE) {
+			printf("Ctr on: %d\n", i);
+			element_mul(tempZ, coefficient_list.coefficients[i].coefficient, attribute_list.attribute[i].share);
+			element_add(temp2Z, tempZ, recovered_secret);
+			element_set(recovered_secret, temp2Z);
+		}
+	}
+	
+	element_printf("Recovered secret: %B\n", recovered_secret);
+	
+	element_clear(secret);
+	element_clear(recovered_secret);
+	element_clear(tempZ);
+	element_clear(temp2Z);
+}
+
+void test_libfenc(char *policy)
+{
+	FENC_ERROR result;
+	fenc_context context;
+	fenc_group_params group_params;
+	fenc_global_params global_params;
+	fenc_function_input policy_input;
+	pairing_t pairing;
+	FILE *fp;
+	char *public_params_buf = NULL;
+	size_t serialized_len;
+	
+	memset(&context, 0, sizeof(fenc_context)); 
+	memset(&group_params, 0, sizeof(fenc_group_params));
+	memset(&global_params, 0, sizeof(fenc_global_params));	
+	
+	/* Initialize the library. */
+	result = libfenc_init();
+	report_error("Initializing library", result);
+	
+	/* Create a Sahai-Waters context. */
+	result = libfenc_create_context(&context, FENC_SCHEME_WATERSCP);
+	report_error("Creating context for Waters CP scheme", result);
+	
+	/* Load group parameters from a file. */
+	fp = fopen(PARAM, "r");
+	if (fp != NULL) {
+		libfenc_load_group_params_from_file(&group_params, fp);
+		libfenc_get_pbc_pairing(&group_params, pairing);
+	} else {
+		perror("Could not open type-d parameters file.\n");
+		return;
+	}
+	fclose(fp);
+	
+	/* Set up the global parameters. */
+	result = context.generate_global_params(&global_params, &group_params);	
+	result = libfenc_gen_params(&context, &global_params);
+	
+	/* Set up the publci parameters */
+	fp = fopen(public_params_file, "r");
+	if(fp != NULL) {
+		size_t pub_len = read_file(fp, &public_params_buf);
+		/* base-64 decode */
+		uint8 *bin_public_buf = NewBase64Decode((const char *) public_params_buf, pub_len, &serialized_len);
+		/* Import the parameters from binary buffer: */
+		result = libfenc_import_public_params(&context, bin_public_buf, serialized_len);
+		report_error("Importing public parameters", result);
+		free(public_params_buf);
+		free(bin_public_buf);
+	}
+	else {
+		perror("Could not open public parameters\n");
+		return;
+	}
+	fclose(fp);
+	
+	/* encrypt under given policy */
+	// fenc_attribute_policy *parsed_policy = construct_test_policy();
+	fenc_attribute_policy *parsed_policy = (fenc_attribute_policy *) malloc(sizeof(fenc_attribute_policy));
+	memset(parsed_policy, 0, sizeof(fenc_attribute_policy)); 
+	
+	fenc_policy_from_string(parsed_policy, policy);
+	
+	policy_input.input_type = FENC_INPUT_NM_ATTRIBUTE_POLICY;
+	policy_input.scheme_input = (void *) parsed_policy;
+	
+	printf("START: test_secret_sharing\n");
+	test_secret_sharing(parsed_policy, pairing);
+	printf("END: test_secret_sharing\n");
+
+	free(parsed_policy);
+	result = libfenc_shutdown();
+	report_error("Shutting down library", result);	
+}
+
