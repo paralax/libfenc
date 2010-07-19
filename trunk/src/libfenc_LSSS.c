@@ -144,7 +144,7 @@ LSSS_compute_shares_on_subtree(element_t *secret, fenc_attribute_subtree *subtre
 {
 	FENC_ERROR err_code, result = FENC_ERROR_NONE;
 	uint32 threshold_k = 0, num_coefs, i;
-	element_t *coefficients = NULL, shareZ, tempZ, temp2Z, temp3Z;
+	element_t *coefficients = NULL, shareZ, tempZ, temp2Z, temp3Z, temp4Z;
 	
 	/* Process the subtree differently depending on whether it's a leaf or an AND/OR/THRESHOLD-k gate.	*/
 	switch(subtree->node_type) {
@@ -199,6 +199,7 @@ LSSS_compute_shares_on_subtree(element_t *secret, fenc_attribute_subtree *subtre
 	element_init_Zr(tempZ, pairing);
 	element_init_Zr(temp2Z, pairing);
 	element_init_Zr(temp3Z, pairing);
+	element_init_Zr(temp4Z, pairing);
 
 	/* Select coefficients for a P s.t. P(0) = secret.	*/
 	for (i = 0; i < num_coefs; i++) {
@@ -214,7 +215,7 @@ LSSS_compute_shares_on_subtree(element_t *secret, fenc_attribute_subtree *subtre
 	/* Evaluate the polynomial at points 1 ... N to obtain each share, then recurse on the corresponding subtrees.	*/
 	for (i = 0; i < subtree->num_subnodes; i++) {
 		/* Evaluate at point i+1, place result into shareZ.	*/
-		LSSS_evaluate_polynomial((i+1), coefficients, threshold_k, &shareZ, &tempZ, &temp2Z, &temp3Z);
+		LSSS_evaluate_polynomial((i+1), coefficients, threshold_k, &shareZ, &tempZ, &temp2Z, &temp3Z, &temp4Z);
 		
 		/* Recurse.	*/
 		err_code = LSSS_compute_shares_on_subtree(&shareZ, subtree->subnode[i], attribute_list, list_index, pairing);
@@ -241,6 +242,7 @@ cleanup:
 		element_clear(tempZ);
 		element_clear(temp2Z);
 		element_clear(temp3Z);
+		element_clear(temp4Z);
 	}
 	
 	return result;
@@ -389,21 +391,25 @@ cleanup:
 
 void
 LSSS_evaluate_polynomial(uint32 x, element_t *coefficients, uint32 num_coefs, element_t *shareZ,
-						 element_t *tempZ, element_t *temp2Z, element_t *temp3Z)
+						 element_t *tempZ, element_t *temp2Z, element_t *temp3Z, element_t *temp4Z)
 {
-	uint32 i, xN;
+	uint32 i;
+	signed int xN;
 	
 	element_set(*shareZ, coefficients[0]);
 	
-	xN = x;
+	xN = (signed int)x;
+	element_set_si(*tempZ, xN);
+	element_set_si(temp4Z, (signed int)x);
 	for (i = 1; i < num_coefs; i++) {
-		element_set_si(*tempZ, (signed int)xN);
 		element_mul(*temp2Z, *tempZ, coefficients[i]);
 		
 		element_add(*temp3Z, *temp2Z, *shareZ);
 		element_set(*shareZ, *temp3Z);
 		
-		xN *= x;
+		/*	xN *= x;	*/
+		element_mul(*temp2Z, *tempZ, *temp4Z);
+		element_set(*tempZ, *temp2Z);
 	}
 }
 
