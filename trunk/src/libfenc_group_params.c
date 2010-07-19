@@ -24,9 +24,10 @@
  * @return						FENC_ERROR_NONE or an error code.
  */
 
+// UNFINISHED : unused parameter.
 FENC_ERROR
-libfenc_setup_from_pbc_params(fenc_group_params *group_params, 
-										  char *param_buf, size_t param_len)
+libfenc_setup_from_pbc_params(/*fenc_group_params *group_params, 
+				char *param_buf, size_t param_len*/)
 {
 	// FENC_ERROR result;
 	
@@ -99,8 +100,9 @@ libfenc_load_group_params_from_buf(fenc_group_params *group_params, uint8 *param
 	FENC_ERROR result;
 	
 	memset(group_params, 0, sizeof(fenc_group_params));
-	
-	if (pbc_param_init_set_buf(group_params->params, param_buf, buf_len) == 0) {
+
+       // UNFINISHED : casting for signedness. 
+	if (pbc_param_init_set_buf(group_params->params, param_buf, (unsigned) buf_len) == 0) {
 		/* We store the parameters into a buffer when we import them, then give back (a copy of) that buffer
 		 * on export.  This should always work since libfenc doesn't currently support
 		 * parameter generation.														*/

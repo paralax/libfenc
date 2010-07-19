@@ -263,7 +263,8 @@ LSSS_compute_coefficients_on_subtree(element_t *in_coef, Bool active_subtree, fe
 							   uint32 *list_index, pairing_t pairing)
 {
 	FENC_ERROR err_code, result = FENC_ERROR_NONE;
-	uint32 threshold_k = 0, num_coefs = 0, i;
+        // UNFINISHED : unused variable.
+	uint32 threshold_k = 0, /*num_coefs = 0,*/ i;
 	element_t shareZ, tempZ, temp2Z, temp3Z;
 	Bool elements_initialized = FALSE;
 	
@@ -421,7 +422,7 @@ LSSS_evaluate_polynomial(uint32 x, element_t *coefficients, uint32 num_coefs, el
 uint32
 prune_tree(fenc_attribute_subtree *subtree, fenc_attribute_list *attribute_list)
 {
-	uint32 k, i, j, result;
+	uint32 k, i, j, result=0;
 	int32 attribute_index;
 	uint32 num_satisfied_subnodes;
 	uint32 *satisfied_leaves = NULL;
@@ -573,7 +574,7 @@ compute_lagrange(uint32 k, uint32 subnode_index, fenc_attribute_subtree *subtree
 	}
 	
 	/* Make sure there weren't too many marked nodes.	*/
-	if (total_comp > k) {
+	if (total_comp > (signed) k) {
 		LOG_ERROR("compute_lagrange: too many child nodes (%d nodes, threshold = %d)", total_comp, k);
 		return FENC_ERROR_UNKNOWN;
 	}

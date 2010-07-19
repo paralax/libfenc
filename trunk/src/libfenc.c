@@ -19,6 +19,7 @@
 #include "libfenc_ABE_common.h"
 #include "libfenc_LSW.h"
 #include "libfenc_WatersCP.h"
+#include "libfenc_WatersSimpleCP.h"
 
 /********************************************************************************
  * Library global variables
@@ -172,8 +173,8 @@ libfenc_gen_params(fenc_context *context, fenc_global_params *global_params)
  * @param secret_params	Secret scheme parameters (optional).
  * @return				FENC_ERROR_NONE or an error code.
  */
-
-FENC_ERROR	libfenc_set_params(fenc_context *context, fenc_public_params *public_params, fenc_secret_params *secret_params)
+// UNFINISHED : unused parameters.
+FENC_ERROR	libfenc_set_params(/*fenc_context *context, fenc_public_params *public_params, fenc_secret_params *secret_params*/)
 {
 	return FENC_ERROR_NOT_IMPLEMENTED;
 }
@@ -186,11 +187,11 @@ FENC_ERROR	libfenc_set_params(fenc_context *context, fenc_public_params *public_
  * @param fenc_global_params		Public scheme parameters.
  * @return							FENC_ERROR_NONE or an error code.
  */
-
-FENC_ERROR	libfenc_set_global_params(fenc_context *context, fenc_global_params *global_params)
+// UNFINISHED : unused parameters.
+FENC_ERROR	libfenc_set_global_params(/*fenc_context *context, fenc_global_params *global_params*/)
 {
 	return FENC_ERROR_NOT_IMPLEMENTED;
-}
+} 
 
 /*!
  * Extract a secret key representing a given function input.
@@ -476,7 +477,6 @@ FENC_ERROR
 libfenc_import_public_params(fenc_context *context, uint8 *buffer, size_t buf_len)
 {
 	FENC_ERROR result = FENC_ERROR_NONE;
-	uint32 global_params_len = 0;
 	
 	/* Validate the context. */
 	if (context->scheme_type == FENC_SCHEME_NONE || context->gen_params == NULL) {
@@ -489,6 +489,9 @@ libfenc_import_public_params(fenc_context *context, uint8 *buffer, size_t buf_le
 	}
 
 #if 0
+	// UNFINISHED : moved within condtional.
+	uint32 global_params_len = 0;
+
 	/* First four bytes contain the length of the global params, or 0 if they're not present.	*/
 	if (buf_len < sizeof(int32)) {
 		return FENC_ERROR_INVALID_GROUP_PARAMS;
@@ -576,7 +579,9 @@ libfenc_import_secret_params(fenc_context *context, uint8 *buffer, size_t buf_le
 FENC_ERROR	libfenc_export_global_params(fenc_context *context, uint8 *buffer, size_t buf_len, size_t *result_len)
 {
 	FENC_ERROR result = FENC_ERROR_NONE;
-	size_t global_params_len = 0;
+	
+	// UNFINISHED : unused variable.
+	//size_t global_params_len = 0;
 	
 	/* Validate the context. */
 	if (context->scheme_type == FENC_SCHEME_NONE || context->gen_params == NULL) {
@@ -766,9 +771,9 @@ FENC_ERROR	libfenc_set_error_file(FILE* error_file)
  * @param context		The context.
  * @return				FENC_ERROR_NONE or an error code.
  */
-
+// UNFINISHED : unused parameter.
 FENC_ERROR
-libfenc_destroy_global_params(fenc_context *context)
+libfenc_destroy_global_params(/*fenc_context *context*/)
 {
 	return FENC_ERROR_NOT_IMPLEMENTED;
 }

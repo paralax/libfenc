@@ -160,9 +160,9 @@ cleanup:
  * @param secret_params	Secret scheme parameters (optional).
  * @return				FENC_ERROR_NONE or an error code.
  */
-
+// UNFINISHED : unused parameter(s).
 FENC_ERROR
-libfenc_set_params_LSW(fenc_context *context, fenc_public_params *public_params, fenc_secret_params *secret_params)
+libfenc_set_params_LSW(/*fenc_context *context, fenc_public_params *public_params, fenc_secret_params *secret_params*/)
 {
 	return FENC_ERROR_NOT_IMPLEMENTED;
 }
@@ -182,7 +182,7 @@ FENC_ERROR
 libfenc_extract_key_LSW(fenc_context *context, fenc_function_input *input, fenc_key *key)
 {
 	FENC_ERROR					result = FENC_ERROR_UNKNOWN, err_code = FENC_ERROR_NONE;
-	fenc_key_LSW				*key_LSW;
+	fenc_key_LSW				*key_LSW = NULL;
 	fenc_attribute_policy		*policy = NULL;
 	fenc_attribute_list			attribute_list;
 	fenc_scheme_context_LSW*	scheme_context;
@@ -350,10 +350,10 @@ cleanup:
  * @param ciphertext	A pre-allocated buffer for the returned fenc_ciphertext.
  * @return				FENC_ERROR_NONE or an error code.
  */
-
+// UNFINISHED : unused parameter(s).
 FENC_ERROR
-libfenc_encrypt_LSW(fenc_context *context, fenc_function_input *input, fenc_plaintext *plaintext,
-					fenc_ciphertext *ciphertext)
+libfenc_encrypt_LSW(/*fenc_context *context, fenc_function_input *input, fenc_plaintext *plaintext,
+					fenc_ciphertext *ciphertext*/)
 {
 	LOG_ERROR("libfenc_encrypt_LSW: standard encryption not supported, use libfenc_kem_encrypt");
 	return FENC_ERROR_NOT_IMPLEMENTED;
@@ -437,8 +437,10 @@ libfenc_decrypt_LSW(fenc_context *context, fenc_ciphertext *ciphertext, fenc_key
 	/* Apply the N() function to the ciphertext's attribute list and the key.  This derives a list of 
 	 * negated/non-negated attributes that we'll use in the decryption procedure below.	*/
 	memset(&(attribute_list_N), 0, sizeof(fenc_attribute_list));
-	err_code = fenc_apply_N_function_to_attributes(&attribute_list_N, &(ciphertext_LSW.attribute_list), key_LSW->policy,
-												   scheme_context->global_params->pairing);
+
+	// UNFINISHED : unused parameter.
+	err_code = fenc_apply_N_function_to_attributes(&attribute_list_N, &(ciphertext_LSW.attribute_list), /*key_LSW->policy,*/
+						      scheme_context->global_params->pairing);
 	if (err_code != FENC_ERROR_NONE) {
 		LOG_ERROR("libfenc_decrypt_LSW: unable to apply N() function to ciphertext attributes");
 		result = err_code;
@@ -586,6 +588,7 @@ libfenc_decrypt_LSW(fenc_context *context, fenc_ciphertext *ciphertext, fenc_key
 	/* Final computation: this depends on whether this is a KEM or a standard encryption.	*/
 	if (ciphertext_LSW.type == FENC_CIPHERTEXT_TYPE_KEM_CPA) {
 		/* If its a KEM, hash prodT and that's the resulting session key.	*/
+		// UNFINISHED : unused parameter... reused.
 		err_code = derive_session_key_from_element(plaintext, prodT, ciphertext_LSW.kem_key_len, scheme_context->global_params->pairing);
 		if (err_code != FENC_ERROR_NONE) {
 			result = err_code;
@@ -599,6 +602,7 @@ libfenc_decrypt_LSW(fenc_context *context, fenc_ciphertext *ciphertext, fenc_key
 		DEBUG_ELEMENT_PRINTF("decrypted plaintext=%B\n", finalT);
 		
 		/* Convert the group element "finalT" back into a bit string.	*/
+		// UNFINISHED : unused parameter... reused
 		err_code = decode_plaintext_GT(plaintext, &finalT, scheme_context->global_params->pairing);
 		if (err_code != FENC_ERROR_NONE)	{
 			LOG_ERROR("libfenc_decrypt_LSW: could not decode plaintext from group element");
@@ -859,7 +863,8 @@ FENC_ERROR
 libfenc_export_secret_params_LSW(fenc_context *context, uint8 *buffer, size_t max_len, size_t *result_len)
 {
 	fenc_scheme_context_LSW* scheme_context;
-	unsigned char *buf_ptr = (unsigned char*)buffer;
+	// UNFINISHED : unused variable.
+	//unsigned char *buf_ptr = (unsigned char*)buffer;
 	
 	/* Get the scheme-specific context. */
 	scheme_context = (fenc_scheme_context_LSW*)context->scheme_context;
@@ -882,13 +887,14 @@ libfenc_export_secret_params_LSW(fenc_context *context, uint8 *buffer, size_t ma
  * @param max_len		The size of the buffer (in bytes).
  * @return				FENC_ERROR_NONE or an error code.
  */
-
+// UNFINISHED : unused parameter(s).
 FENC_ERROR
-libfenc_import_public_params_LSW(fenc_context *context, uint8 *buffer, size_t buf_len, fenc_global_params *global_params)
+libfenc_import_public_params_LSW(fenc_context *context, uint8 *buffer, size_t buf_len/*, fenc_global_params *global_params*/)
 {
-	FENC_ERROR err_code;
+	// UNFINISHED : unused variable(s).
+	//FENC_ERROR err_code;
 	fenc_scheme_context_LSW* scheme_context;
-	size_t bytes_read = 0;
+	//size_t bytes_read = 0;
 	
 	scheme_context = (fenc_scheme_context_LSW*)context->scheme_context;
 	if (scheme_context == NULL) {
@@ -926,7 +932,8 @@ libfenc_import_public_params_LSW(fenc_context *context, uint8 *buffer, size_t bu
 FENC_ERROR
 libfenc_import_secret_params_LSW(fenc_context *context, uint8 *buffer, size_t buf_len)
 {
-	FENC_ERROR err_code;
+	// UNFINISHED : unused variable(s).
+	//FENC_ERROR err_code;
 	fenc_scheme_context_LSW* scheme_context;
 	
 	scheme_context = (fenc_scheme_context_LSW*)context->scheme_context;
@@ -960,7 +967,8 @@ libfenc_import_global_params_LSW(fenc_context *context, uint8 *buffer, size_t bu
 {
 	FENC_ERROR err_code;
 	fenc_scheme_context_LSW* scheme_context;
-	size_t bytes_read = 0;
+	// UNFINISHED : unused variable(s).
+	//size_t bytes_read = 0;
 	fenc_group_params group_params;
 	
 	scheme_context = (fenc_scheme_context_LSW*)context->scheme_context;
@@ -997,7 +1005,8 @@ libfenc_export_global_params_LSW(fenc_context *context, uint8 *buffer, size_t ma
 {
 	FENC_ERROR err_code;
 	fenc_scheme_context_LSW* scheme_context;
-	size_t params_len;
+	// UNFINISHED : unused variable(s).
+	//size_t params_len;
 	
 	/* Get the scheme-specific context. */
 	scheme_context = (fenc_scheme_context_LSW*)context->scheme_context;
@@ -1052,9 +1061,9 @@ libfenc_destroy_context_LSW(fenc_context *context)
  * @param global_params	The global parameters.
  * @return				FENC_ERROR_NONE or an error code.
  */
-
+// UNFINISHED : unused parameter(s).
 FENC_ERROR
-libfenc_destroy_global_params_LSW(fenc_global_params *global_params)
+libfenc_destroy_global_params_LSW(/*fenc_global_params *global_params*/)
 {
 	return FENC_ERROR_NOT_IMPLEMENTED;
 }
@@ -1103,8 +1112,9 @@ libfenc_serialize_key_LSW(fenc_key_LSW *key, unsigned char *buffer, size_t max_l
 {
 	FENC_ERROR err_code = FENC_ERROR_NONE;
 	unsigned char *buf_ptr = (unsigned char*)buffer;
-	char *policy_str;
-	size_t str_index = 0, str_len = MAX_POLICY_STR - 1, result_len = 0;
+	// UNFINISHED : unused variables.
+	//char *policy_str;
+	size_t /*str_index = 0, str_len = MAX_POLICY_STR - 1,*/ result_len = 0;
 	uint32 i;
 
 	/* Export the policy, result length, number of components in the key.	*/
@@ -1206,7 +1216,7 @@ libfenc_serialize_ciphertext_LSW(fenc_ciphertext_LSW *ciphertext, unsigned char 
 	}
 
 	/* For every attribute in the ciphertext... */
-	for (i = 0; i < ciphertext->attribute_list.num_attributes; i++) {
+	for (i = 0; (unsigned) i < ciphertext->attribute_list.num_attributes; i++) {
 		*serialized_len += element_length_in_bytes(ciphertext->attribute_list.attribute[i].attribute_hash);			/* attribute[i]		*/
 		if (buffer != NULL && *serialized_len <= max_len) {
 			element_to_bytes(buf_ptr, ciphertext->attribute_list.attribute[i].attribute_hash);
@@ -1263,9 +1273,9 @@ libfenc_serialize_ciphertext_LSW(fenc_ciphertext_LSW *ciphertext, unsigned char 
 FENC_ERROR
 libfenc_deserialize_ciphertext_LSW(unsigned char *buffer, size_t buf_len, fenc_ciphertext_LSW *ciphertext, fenc_scheme_context_LSW *scheme_context)
 {
-	int i;
+	unsigned int i;
 	size_t deserialized_len;
-	uint32 num_attributes, type, kem_key_len;
+	uint32 num_attributes=0, type=0, kem_key_len=0;
 	FENC_ERROR result = FENC_ERROR_UNKNOWN, err_code;
 	unsigned char *buf_ptr = buffer;
 	
@@ -1330,7 +1340,7 @@ libfenc_deserialize_ciphertext_LSW(unsigned char *buffer, size_t buf_len, fenc_c
 	buf_ptr = buffer + deserialized_len;
 	
 	/* For every attribute in the ciphertext... */
-	for (i = 0; i < ciphertext->attribute_list.num_attributes; i++) {
+	for ( i = 0; i < ciphertext->attribute_list.num_attributes; i++) {
 		memset(&(ciphertext->attribute_list.attribute[i]), 0, sizeof(fenc_attribute));
 		element_init_Zr(ciphertext->attribute_list.attribute[i].attribute_hash, scheme_context->global_params->pairing);
 		deserialized_len += element_from_bytes(ciphertext->attribute_list.attribute[i].attribute_hash, buf_ptr);			/* attribute[i]		*/
@@ -1389,13 +1399,13 @@ FENC_ERROR
 fenc_ciphertext_LSW_initialize(fenc_ciphertext_LSW *ciphertext, uint32 num_attributes, FENC_CIPHERTEXT_TYPE type,
 							   fenc_scheme_context_LSW *scheme_context)
 {
-	int i;
+	unsigned int i;
 	
 	memset(ciphertext, 0, sizeof(fenc_ciphertext_LSW));
 	element_init_GT(ciphertext->E1T, scheme_context->global_params->pairing);
 	element_set1(ciphertext->E1T);
 	element_init_G2(ciphertext->E2TWO, scheme_context->global_params->pairing);
-	for (i = 0; i < num_attributes; i++) {
+	for ( i = 0; i < num_attributes; i++) {
 		element_init_G1(ciphertext->E3ONE[i], scheme_context->global_params->pairing);
 		element_init_G1(ciphertext->E4ONE[i], scheme_context->global_params->pairing);
 		element_init_G1(ciphertext->E5ONE[i], scheme_context->global_params->pairing);
@@ -1415,7 +1425,7 @@ fenc_ciphertext_LSW_initialize(fenc_ciphertext_LSW *ciphertext, uint32 num_attri
 FENC_ERROR
 fenc_ciphertext_LSW_clear(fenc_ciphertext_LSW *ciphertext)
 {
-	int i;
+	unsigned int i;
 	
 	/* Make sure the number of attributes is reasonable (if not, this is an invalid ciphertext).	*/
 	if (ciphertext->attribute_list.num_attributes < 1 || ciphertext->attribute_list.num_attributes > MAX_CIPHERTEXT_ATTRIBUTES) {
@@ -1426,7 +1436,7 @@ fenc_ciphertext_LSW_clear(fenc_ciphertext_LSW *ciphertext)
 	/* Release all of the internal elements.  Let's hope the ciphertext was correctly inited! */
 	element_clear(ciphertext->E1T);
 	element_clear(ciphertext->E2TWO);
-	for (i = 0; i < ciphertext->attribute_list.num_attributes; i++) {
+	for ( i = 0; i < ciphertext->attribute_list.num_attributes; i++) {
 		element_clear(ciphertext->E3ONE[i]);
 		element_clear(ciphertext->E4ONE[i]);
 		element_clear(ciphertext->E5ONE[i]);
@@ -1593,6 +1603,7 @@ hash2_attribute_element_to_G1(element_t *attribute_elt, element_t *hashed_attr)
 		
 	/* TODO: HASH_TARGET_LEN must be replaced with something more sophisticated.	*/
 	/* Use the hash function index HASH_FUNCTION_Zr_TO_G1_ROM.	*/
+	// UNFINISHED : unused parameter... reused
 	err_code = hash_element_to_bytes(attribute_elt, HASH_TARGET_LEN, hash_buf, HASH_FUNCTION_Zr_TO_G1_ROM);
 	if (err_code != FENC_ERROR_NONE) { return err_code; }
 	element_from_hash(*hashed_attr, hash_buf, HASH_TARGET_LEN); 
@@ -1640,7 +1651,7 @@ key_LSW_initialize(fenc_attribute_list *attribute_list, fenc_attribute_policy *p
 				   fenc_global_params_LSW *global_params)
 {
 	FENC_ERROR err_code;
-	int i;
+	unsigned int i;
 	fenc_key_LSW *key_LSW;
 				
 	/* Initialize and wipe the key structure.	*/
@@ -1670,7 +1681,7 @@ key_LSW_initialize(fenc_attribute_list *attribute_list, fenc_attribute_policy *p
 	
 	/* Allocate the internal group elements.	*/
 	key_LSW->num_components = attribute_list->num_attributes;
-	for (i = 0; i < key_LSW->attribute_list.num_attributes; i++) {
+	for ( i = 0; i < key_LSW->attribute_list.num_attributes; i++) {
 		element_init_G1(key_LSW->D1ONE[i], global_params->pairing);
 		element_init_G2(key_LSW->D2TWO[i], global_params->pairing);
 		element_init_G1(key_LSW->D3ONE[i], global_params->pairing);
@@ -1692,9 +1703,9 @@ key_LSW_initialize(fenc_attribute_list *attribute_list, fenc_attribute_policy *p
 FENC_ERROR
 key_LSW_clear(fenc_key_LSW *key_LSW)
 {	
-	int i;
+	unsigned int i;
 	
-	for (i = 0; i < key_LSW->attribute_list.num_attributes; i++) {
+	for ( i = 0; i < key_LSW->attribute_list.num_attributes; i++) {
 		element_clear(key_LSW->D1ONE[i]);
 		element_clear(key_LSW->D2TWO[i]);
 		element_clear(key_LSW->D3ONE[i]);
@@ -1769,7 +1780,7 @@ secret_params_initialize_LSW(fenc_secret_params_LSW *params, pairing_t pairing)
 FENC_ERROR
 libfenc_fprint_ciphertext_LSW(fenc_ciphertext_LSW *ciphertext, FILE* out_file)
 {
-	int i;
+	unsigned int i;
 	
 	fprintf(out_file, "number of attributes = %d\n", ciphertext->attribute_list.num_attributes);
 
@@ -1777,7 +1788,7 @@ libfenc_fprint_ciphertext_LSW(fenc_ciphertext_LSW *ciphertext, FILE* out_file)
 	element_fprintf(out_file, "E2TWO = %B\n", ciphertext->E2TWO);
 	
 	/* For every attribute in the ciphertext... */
-	for (i = 0; i < ciphertext->attribute_list.num_attributes; i++) {
+	for ( i = 0; i < ciphertext->attribute_list.num_attributes; i++) {
 		fprintf(out_file, "Attribute #%d:\n", i);
 		if (strlen((char*)ciphertext->attribute_list.attribute[i].attribute_str) > 0) {
 			fprintf(out_file, "\tAttribute = \"%s\"\n", ciphertext->attribute_list.attribute[i].attribute_str);

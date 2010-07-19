@@ -12,6 +12,7 @@
 #include "libfenc.h"
 #include "libfenc_group_params.h"
 #include "libfenc_ABE_common.h"
+#include "libfenc_LSW.h"
 #include "policy_lang.h"
 
 /*!
@@ -196,10 +197,10 @@ libfenc_create_attribute_list_from_strings(fenc_function_input *input, char **at
  * @param group_params		Group parameters.
  * @return					FENC_ERROR_NONE or an error code
  */
-
+// UNFINISHED : unused parameter 'policy'.  
 FENC_ERROR
 fenc_apply_N_function_to_attributes(fenc_attribute_list *result_list, fenc_attribute_list *input_list,
-									fenc_attribute_policy *policy, pairing_t pairing)
+									/*fenc_attribute_policy *policy,*/ pairing_t pairing)
 {
 	FENC_ERROR result = FENC_ERROR_NONE;
 	
@@ -258,7 +259,7 @@ fenc_attribute_list_clear(fenc_attribute_list *attribute_list)
 	int i;
 	
 	/* Clear out the attributes in the list.	*/
-	for (i = 0; i < attribute_list->num_attributes; i++) {
+	for (i = 0; (unsigned) i < attribute_list->num_attributes; i++) {
 		fenc_attribute_clear(&(attribute_list->attribute[i]));
 	}
 
@@ -290,7 +291,7 @@ fenc_attribute_list_copy(fenc_attribute_list *attribute_list_DST, fenc_attribute
 	}
 
 	/* Duplicate the contents of each fenc_attribute structure.	*/
-	for (i = 0; i < attribute_list_SRC->num_attributes; i++) {
+	for (i = 0; (unsigned) i < attribute_list_SRC->num_attributes; i++) {
 		/* Copy attribute #i	*/
 		err_code = fenc_attribute_copy((fenc_attribute*)&(attribute_list_DST->attribute[i]), (fenc_attribute*)&(attribute_list_SRC->attribute[i]), pairing);
 		if (err_code != FENC_ERROR_NONE) {
@@ -339,7 +340,7 @@ fenc_attribute_list_to_buffer(fenc_attribute_list *attribute_list, uint8 *buffer
 			if (i != 0) {
 				if (buffer != NULL) {	
 					/* MDG: 7/4/2010 commented out what look like unnecessary agruments.	*/
-					buf_ptr += snprintf((char*) buf_ptr, (buf_len - *result_len), ",");/*, attribute_list->attribute[i].attribute_str); */
+					buf_ptr += snprintf((char*) buf_ptr, (buf_len - *result_len), ","/*);*/, attribute_list->attribute[i].attribute_str);
 				}
 				(*result_len)++;
 			}
@@ -947,7 +948,8 @@ fenc_policy_from_string(fenc_attribute_policy *policy, char *policy_str)
 char*
 fenc_get_policy_string(fenc_attribute_policy *policy)
 {
-	char *string;
+	// UNFINISHED : unused variable.
+	//char *string;
 	if(policy == NULL) {
 		goto cleanup;
 	}
