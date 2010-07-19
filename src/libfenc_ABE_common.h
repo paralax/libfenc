@@ -21,7 +21,7 @@ typedef enum _FENC_ATTRIBUTE_NODE_TYPE {
 } FENC_ATTRIBUTE_NODE_TYPE;
 
 /* Number of ciphertext attributes (maximum)	*/
-#define	MAX_CIPHERTEXT_ATTRIBUTES	40
+#define	MAX_CIPHERTEXT_ATTRIBUTES	100
 
 /* Maximum attribute string length in bytes (this includes a NULL termination byte.) */
 #define MAX_ATTRIBUTE_STR	256

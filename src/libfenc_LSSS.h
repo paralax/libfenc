@@ -112,7 +112,7 @@ FENC_ERROR	LSSS_compute_coefficients_on_subtree(element_t *in_coef, Bool active_
  */
 
 void	LSSS_evaluate_polynomial(uint32 x, element_t *coefficients, uint32 num_coefs, element_t *shareZ,
-								 element_t *tempZ, element_t *temp2Z, element_t *temp3Z);
+								 element_t *tempZ, element_t *temp2Z, element_t *temp3Z, element_t *temp4Z);
 
 /***********************************************************************************
  * Utility functions
