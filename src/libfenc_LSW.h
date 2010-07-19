@@ -118,8 +118,8 @@ FENC_ERROR	libfenc_gen_params_LSW(fenc_context *context, fenc_global_params *glo
  * @param secret_params	Secret scheme parameters (optional).
  * @return				FENC_ERROR_NONE or an error code.
  */
-
-FENC_ERROR	libfenc_set_params_LSW(fenc_context *context, fenc_public_params *public_params, fenc_secret_params *secret_params);
+// UNFINISHED : unused parameter(s).
+FENC_ERROR	libfenc_set_params_LSW(/*fenc_context *context, fenc_public_params *public_params, fenc_secret_params *secret_params*/);
 
 /*!
  * Extract a secret key representing a given function input.
@@ -141,9 +141,9 @@ FENC_ERROR	libfenc_extract_key_LSW(fenc_context *context, fenc_function_input *i
  * @param ciphertext	A pre-allocated buffer for the returned fenc_ciphertext.
  * @return				FENC_ERROR_NONE or an error code.
  */
-
-FENC_ERROR	libfenc_encrypt_LSW(fenc_context *context, fenc_function_input *input, fenc_plaintext *plaintext,
-							fenc_ciphertext *ciphertext);
+// UNFINISHED : unused parameter(s).
+FENC_ERROR	libfenc_encrypt_LSW(/*fenc_context *context, fenc_function_input *input, fenc_plaintext *plaintext,
+							fenc_ciphertext *ciphertext*/);
 
 /*!
  * Key encapsulation variant of encryption.  Generate an encryption key and encapsulate it under 
@@ -208,8 +208,8 @@ FENC_ERROR	libfenc_export_secret_params_LSW(fenc_context *context, uint8 *buffer
  * @param max_len		The size of the buffer (in bytes).
  * @return				FENC_ERROR_NONE or an error code.
  */
-
-FENC_ERROR	libfenc_import_public_params_LSW(fenc_context *context, uint8 *buffer, size_t buf_len, fenc_global_params *global_params);
+// UNFINISHED : unused parameter(s).
+FENC_ERROR	libfenc_import_public_params_LSW(fenc_context *context, uint8 *buffer, size_t buf_len/*, fenc_global_params *global_params*/);
 
 /*!
  * Import the secret parameters (MPK) from a binary buffer.
@@ -284,8 +284,8 @@ FENC_ERROR	libfenc_destroy_context_LSW(fenc_context *context);
  * @param global_params	The global parameters.
  * @return				FENC_ERROR_NONE or an error code.
  */
-
-FENC_ERROR	libfenc_destroy_global_params_LSW(fenc_global_params *global_params);
+// UNFINISHED : unused parameter(s).
+FENC_ERROR	libfenc_destroy_global_params_LSW(/*fenc_global_params *global_params*/);
 
 /*!
  * Validate a set of global parameters for the LSW scheme.

@@ -261,7 +261,7 @@ FENC_ERROR	libfenc_gen_params(fenc_context *context, fenc_global_params *global_
  * @return				FENC_ERROR_NONE or an error code.
  */
 
-FENC_ERROR	libfenc_set_params(fenc_context *context, fenc_public_params *public_params, fenc_secret_params *secret_params);
+FENC_ERROR	libfenc_set_params(/*fenc_context *context, fenc_public_params *public_params, fenc_secret_params *secret_params*/);
 
 /*!
  * Load global parameters into the context.  All relevant global
@@ -272,7 +272,7 @@ FENC_ERROR	libfenc_set_params(fenc_context *context, fenc_public_params *public_
  * @return				FENC_ERROR_NONE or an error code.
  */
 
-FENC_ERROR	libfenc_set_global_params(fenc_context *context, fenc_global_params *global_params);
+FENC_ERROR	libfenc_set_global_params(/*fenc_context *context, fenc_global_params *global_params*/);
 
 /*!
  * Extract a secret key representing a given function input.
@@ -469,7 +469,7 @@ FENC_ERROR	libfenc_set_error_file(FILE* error_file);
  * @return				FENC_ERROR_NONE or an error code.
  */
 
-FENC_ERROR	libfenc_destroy_global_params(fenc_context *context);
+FENC_ERROR	libfenc_destroy_global_params(/*fenc_context *context*/);
 
 /*!
  * Get the group parameters structure from the global parameters structure.

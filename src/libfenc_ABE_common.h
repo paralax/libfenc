@@ -156,7 +156,7 @@ uint32	fenc_count_policy_leaves(fenc_attribute_subtree *subtree);
  */
 
 FENC_ERROR	fenc_apply_N_function_to_attributes(fenc_attribute_list *result_list, fenc_attribute_list *input_list,
-									fenc_attribute_policy *policy, pairing_t pairing);
+									/*fenc_attribute_policy *policy,*/ pairing_t pairing);
 
 /*!
  * Allocate memory for an attribute list of num_attributes attributes.

@@ -40,9 +40,9 @@ typedef struct _fenc_group_params {
  * @param param_len				Number of bytes in the buffer
  * @return						FENC_ERROR_NONE or an error code.
  */
-
-FENC_ERROR	libfenc_setup_from_pbc_params(fenc_group_params *group_params, 
-									  char *param_buf, size_t param_len);
+// UNFINISHED : unused parameters.
+FENC_ERROR	libfenc_setup_from_pbc_params(/*fenc_group_params *group_params, 
+									  char *param_buf, size_t param_len*/);
 
 /*!
  * Load parameters from a buffer.
