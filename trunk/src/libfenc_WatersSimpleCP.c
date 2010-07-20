@@ -570,7 +570,7 @@ cleanup:
 }
 
 FENC_ERROR
-libfenc_retrieve_attribute_policy(fenc_context *context, fenc_ciphertext *ciphertext, uint8 *buffer, size_t buf_len)
+libfenc_retrieve_attribute_policy_WatersSimpleCP(fenc_context *context, fenc_ciphertext *ciphertext, uint8 *buffer, size_t buf_len)
 {
 	FENC_ERROR result = FENC_ERROR_NONE, err_code;
 	fenc_ciphertext_WatersSimpleCP		ciphertext_WatersSimpleCP;
