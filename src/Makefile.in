@@ -77,7 +77,8 @@ am__installdirs = "$(DESTDIR)$(libdir)" \
 LTLIBRARIES = $(lib_LTLIBRARIES)
 libfenc_la_LIBADD =
 am_libfenc_la_OBJECTS = libfenc.lo libfenc_LSW.lo libfenc_WatersCP.lo \
-	libfenc_ABE_common.lo libfenc_LSSS.lo libfenc_group_params.lo \
+	libfenc_ABE_common.lo libfenc_LSSS.lo \
+	libfenc_WatersSimpleCP.lo libfenc_group_params.lo \
 	libfenc_utils.lo sha1.lo policy_lang.tab.lo
 libfenc_la_OBJECTS = $(am_libfenc_la_OBJECTS)
 libfenc_la_LINK = $(LIBTOOL) --tag=CC $(AM_LIBTOOLFLAGS) \
@@ -289,10 +290,11 @@ libfenc_LSSS.h \
 libfenc_LSW.h \
 libfenc_utils.h \
 libfenc_WatersCP.h \
+libfenc_WatersSimpleCP.h \
 policy_lang.h
 
 libfenc_la_SOURCES = libfenc.c libfenc_LSW.c libfenc_WatersCP.c \
-	libfenc_ABE_common.c libfenc_LSSS.c \
+	libfenc_ABE_common.c libfenc_LSSS.c libfenc_WatersSimpleCP.c \
 	libfenc_group_params.c libfenc_utils.c sha1.c policy_lang.tab.c
 
 libfenc_la_LDFLAGS = -lgmp -lpbc -lm -version-info $(SO_VERSION)
@@ -401,6 +403,7 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libfenc_LSSS.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libfenc_LSW.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libfenc_WatersCP.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libfenc_WatersSimpleCP.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libfenc_group_params.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libfenc_utils.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/policy_lang.tab.Plo@am__quote@
