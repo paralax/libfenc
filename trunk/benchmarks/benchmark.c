@@ -550,7 +550,6 @@ void test_secret_sharing(fenc_attribute_policy *policy, pairing_t pairing)
 	element_set0(recovered_secret);
 	for (i = 0; i < attribute_list.num_attributes; i++) {
 		if (coefficient_list.coefficients[i].is_set == TRUE) {
-			printf("Ctr on: %d\n", i);
 			element_mul(tempZ, coefficient_list.coefficients[i].coefficient, attribute_list.attribute[i].share);
 			element_add(temp2Z, tempZ, recovered_secret);
 			element_set(recovered_secret, temp2Z);
@@ -636,8 +635,64 @@ void test_libfenc(char *policy)
 	test_secret_sharing(parsed_policy, pairing);
 	printf("END: test_secret_sharing\n");
 
+	/* simple test */
+	element_t ONE, TWO, THREE, ONEG2, TWOG2, THREEG2, ONEGT, TWOGT, FinalGT;
+	element_init_G1(ONE, pairing);
+	element_init_G1(TWO, pairing);
+	element_init_G1(THREE, pairing);
+	element_init_G2(ONEG2, pairing);
+	element_init_G2(TWOG2, pairing);
+	element_init_G2(THREEG2, pairing);
+	element_init_GT(ONEGT, pairing);
+	element_init_GT(TWOGT, pairing);
+	element_init_GT(FinalGT, pairing);
+
+	clock_t start, stop;
+	double timeG1, timeG2, timeGT, timePairing;
+	element_random(ONE);
+	element_random(TWO);
+	element_random(ONEG2);
+	element_random(TWOG2);
+	// element_random(ONEGT);
+	// element_random(TWOGT);
+	
+	/* time G1 */
+	start = clock();
+	element_mul(THREE, ONE, TWO);	
+	stop = clock();
+	timeG1 = ((double)(stop - start))/CLOCKS_PER_SEC;
+
+	element_printf("THREEG1: %B, ", THREE);
+	printf("G1 mul time: %f secs\n", timeG1);
+	
+	/* time G2 */
+	start = clock();
+	element_mul(THREEG2, ONEG2, TWOG2);	
+	stop = clock();
+	timeG2 = ((double)(stop - start))/CLOCKS_PER_SEC;
+		
+	element_printf("THREEG2: %B, ", THREEG2);
+	printf("G2 mul time: %f secs\n", timeG2);
+	
+	/* time GT 
+	start = clock();
+	element_mul(FinalGT, ONEGT, TWOGT);	
+	stop = clock();
+	timeGT = ((double)(stop - start))/CLOCKS_PER_SEC;	
+
+	element_printf("FinalGT: %B, ", FinalGT);
+	printf("GT mul time: %f secs\n", timeGT);
+	
+	/* time pairings */
+	start = clock();
+	pairing_apply(FinalGT, THREE, THREEG2, pairing);
+	stop = clock();
+	timePairing = ((double)(stop - start))/CLOCKS_PER_SEC;
+
+	element_printf("Pairing: %B, ", FinalGT);
+	printf("GT pairing time: %f secs\n", timePairing);
+	
 	free(parsed_policy);
 	result = libfenc_shutdown();
 	report_error("Shutting down library", result);	
 }
-
