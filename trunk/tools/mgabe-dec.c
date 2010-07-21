@@ -252,11 +252,6 @@ Bool cpabe_decrypt(char *inputfile, char *keyfile)
 	
 	/* Descrypt the resulting ciphertext. */
 	result = libfenc_decrypt(&context, &ciphertext, &secret_key, &aes_session_key);
-	if (result == FENC_ERROR_NONE) {
-		if (memcmp(aes_session_key.data, session_key, aes_session_key.data_len) != 0) {
-			result = FENC_ERROR_UNKNOWN;
-		}
-	}
 	report_error("Decrypting the ciphertext", result);
 	
 	printf("\tDecrypted session key is: ");
@@ -289,7 +284,6 @@ Bool cpabe_decrypt(char *inputfile, char *keyfile)
 		fprintf(stderr, "ERROR: ABE Decryption unsuccessful!!!\n");
 		magic_failed = TRUE;
 	}
-
 	
 	/* Destroy the context. */
 	result = libfenc_destroy_context(&context);
