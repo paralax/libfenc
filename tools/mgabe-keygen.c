@@ -4,13 +4,11 @@
 #include "common.h"
 
 #define DEFAULT_KEYFILE "private.key"
-#define BITS 64
 char *attributes[MAX_CIPHERTEXT_ATTRIBUTES];
 char *policy = NULL;
 int attributes_len = 0;
 int parse_attributes(char *input);
 void generate_keys(char *outfile, FENC_SCHEME_TYPE scheme, char *secret_params, char *public_params);
-int ret_num_bits(int value1);
 /* Description: mgabe-keygen takes the outfile to write the users keys, and the .
  
  */
@@ -31,6 +29,7 @@ int main (int argc, char* argv[]) {
 			  printf("Generating list of attributes....\n");
 			  string = strdup(optarg);
 			  err = parse_attributes(string);
+			  free(string);
 			  break;
 		case 'p':
 			  pflag = TRUE;
@@ -38,17 +37,17 @@ int main (int argc, char* argv[]) {
 			  break;
 		case 'o':
 			  oflag = TRUE;
-			  keyfile = strdup(optarg);
+			  keyfile = optarg;
 			  break;
 		case 'm': 
 			  if (strcmp(optarg, SCHEME_LSW) == 0) {
-				  printf("Generating Lewko-Sahai-Waters KP scheme parameters...\n");
+				  printf("Generating private key for Lewko-Sahai-Waters KP scheme...\n");
 				  mode = FENC_SCHEME_LSW;
 				  secret_params = SECRET_FILE".kp";
 				  public_params = PUBLIC_FILE".kp";
 			  }
 			  else if(strcmp(optarg, SCHEME_WCP) == 0) {
-				  printf("Generating Waters CP scheme parameters...\n");
+				  printf("Generating private key for Waters CP scheme...\n");
 				  mode = FENC_SCHEME_WATERSCP;
 				  secret_params = SECRET_FILE".cp";
 				  public_params = PUBLIC_FILE".cp";
@@ -101,8 +100,9 @@ int main (int argc, char* argv[]) {
 	generate_keys(keyfile, mode, secret_params, public_params);
 
 cleanup:
-	free(string);
-	free(keyfile);
+/*	if(keyfile != NULL)
+		free(keyfile);
+ */
 	// free attribute list 
 	for (c = 0; c < attributes_len; c++) {
 		free(attributes[c]);
@@ -185,25 +185,9 @@ int parse_attributes(char *input)
 	}
 	
 	attributes_len = ctr;
-	for (i = 0; i < attributes_len; i++) {
+	/*for (i = 0; i < attributes_len; i++) {
 		printf("Attribute '%i' = '%s'\n", i, attributes[i]);
-	}
-	return 0;
-}
-
-int ret_num_bits(int value1)
-{
-	int j;
-
-	for(j = 0; j < BITS; j++) {
-		if(value1 < pow(2,j)) {
-			double x = (double)j;
-			// round to nearest multiple of 4
-			int newj = (int) ceil(x/4)*4;
-			printf("numberOfBits => '%d'\n", newj);
-			return newj;
-		}
-	}
+	}*/
 	return 0;
 }
 
@@ -368,21 +352,23 @@ void generate_keys(char *outfile, FENC_SCHEME_TYPE scheme, char *secret_params, 
 	
 	printf("Buffer contents:\n");
 	print_buffer_as_hex(buffer, serialized_len);
-/*	result = libfenc_import_secret_key(&context, &key2, buffer, serialized_len);
-	report_error("Import secret key", result);
+/*	
+	if(scheme == FENC_SCHEME_LSW) {
+		result = libfenc_import_secret_key(&context, &key2, buffer, serialized_len);
+		report_error("Import secret key", result);
 	
-	// print out new buffer 
-	fenc_key_WatersCP *myKey2 = (fenc_key_WatersCP *) key2.scheme_key;
-	size_t serialized_len2;
-	uint8 *buffer2 = malloc(KEYSIZE_MAX);
-	memset(buffer2, 0, KEYSIZE_MAX);
-	result = libfenc_serialize_key_WatersCP(myKey2, buffer2, KEYSIZE_MAX, &serialized_len2);		
-	report_error("Serialize user's key", result);
+		fenc_key_LSW *myKey2 = (fenc_key_LSW *) key2.scheme_key;
 	
-	printf("Key-len2: '%zu'\n", serialized_len2);
-	printf("Buffer contents 2:\n");
-	print_buffer_as_hex(buffer2, serialized_len2);
-*/
+		size_t serialized_len2;
+		uint8 *buffer2 = malloc(KEYSIZE_MAX);
+		memset(buffer2, 0, KEYSIZE_MAX);
+		result = libfenc_serialize_key_LSW(myKey2, buffer2, KEYSIZE_MAX, &serialized_len2);		
+		report_error("Serialize user's key", result);
+	
+		printf("Key-len2: '%zu'\n", serialized_len2);
+		printf("Buffer contents 2:\n");
+		print_buffer_as_hex(buffer2, serialized_len2);
+	}*/
 cleanup:
 	/* Destroy the context. */
 	result = libfenc_destroy_context(&context);

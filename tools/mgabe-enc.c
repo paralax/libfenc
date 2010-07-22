@@ -10,34 +10,44 @@
 /* include code that creates policy by hand */
 
 #define BYTES 4
-void parse_attributes(char *input);
-void cpabe_encrypt(char *policy, char *data, char *enc_file, int isXML);
+size_t attr_len = 0;
+char *attr[MAX_CIPHERTEXT_ATTRIBUTES];
+void cpabe_encrypt(FENC_SCHEME_TYPE scheme, char *public_params, char *policy, char *data, char *enc_file, int isXML, char *ext);
 fenc_attribute_policy *construct_test_policy();
 
 /* Description: mgabe-keygen takes the outfile to write the users keys, and the .
  
  */
 int main (int argc, char *argv[]) {
-	int pflag,dflag,oflag,iflag,xflag;
-	char *policy = NULL, *data = NULL, *enc_file = NULL;
+	int aflag,pflag,dflag,oflag,iflag,xflag,err;
+	char *policy = NULL, *data = NULL, *enc_file = NULL,*string = NULL;
+	char *ext = NULL;
+	FENC_SCHEME_TYPE mode = FENC_SCHEME_NONE;
+	char *public_params = NULL;
 	ssize_t data_len;
 	FILE *fp;
-	int c, exit_status = 0;
+	int c, exit_status = -1;
 		
 	opterr = 0;
 	// default
-	pflag = dflag = oflag = iflag = xflag = FALSE;
+	aflag = pflag = dflag = oflag = iflag = xflag = FALSE;
 
 	
-	while ((c = getopt (argc, argv, "d:i:o:p:x")) != -1) {
+	while ((c = getopt (argc, argv, "a:d:i:o:m:p:xh")) != -1) {
 		
 		switch (c)
 		{
+			case 'a': // retrieve attributes from user 
+				aflag = TRUE;
+				string = strdup(optarg);
+				construct_attribute_list(string, attr, &attr_len);
+				free(string);
+				break;
 			case 'p': /* holds policy string */
 				pflag = TRUE;
 				if((policy = malloc(strlen(optarg)+1)) == NULL) {
 					perror("malloc failed");
-					exit(1);
+					exit(-1);
 				}
 				strncpy(policy, optarg, strlen(optarg));			  
 				break;
@@ -52,7 +62,7 @@ int main (int argc, char *argv[]) {
 				}
 				else {
 					perror("failed to read input file");
-					exit(1);
+					exit(-1);
 				}
 
 				break;
@@ -63,14 +73,27 @@ int main (int argc, char *argv[]) {
 				// printf("optarg = '%s'\n", optarg);
 				if((data = malloc(strlen(optarg)+1)) == NULL) {
 					perror("malloc failed");
-					exit(1);
+					exit(-1);
 				}
 				strncpy(data, optarg, strlen(optarg));
 				break;
-				
 			case 'o': /* output file */
 				oflag = TRUE;
 				enc_file = optarg;
+				break;
+			case 'm': 
+				if (strcmp(optarg, SCHEME_LSW) == 0) {
+					printf("Generating private key for Lewko-Sahai-Waters KP scheme...\n");
+					mode = FENC_SCHEME_LSW;
+					public_params = PUBLIC_FILE".kp";
+					ext = "kpabe";
+				}
+				else if(strcmp(optarg, SCHEME_WCP) == 0) {
+					printf("Generating private key for Waters CP scheme...\n");
+					mode = FENC_SCHEME_WATERSCP;
+					public_params = PUBLIC_FILE".cp";
+					ext = "cpabe";
+				}
 				break;
 			case 'x': /* output format: xml format */
 				xflag = TRUE;
@@ -79,7 +102,7 @@ int main (int argc, char *argv[]) {
 				print_help();
 				exit(1);
 			case '?':
-				if (optopt == 'p' || optopt == 'd' || optopt == 'o')
+				if (optopt == 'a' || optopt == 'p' || optopt == 'd' || optopt == 'o' || optopt == 'm')
 					fprintf (stderr, "Option -%c requires an argument.\n", optopt);
 				else if (isprint (optopt))
 					fprintf (stderr, "Unknown option `-%c'.\n", optopt);
@@ -96,42 +119,56 @@ int main (int argc, char *argv[]) {
 	if(dflag == FALSE && iflag == FALSE) {
 		fprintf(stderr, "Need some data to encrypt!\n");
 		print_help();
-		exit(1);
+		exit(-1);
 	}	
 	
-	if(pflag == FALSE) {
+	if(aflag == FALSE && mode == FENC_SCHEME_LSW) {
+		fprintf(stderr, "No attribute list specified!\n");
+		print_help();
+		goto clean;
+	}
+	
+	if(pflag == FALSE && mode == FENC_SCHEME_WATERSCP) {
 		fprintf(stderr, "No policy specified to encrypt data!\n");
 		print_help();
-		exit_status = -1;
 		goto clean;
 	}	
 
 	if(oflag == FALSE) {
 		fprintf(stderr, "Specify file to store ciphertext!\n");
 		print_help();
-		exit_status = -1;
 		goto clean;
 	}
 	
-	cpabe_encrypt(policy, data, enc_file, xflag);
+	if(mode == FENC_SCHEME_NONE) {
+		fprintf(stderr, "Please specify a scheme type\n");
+		print_help();
+		goto clean;
+	}
+	
+	cpabe_encrypt(mode, public_params, policy, data, enc_file, xflag, ext);
+	exit_status = 0;
 clean:	
 	free(data);
+	// free attr
 	return exit_status;
 }
 
 void print_help(void)
 {
-	printf("Usage: ./abe-enc -d [ \"data\" ] -i [ input-filename ] -p '((ATTR1 and ATTR2) or ATT3) -o [ output-filename ]'\n\n");
+	printf("Usage: ./abe-enc -m [ KP or CP ] -d [ \"data\" ] -i [ input-filename ]\n\t\t -a Attr1,Attr2,Attr3 -p '((Attr1 and Attr2) or Attr3)' -o [ output-filename ]\n\n");
 }
 
-void cpabe_encrypt(char *policy, char *data, char *enc_file, int isXML)
+void cpabe_encrypt(FENC_SCHEME_TYPE scheme, char *public_params, char *policy, char *data, char *enc_file, int isXML, char *ext)
 {
 	FENC_ERROR result;
 	fenc_context context;
 	fenc_group_params group_params;
 	fenc_global_params global_params;
 	fenc_ciphertext ciphertext;
-	fenc_function_input func_policy_input;
+	fenc_function_input func_object_input;
+	fenc_attribute_policy *parsed_policy = NULL;
+	fenc_attribute_list *parsed_attributes = NULL;
 	pairing_t pairing;
 	FILE *fp;
 	char c;
@@ -153,10 +190,10 @@ void cpabe_encrypt(char *policy, char *data, char *enc_file, int isXML)
 	/* Initialize the library. */
 	result = libfenc_init();
 	/* Create a Sahai-Waters context. */
-	result = libfenc_create_context(&context, FENC_SCHEME_WATERSCP);
+	result = libfenc_create_context(&context, scheme);
 	
 	/* Load group parameters from a file. */
-	fp = fopen("d224.param", "r");
+	fp = fopen(PARAM, "r");
 	if (fp != NULL) {
 		libfenc_load_group_params_from_file(&group_params, fp);
 		libfenc_get_pbc_pairing(&group_params, pairing);
@@ -175,7 +212,7 @@ void cpabe_encrypt(char *policy, char *data, char *enc_file, int isXML)
 	
 	// printf("Reading the public parameters file = %s\n", public_params_file);	
 	/* read file */
-	fp = fopen(public_params_file, "r");
+	fp = fopen(public_params, "r");
 	if(fp != NULL) {
 		while (TRUE) {
 			c = fgetc(fp);
@@ -193,21 +230,20 @@ void cpabe_encrypt(char *policy, char *data, char *enc_file, int isXML)
 		return;
 	}
 	fclose(fp);
-	
-	fenc_attribute_policy *parsed_policy = (fenc_attribute_policy *) malloc(sizeof(fenc_attribute_policy));
-	if(parsed_policy == NULL) {
-		printf("parsed_policy is NULL!");
+		
+	if(scheme == FENC_SCHEME_LSW) {
+		libfenc_create_attribute_list_from_strings(&func_object_input, attr, attr_len);
+		debug_print_attribute_list((fenc_attribute_list*)(func_object_input.scheme_input));
 	}
-	memset(parsed_policy, 0, sizeof(fenc_attribute_policy)); 
-	
-	fenc_policy_from_string(parsed_policy, policy);
-	// test_policy = construct_simple_test_policy();
-	// printf("Address at 0x%x\n", &(parsed_policy->root));
-	// result = fenc_attribute_policy_to_string(parsed_policy->root, pol_str, pol_str_len);
-	// report_error("Fenc_policy_to_string", result);
-	// printf("\noutput policy: %s\n", pol_str); 	
-	func_policy_input.input_type = FENC_INPUT_NM_ATTRIBUTE_POLICY;
-	func_policy_input.scheme_input = (void*)parsed_policy;	
+	else if(scheme == FENC_SCHEME_WATERSCP) {
+		parsed_policy = (fenc_attribute_policy *) malloc(sizeof(fenc_attribute_policy));
+		memset(parsed_policy, 0, sizeof(fenc_attribute_policy)); 
+		
+		fenc_policy_from_string(parsed_policy, policy);
+		func_object_input.input_type = FENC_INPUT_NM_ATTRIBUTE_POLICY;
+		func_object_input.scheme_input = (void*)parsed_policy;
+		debug_print_policy(parsed_policy);
+	}
 	
 	// printf("public params input = '%s'\n", public_params_buf);
 	
@@ -220,7 +256,7 @@ void cpabe_encrypt(char *policy, char *data, char *enc_file, int isXML)
 	// report_error("Importing public parameters", result);
 	
 	/*  */
-	result = libfenc_kem_encrypt(&context, &func_policy_input, SESSION_KEY_LEN, (uint8 *)session_key, &ciphertext);	
+	result = libfenc_kem_encrypt(&context, &func_object_input, SESSION_KEY_LEN, (uint8 *)session_key, &ciphertext);	
 	
 	/* generated PSK from policy string */
 	printf("\tSession key is: ");
@@ -251,7 +287,7 @@ void cpabe_encrypt(char *policy, char *data, char *enc_file, int isXML)
 	memset(filename, 0, strlen(enc_file)+9);
 	uint8 *rand_id[BYTES+1];
 	if(isXML) {
-		sprintf(filename, "%s.abe.xml", enc_file);
+		sprintf(filename, "%s.%s.xml", enc_file, ext);
 		fp = fopen(filename, "w");
 		/* generate the random unique id */
 		if(RAND_bytes((char *) rand_id, BYTES) == 0) {
@@ -260,7 +296,7 @@ void cpabe_encrypt(char *policy, char *data, char *enc_file, int isXML)
 		}		
 	}
 	else {
-		sprintf(filename, "%s.abe", enc_file);
+		sprintf(filename, "%s.%s", enc_file, ext);
 		fp = fopen(filename, "w");
 	}
 	printf("\tCiphertext stored in '%s'.\n", filename);

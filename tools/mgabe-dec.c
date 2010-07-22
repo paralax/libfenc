@@ -9,7 +9,7 @@
 
 /* test encryption of "hello world" under policy of "ONE or TWO" */
 #define MAX_ATTRIBUTES 100
-Bool cpabe_decrypt(char *inputfile, char *keyfile);
+Bool cpabe_decrypt(FENC_SCHEME_TYPE scheme, char *public_params, char *inputfile, char *keyfile);
 void tokenize_inputfile(char* in, char** abe, char** aes);
 
 /* 
@@ -20,12 +20,13 @@ void tokenize_inputfile(char* in, char** abe, char** aes);
  */
 int main (int argc, char *argv[]) {
 	int fflag = FALSE, kflag = FALSE;
-	char *file = "enc_data.txt", *key = "user_priv.key";
+	char *file = "input.txt", *key = "private.key", *public_params = NULL;
+	FENC_SCHEME_TYPE mode = FENC_SCHEME_NONE;
 	int c;
 	
 	opterr = 0;
 
-	while ((c = getopt (argc, argv, "f:k:")) != -1) {
+	while ((c = getopt (argc, argv, "m:f:k:h")) != -1) {
 		
 		switch (c)
 		{
@@ -38,6 +39,18 @@ int main (int argc, char *argv[]) {
 				kflag = TRUE;
 				key = optarg;
 				printf("private-key file = '%s'\n", key);
+				break;
+			case 'm': 
+				if (strcmp(optarg, SCHEME_LSW) == 0) {
+					printf("Decrypting under Lewko-Sahai-Waters KP scheme...\n");
+					mode = FENC_SCHEME_LSW;
+					public_params = PUBLIC_FILE".kp";
+				}
+				else if(strcmp(optarg, SCHEME_WCP) == 0) {
+					printf("Decrypting under Waters CP scheme...\n");
+					mode = FENC_SCHEME_WATERSCP;
+					public_params = PUBLIC_FILE".cp";
+				}
 				break;
 			case 'h': // print usage 
 				print_help();
@@ -60,22 +73,27 @@ int main (int argc, char *argv[]) {
 
 	if(fflag == FALSE) {
 		fprintf(stderr, "No file to decrypt!\n");
-		print_help();
-		exit(-1);
+		goto error;
 	}
 	
 	if(kflag == FALSE) {
 		fprintf(stderr, "Decrypt without a key? c'mon!\n");
-		print_help();
-		exit(-1);
+		goto error;	
 	}
 	
-	return cpabe_decrypt(file, key);
+	if(mode == FENC_SCHEME_NONE) {
+		fprintf(stderr, "Please specify a scheme type\n");
+		goto error;	
+	}
+	return cpabe_decrypt(mode, public_params, file, key);
+error:
+	print_help();
+	exit(-1);
 }
 
 void print_help(void)
 {
-	printf("Usage: ./abe-dec -k [ private-key-file ] -f [ file-to-decrypt ] \n\n");
+	printf("Usage: ./abe-dec -m [ KP or CP ] -k [ private-key-file ] -f [ file-to-decrypt ] \n\n");
 }
 /* This function tokenizes the input file with the 
 expected format: "ABE_TOKEN : base-64 : ABE_TOKEN_END : 
@@ -105,7 +123,7 @@ void tokenize_inputfile(char* in, char** abe, char** aes)
 	}
 }
 
-Bool cpabe_decrypt(char *inputfile, char *keyfile)
+Bool cpabe_decrypt(FENC_SCHEME_TYPE scheme, char *public_params, char *inputfile, char *keyfile)
 {
 	FENC_ERROR result;
 	fenc_context context;
@@ -122,7 +140,6 @@ Bool cpabe_decrypt(char *inputfile, char *keyfile)
 	int pub_len = 0, sec_len = 0;
 	size_t serialized_len = 0;
 	uint8 public_params_buf[SIZE];
-	uint8 secret_params_buf[SIZE];
 	char session_key[SESSION_KEY_LEN];
 	char output_str[200];
 	int output_str_len = 200;
@@ -170,9 +187,9 @@ Bool cpabe_decrypt(char *inputfile, char *keyfile)
 	/* Initialize the library. */
 	result = libfenc_init();
 	/* Create a Sahai-Waters context. */
-	result = libfenc_create_context(&context, FENC_SCHEME_WATERSCP);	
+	result = libfenc_create_context(&context, scheme);	
 	/* Load group parameters from a file. */
-	fp = fopen("d224.param", "r");
+	fp = fopen(PARAM, "r");
 	if (fp != NULL) {
 		libfenc_load_group_params_from_file(&group_params, fp);
 		libfenc_get_pbc_pairing(&group_params, pairing);
@@ -190,7 +207,7 @@ Bool cpabe_decrypt(char *inputfile, char *keyfile)
 	// report_error("Generating scheme parameters and secret key", result);
 	
 	/* read file */
-	fp = fopen(public_params_file, "r");
+	fp = fopen(public_params, "r");
 	if(fp != NULL) {
 		while (TRUE) {
 			c = fgetc(fp);
@@ -204,7 +221,7 @@ Bool cpabe_decrypt(char *inputfile, char *keyfile)
 		}
 	}
 	else {
-		fprintf(stderr, "File does not exist: %s\n", public_params_file);
+		fprintf(stderr, "File does not exist: %s\n", public_params);
 		return FALSE;
 	}
 	fclose(fp);
@@ -227,11 +244,11 @@ Bool cpabe_decrypt(char *inputfile, char *keyfile)
 			size_t keyLength;
 			uint8 *bin_keyfile_buf = NewBase64Decode((const char *) keyfile_buf, key_len, &keyLength);
 
-#ifdef DEBUG			
+//#ifdef DEBUG			
 			/* base-64 decode user's private key */
 			printf("Base-64 decoded buffer:\t");
 			print_buffer_as_hex(bin_keyfile_buf, keyLength);
-#endif			
+//#endif			
 			result = libfenc_import_secret_key(&context, &secret_key, bin_keyfile_buf, keyLength);
 			report_error("Importing secret key", result);
 			free(keyfile_buf);
@@ -247,8 +264,7 @@ Bool cpabe_decrypt(char *inputfile, char *keyfile)
 	uint8 *data = NewBase64Decode((const char *) abe_blob64, strlen(abe_blob64), &abeLength);
 	ciphertext.data = data;
 	ciphertext.data_len = abeLength;
-	ciphertext.max_len = abeLength;
-	
+	ciphertext.max_len = abeLength;	
 	
 	/* Descrypt the resulting ciphertext. */
 	result = libfenc_decrypt(&context, &ciphertext, &secret_key, &aes_session_key);
