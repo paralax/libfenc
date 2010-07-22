@@ -991,3 +991,23 @@ hash_attribute_string_to_Zr(fenc_attribute *attribute, pairing_t pairing)
 	
 	return FENC_ERROR_NONE;
 }
+
+void debug_print_policy(fenc_attribute_policy *policy)
+{
+	int len = 1024;
+	char pol_str[len];
+	memset(pol_str, 0, len);
+	fenc_attribute_policy_to_string(policy->root, pol_str, len);
+	printf("DEBUG: Policy -- '%s'\n", pol_str);
+}
+
+void debug_print_attribute_list(fenc_attribute_list *attribute_list)
+{
+	int len = 1024;
+	char attr_str[len];
+	memset(attr_str, 0, len);
+	size_t result_len;
+	fenc_attribute_list_to_buffer(attribute_list, attr_str, len, &result_len);
+	printf("DEBUG: Attribute list -- '%s'\n", attr_str);
+}
+

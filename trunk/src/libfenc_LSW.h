@@ -246,6 +246,31 @@ FENC_ERROR	libfenc_import_global_params_LSW(fenc_context *context, uint8 *buffer
 
 FENC_ERROR	libfenc_export_global_params_LSW(fenc_context *context, uint8 *buffer, size_t max_len, size_t *result_len);
 
+/*!
+ * Serialize an ABE key structure.
+ *
+ * @param context		The fenc_context data structure
+ * @param key			The fenc_key data structure.
+ * @param buffer		A pre-allocated buffer for the resulting export.
+ * @param buf_len		The maximum allocated size of the buffer (in bytes).
+ * @param result_len	The size of the resulting export (in bytes).
+ * @return				FENC_ERROR_NONE or an error code.
+ */
+
+FENC_ERROR	libfenc_export_secret_key_LSW(fenc_context *context, fenc_key *key, uint8 *buffer, size_t buf_len, size_t *result_len);
+
+/*!
+ * Deserialize an ABE key structure.
+ *
+ * @param context		The fenc_context data structure
+ * @param key			The fenc_key data structure (pre-allocated), but not initialized.
+ * @param buffer		The buffer which contains the binary contents of key?
+ * @param buf_len		The size of the buffer (in bytes).
+ * @return				FENC_ERROR_NONE or an error code.
+ */
+
+FENC_ERROR	libfenc_import_secret_key_LSW(fenc_context *context, fenc_key *key, uint8 *buffer, size_t buf_len);
+
 /**************************************************************************************
  * Utility functions
  **************************************************************************************/
@@ -310,6 +335,21 @@ FENC_ERROR libfenc_validate_global_params_LSW(fenc_global_params *global_params)
  */
 
 FENC_ERROR	libfenc_serialize_key_LSW(fenc_key_LSW *key, unsigned char *buffer, size_t max_len, size_t *serialized_len);
+
+/*!
+ * Deserialize a decryption key from a binary buffer.  Accepts an LSW key, buffer, and buffer length.
+ * If the buffer is large enough, the serialized result is written to the buffer and returns the
+ * length in "serialized_len".  Calling with a NULL buffer returns the length /only/ but does
+ * not actually serialize the structure.
+ *
+ * @param key				The key to serialize.
+ * @param buffer			Pointer to a buffer, or NULL to get the length only.
+ * @param buf_len			The length of the buffer (in bytes).
+ * @param serialized_len	Total size of the serialized structure (in bytes).
+ * @return					FENC_ERROR_NONE or FENC_ERROR_BUFFER_TOO_SMALL.
+ */
+
+FENC_ERROR	libfenc_deserialize_key_LSW(fenc_key_LSW *key, unsigned char *buffer, size_t buf_len);
 
 /*!
  * Serialize a ciphertext to a binary buffer.  Accepts an LSW ciphertext, buffer, and buffer length.
@@ -453,7 +493,7 @@ FENC_ERROR	hash2_attribute_string_to_G1(uint8 *attribute_str, element_t *hashed_
  */
 
 fenc_key_LSW*
-key_LSW_initialize(fenc_attribute_list *attribute_list, fenc_attribute_policy *policy, Bool copy_attr_list, 
+fenc_key_LSW_initialize(fenc_attribute_list *attribute_list, fenc_attribute_policy *policy, Bool copy_attr_list, 
 				   fenc_global_params_LSW *global_params);
 
 /*!

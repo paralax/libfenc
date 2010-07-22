@@ -68,6 +68,8 @@ libfenc_create_context_LSW(fenc_context *context)
 		context->import_secret_params	= libfenc_import_secret_params_LSW;
 		context->export_global_params	= libfenc_export_global_params_LSW;
 		context->import_global_params	= libfenc_import_global_params_LSW;
+		context->export_secret_key		= libfenc_export_secret_key_LSW;
+		context->import_secret_key		= libfenc_import_secret_key_LSW;		
 	}
 		
 	/* Return success/error. */
@@ -189,6 +191,9 @@ libfenc_extract_key_LSW(fenc_context *context, fenc_function_input *input, fenc_
 	int							i;
 	element_t					rZ, hashONE, tempONE, temp2ONE, tempZ, temp2Z, tempTWO, temp2TWO;
 	Bool						elements_initialized = FALSE;
+	int length = 1024;
+	char output_str[length];
+	memset(output_str, 0, length);
 	
 	/* Get the scheme-specific context. */
 	scheme_context = (fenc_scheme_context_LSW*)context->scheme_context;
@@ -202,10 +207,15 @@ libfenc_extract_key_LSW(fenc_context *context, fenc_function_input *input, fenc_
 	policy = (fenc_attribute_policy*)SAFE_MALLOC(sizeof(fenc_attribute_policy));
 	err_code = libfenc_parse_input_as_attribute_policy(input, policy);
 	if (err_code != FENC_ERROR_NONE) {
-		LOG_ERROR("libfenc_extract_key_LSW: could not parse function input as policy");
+		LOG_ERROR("%s: could not parse function input as policy", __func__);
 		result = FENC_ERROR_INVALID_INPUT;
 		goto cleanup;
 	}
+	
+	/* test print out */
+//	fenc_attribute_policy_to_string(policy->root, output_str, length);
+//	printf("Copied policy: '%s'\n", output_str);
+//	print_buffer_as_hex((uint8 *) output_str, strlen(output_str));
 	
 	/* Use the Linear Secret Sharing Scheme (LSSS) to compute an enumerated list of all
 	 * attributes and corresponding secret shares.  The shares will be placed into 
@@ -214,15 +224,15 @@ libfenc_extract_key_LSW(fenc_context *context, fenc_function_input *input, fenc_
 	err_code = fenc_LSSS_calculate_shares_from_policy(&(scheme_context->secret_params.alphaprimeZ), policy, &attribute_list, 
 													  scheme_context->global_params->pairing);
 	if (err_code != FENC_ERROR_NONE) {
-		LOG_ERROR("libfenc_extract_key_LSW: could not calculate shares");
+		LOG_ERROR("%s: could not calculate shares", __func__);
 		result = FENC_ERROR_INVALID_INPUT;
 		goto cleanup;
 	}
 	
 	/* Initialize the LSW-specific key data structure and allocate some temporary variables.	*/
-	key_LSW = key_LSW_initialize(&attribute_list, policy, FALSE, scheme_context->global_params);
+	key_LSW = fenc_key_LSW_initialize(&attribute_list, policy, FALSE, scheme_context->global_params);
 	if (key_LSW == NULL) {
-		LOG_ERROR("libfenc_extract_key_LSW: could not initialize key structure");
+		LOG_ERROR("%s: could not initialize key structure", __func__);
 		result = FENC_ERROR_INVALID_INPUT;
 		goto cleanup;
 	}
@@ -1017,6 +1027,139 @@ libfenc_export_global_params_LSW(fenc_context *context, uint8 *buffer, size_t ma
 	return err_code;
 }	
 
+/*!
+ * Serialize an ABE key structure.
+ *
+ * @param context		The fenc_context data structure
+ * @param key			The fenc_key data structure.
+ * @param buffer		A pre-allocated buffer for the resulting export.
+ * @param buf_len		The maximum allocated size of the buffer (in bytes).
+ * @param result_len	The size of the resulting export (in bytes).
+ * @return				FENC_ERROR_NONE or an error code.
+ */
+
+FENC_ERROR	
+libfenc_export_secret_key_LSW(fenc_context *context, fenc_key *key, uint8 *buffer, size_t buf_len, size_t *result_len)
+{ 
+	FENC_ERROR err_code = FENC_ERROR_NONE;
+	fenc_scheme_context_LSW *scheme_context;
+	
+	scheme_context = (fenc_scheme_context_LSW*)context->scheme_context;
+	if (scheme_context == NULL) {
+		return FENC_ERROR_INVALID_CONTEXT;
+	}	
+	
+	/* retrieve the key for the WatersCP context */ 
+	fenc_key_LSW *key_LSW = (fenc_key_LSW *) key->scheme_key;
+	if(key_LSW == NULL) {
+		err_code = FENC_ERROR_INVALID_INPUT;
+		LOG_ERROR("%s: fenc_key structure non-existent.", __func__);
+		goto cleanup;
+	}
+	
+	/* serialize key structure to buffer */
+	err_code = libfenc_serialize_key_LSW(key_LSW, buffer, buf_len, result_len);		
+	if (err_code != FENC_ERROR_NONE) {
+		err_code = FENC_ERROR_INVALID_INPUT;
+		LOG_ERROR("%s: cannot serialize key to buffer. has key been constructed?", __func__);
+		goto cleanup;
+	}
+	
+cleanup:	
+	return err_code;
+}
+
+/*!
+ * Deserialize an ABE key structure.
+ *
+ * @param context		The fenc_context data structure
+ * @param key			The fenc_key data structure (pre-allocated), but not initialized.
+ * @param buffer		The buffer which contains the binary contents of key?
+ * @param buf_len		The size of the buffer (in bytes).
+ * @return				FENC_ERROR_NONE or an error code.
+ */
+
+FENC_ERROR	
+libfenc_import_secret_key_LSW(fenc_context *context, fenc_key *key, uint8 *buffer, size_t buf_len)
+{
+	FENC_ERROR err_code = FENC_ERROR_NONE;
+	fenc_key_LSW			*key_LSW;
+	fenc_scheme_context_LSW *scheme_context;
+	fenc_attribute_policy	*policy_tree = NULL;
+	fenc_attribute_list		*attribute_list = NULL;
+	uint32					num_components;
+	size_t					import_len;
+	
+	/* Get the scheme-specific context. */
+	scheme_context = (fenc_scheme_context_LSW*)context->scheme_context;
+	if (scheme_context == NULL) {
+		return FENC_ERROR_INVALID_CONTEXT;
+	}
+	
+	/* import policy structure */
+	policy_tree = (fenc_attribute_policy*) SAFE_MALLOC(sizeof(fenc_attribute_policy));
+	if (policy_tree == NULL) {
+		LOG_ERROR("%s: could not allocate policy structure", __func__);
+		err_code = FENC_ERROR_OUT_OF_MEMORY;
+		goto cleanup;
+	}		
+	
+	/* Allocate an attribute list data structure.	*/
+	attribute_list = (fenc_attribute_list*) SAFE_MALLOC(sizeof(fenc_attribute_list));
+	if (attribute_list == NULL) {
+		LOG_ERROR("%s: could not allocate attribute list", __func__);
+		free(policy_tree);
+		err_code = FENC_ERROR_OUT_OF_MEMORY;
+		goto cleanup;
+	}	
+	
+	/* import attributes only -- should be first in buffer */
+	err_code = import_components_from_buffer(buffer, buf_len, &import_len, "%P%A%d",
+											 policy_tree,
+											 attribute_list,
+											 &(num_components));
+	
+	// debug_print_policy(policy_tree);
+	// debug_print_attribute_list(attribute_list);
+	// printf("num_components => '%d'\n", num_components);
+	// printf("import_len => '%zu'\n", import_len);
+	
+	/* sanity check */
+	if(num_components != attribute_list->num_attributes) {
+		LOG_ERROR("%s: mis-match in attributes found in key", __func__);
+		err_code = FENC_ERROR_INVALID_INPUT;
+		goto cleanup;
+	}
+	
+	/* initialize the key structure */
+	key_LSW = fenc_key_LSW_initialize(attribute_list, policy_tree, FALSE, scheme_context->global_params);
+	if (key_LSW == NULL) {
+		LOG_ERROR("%s: could not initialize key structure", __func__);
+		err_code = FENC_ERROR_INVALID_INPUT;
+		goto cleanup;
+	}
+									   
+	/* deserialize rest of key components -- D1-D5 for each attribute. Worry about negation later. */
+	err_code = libfenc_deserialize_key_LSW(key_LSW, (uint8 *) (buffer + import_len), (buf_len - import_len));
+	if (err_code != FENC_ERROR_NONE) {
+		LOG_ERROR("%s: could not deserialize into key structure", __func__);
+		err_code = FENC_ERROR_INVALID_INPUT;
+		goto cleanup;
+	}
+	
+	/* Stash the key_WatersCP structure inside of the fenc_key.		*/
+	memset(key, 0, sizeof(fenc_key));
+	key->scheme_type = FENC_SCHEME_LSW;
+	key->valid = TRUE;
+	key->scheme_key = (void*)key_LSW;	
+
+	/* Success */
+	err_code = FENC_ERROR_NONE;
+cleanup:
+	
+	return err_code;
+}
+
 /**************************************************************************************
  * Utility functions
  **************************************************************************************/
@@ -1112,19 +1255,18 @@ libfenc_serialize_key_LSW(fenc_key_LSW *key, unsigned char *buffer, size_t max_l
 {
 	FENC_ERROR err_code = FENC_ERROR_NONE;
 	unsigned char *buf_ptr = (unsigned char*)buffer;
-	// UNFINISHED : unused variables.
-	//char *policy_str;
-	size_t /*str_index = 0, str_len = MAX_POLICY_STR - 1,*/ result_len = 0;
+	size_t result_len = 0;
 	uint32 i;
-
+	
 	/* Export the policy, result length, number of components in the key.	*/
 	err_code = export_components_to_buffer(buf_ptr, max_len, &result_len, "%P%A%d",
 										   key->policy,
-										   &(key->attribute_list),
+										  &(key->attribute_list),
 										   key->num_components);
 	if (err_code != FENC_ERROR_NONE) {
 		return err_code;
 	}
+	*serialized_len = 0;
 	*serialized_len += result_len;
 	if (buffer != NULL) {	buf_ptr = buffer + *serialized_len;	}
 	max_len -= result_len;	/* TODO: may be a problem.	*/
@@ -1150,6 +1292,58 @@ libfenc_serialize_key_LSW(fenc_key_LSW *key, unsigned char *buffer, size_t max_l
 		*serialized_len += result_len;
 		if (buffer != NULL) {	buf_ptr = buffer + *serialized_len;	}
 		max_len -= result_len;	/* TODO: may be a problem.	*/
+	}
+	
+	/* All done.	*/
+	return err_code;
+}
+
+/*!
+ * Deserialize a decryption key from a binary buffer.  Accepts an LSW key, buffer, and buffer length.
+ * If the buffer is large enough, the serialized result is written to the buffer and returns the
+ * length in "serialized_len".  Calling with a NULL buffer returns the length /only/ but does
+ * not actually serialize the structure.
+ *
+ * @param key				The key to serialize.
+ * @param buffer			Pointer to a buffer, or NULL to get the length only.
+ * @param buf_len			The length of the buffer (in bytes).
+ * @param serialized_len	Total size of the serialized structure (in bytes).
+ * @return					FENC_ERROR_NONE or FENC_ERROR_BUFFER_TOO_SMALL.
+ */
+
+FENC_ERROR
+libfenc_deserialize_key_LSW(fenc_key_LSW *key, unsigned char *buffer, size_t buf_len)
+{
+	FENC_ERROR err_code = FENC_ERROR_NONE;
+	unsigned char *buf_ptr = (unsigned char*)buffer;
+	size_t result_len = 0, serialized_len = 0;
+	uint32 i;
+	
+	serialized_len += result_len;
+	if (buffer != NULL) {	buf_ptr = buffer + serialized_len;	}
+	buf_len -= result_len;
+	
+	/* Now output each component of the key.								*/
+	for (i = 0; i < key->num_components; i++) {
+		/* Export the five group elements that correspond to an element.	*/
+		if (key->attribute_list.attribute[i].is_negated == FALSE) {
+			err_code = import_components_from_buffer(buf_ptr, buf_len, &result_len, "%C%C",
+												   &(key->D1ONE[i]),
+												   &(key->D2TWO[i]));
+		} else {
+			err_code = import_components_from_buffer(buf_ptr, buf_len, &result_len, "%C%C%C",
+												   &(key->D3ONE[i]),
+												   &(key->D4TWO[i]),
+												   &(key->D5TWO[i]));
+		}
+		
+		if (err_code != FENC_ERROR_NONE) {
+			return err_code;
+		}
+		
+		serialized_len += result_len;
+		if (buffer != NULL) {	buf_ptr = buffer + serialized_len;	}
+		buf_len -= result_len;	/* TODO: may be a problem.	*/
 	}
 	
 	/* All done.	*/
@@ -1647,7 +1841,7 @@ hash2_attribute_string_to_G1(uint8 *attribute_str, element_t *hashed_attr, eleme
  */
 
 fenc_key_LSW*
-key_LSW_initialize(fenc_attribute_list *attribute_list, fenc_attribute_policy *policy, Bool copy_attr_list, 
+fenc_key_LSW_initialize(fenc_attribute_list *attribute_list, fenc_attribute_policy *policy, Bool copy_attr_list, 
 				   fenc_global_params_LSW *global_params)
 {
 	FENC_ERROR err_code;
@@ -1657,7 +1851,7 @@ key_LSW_initialize(fenc_attribute_list *attribute_list, fenc_attribute_policy *p
 	/* Initialize and wipe the key structure.	*/
 	key_LSW = (fenc_key_LSW*)SAFE_MALLOC(sizeof(fenc_key_LSW));
 	if (key_LSW == NULL) {
-		LOG_ERROR("key_LSW_initialize: out of memory");
+		LOG_ERROR("%s: out of memory", __func__);
 		return NULL;
 	}
 	memset(key_LSW, 0, sizeof(fenc_key_LSW));

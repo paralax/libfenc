@@ -31,7 +31,6 @@ void printf_buffer_as_hex(uint8* data, size_t len)
 	printf("\n");
 }
 
-
 /*!
  * Import a collection of parameters from a buffer.
  *
@@ -48,6 +47,7 @@ import_components_from_buffer(uint8* buffer, size_t buf_len, size_t *imported_le
 	va_list comp_list;
 	uint32 deserialized_len = 0;
 	fenc_attribute_list *attr_list = NULL;
+	fenc_attribute_policy *pol_tree = NULL;
 	char *attrs;
 	size_t len;
 	int32 temp_int;
@@ -100,6 +100,12 @@ import_components_from_buffer(uint8* buffer, size_t buf_len, size_t *imported_le
 				fenc_buffer_to_attribute_list(&attrs, attr_list);
 				free(attrs);
 				break;
+			case 'P':
+				len = strlen((char *) buf_ptr); /* assume policy is NULL terminated */
+				pol_tree = va_arg(comp_list, fenc_attribute_policy *); /* get the users ptr to fenc_attribute_policy */
+				fenc_policy_from_string(pol_tree, (char *) buf_ptr); /* store policy into given policy structure */
+				deserialized_len += len + 1;	/* increment pointer to next component */
+				break;
 			default:
 				/* Unrecognized symbol.	*/
 				result = FENC_ERROR_INVALID_INPUT;
@@ -142,6 +148,7 @@ export_components_to_buffer(uint8* buffer, size_t max_len, size_t *result_len, c
 	FENC_ERROR result = FENC_ERROR_NONE;
 	va_list comp_list;
 	uint8* buf_ptr = buffer;
+	uint8 *tmp_ptr;
 	char* fmt_ptr;
 	element_t *elt;
 	fenc_attribute_policy *policy;
@@ -187,16 +194,17 @@ export_components_to_buffer(uint8* buffer, size_t max_len, size_t *result_len, c
 				
 			case 'P':
 				policy = va_arg(comp_list, fenc_attribute_policy*);
-				index = 0;
 				result = fenc_attribute_policy_to_string(policy->root, (char *)buf_ptr, (max_len - *result_len));
+				index = strchr((char *) buf_ptr, 0) - (char *) buf_ptr;
 				*result_len += index + 1;
+				printf("policy_root: '%s', strlen: '%d', index: '%d'\n", (char *) buf_ptr, strlen((char *) buf_ptr), index);
 				break;
 				
 			case 'A':
 				attribute_list = va_arg(comp_list, fenc_attribute_list*);
 				fenc_attribute_list_to_buffer(attribute_list, buf_ptr, (max_len - *result_len), &index);
 				*result_len += index + 1;
-				// printf("attribute_list: '%s'\n\tlength: '%zu'\n", (char *)buf_ptr, strlen((char *)buf_ptr));
+				printf("attribute_list: '%s'\n\tlength: '%zu'\n", (char *)buf_ptr, strlen((char *)buf_ptr));
 				break;
 				
 			case 's':

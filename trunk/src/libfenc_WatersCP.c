@@ -967,7 +967,7 @@ libfenc_import_secret_key_WatersCP(fenc_context *context, fenc_key *key, uint8 *
 	}
 	// printf("import_len => '%zu'\n", import_len);
 	
-	/* Initialize the LSW-specific key data structure and allocate some temporary variables.	*/
+	/* Initialize the WatersCP-specific key data structure and allocate some temporary variables.	*/
 	key_WatersCP = fenc_key_WatersCP_initialize(attribute_list, FALSE, scheme_context->global_params);
 	if (key_WatersCP == NULL) {
 		LOG_ERROR("%s: could not initialize key structure", __func__);
