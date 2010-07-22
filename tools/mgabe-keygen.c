@@ -6,20 +6,23 @@
 #define DEFAULT_KEYFILE "private.key"
 #define BITS 64
 char *attributes[MAX_CIPHERTEXT_ATTRIBUTES];
+char *policy = NULL;
 int attributes_len = 0;
 int parse_attributes(char *input);
-void generate_keys(char *outfile);
+void generate_keys(char *outfile, FENC_SCHEME_TYPE scheme, char *secret_params, char *public_params);
 int ret_num_bits(int value1);
 /* Description: mgabe-keygen takes the outfile to write the users keys, and the .
  
  */
 int main (int argc, char* argv[]) {
-	int oflag = FALSE, aflag = FALSE;
+	int oflag = FALSE, aflag = FALSE, pflag = FALSE;
 	char *keyfile = NULL, *string = NULL;
 	int  c,err;
+	FENC_SCHEME_TYPE mode = FENC_SCHEME_NONE;
+	char *secret_params = NULL, *public_params = NULL;
 	opterr = 0;
 	
-	while ((c = getopt (argc, argv, "a:o:h")) != -1) {
+	while ((c = getopt (argc, argv, "a:o:m:p:h")) != -1) {
 	
 	switch (c)
 	  {
@@ -29,15 +32,33 @@ int main (int argc, char* argv[]) {
 			  string = strdup(optarg);
 			  err = parse_attributes(string);
 			  break;
+		case 'p':
+			  pflag = TRUE;
+			  policy = strdup(optarg);
+			  break;
 		case 'o':
 			  oflag = TRUE;
 			  keyfile = strdup(optarg);
+			  break;
+		case 'm': 
+			  if (strcmp(optarg, SCHEME_LSW) == 0) {
+				  printf("Generating Lewko-Sahai-Waters KP scheme parameters...\n");
+				  mode = FENC_SCHEME_LSW;
+				  secret_params = SECRET_FILE".kp";
+				  public_params = PUBLIC_FILE".kp";
+			  }
+			  else if(strcmp(optarg, SCHEME_WCP) == 0) {
+				  printf("Generating Waters CP scheme parameters...\n");
+				  mode = FENC_SCHEME_WATERSCP;
+				  secret_params = SECRET_FILE".cp";
+				  public_params = PUBLIC_FILE".cp";
+			  }
 			  break;
 		case 'h':
 			  print_help();
 			  exit(1);			  
 		case '?':
-			if (optopt == 'o')
+			if (optopt == 'o' )
 				fprintf (stderr, "Option -%o requires an argument.\n", optopt);
 			else if (isprint (optopt))
 				fprintf (stderr, "Unknown option `-%c'.\n", optopt);
@@ -50,10 +71,16 @@ int main (int argc, char* argv[]) {
 			  abort ();
 		}
 	}
-	
+		
 	/* attribute list required */
-	if(aflag == FALSE) {
+	if(aflag == FALSE && mode == FENC_SCHEME_WATERSCP) {
 		fprintf(stderr, "Attributes list required to generate user's key!\n");
+		print_help();
+		exit(1);
+	}
+	
+	if(pflag == FALSE && mode == FENC_SCHEME_LSW) {
+		fprintf(stderr, "Policy required to generate user's key under "SCHEME_LSW" scheme\n");
 		print_help();
 		exit(1);
 	}
@@ -63,10 +90,17 @@ int main (int argc, char* argv[]) {
 		keyfile = DEFAULT_KEYFILE;
 	}
 
+	if(mode == FENC_SCHEME_NONE) {
+		fprintf(stderr, "Please specify a scheme type\n");
+		print_help();
+		goto cleanup;
+	}
+	
+	
 	printf("Generating your private-key...\n");
-	generate_keys(keyfile);
+	generate_keys(keyfile, mode, secret_params, public_params);
 
-	printf("Deallocate memory...\n");
+cleanup:
 	free(string);
 	free(keyfile);
 	// free attribute list 
@@ -78,7 +112,7 @@ int main (int argc, char* argv[]) {
 
 void print_help(void)
 {
-	printf("Usage: ./abe-keygen -o key_file -a ATTR1,ATTR2,ATT3,etc\n\n");
+	printf("Usage: ./abe-keygen -m [ KP or CP ] -a [ ATTR1,ATTR2,ATT3,etc ] -o [ key file ]\n\n");
 }
 
 int parse_attributes(char *input)
@@ -173,13 +207,13 @@ int ret_num_bits(int value1)
 	return 0;
 }
 
-void generate_keys(char *outfile)
+void generate_keys(char *outfile, FENC_SCHEME_TYPE scheme, char *secret_params, char *public_params)
 {
 	FENC_ERROR result;
 	fenc_context context;
 	fenc_group_params group_params;
 	fenc_global_params global_params;
-	fenc_function_input func_list_input;
+	fenc_function_input func_object_input; // could be policy or list
 	pairing_t pairing;
 	fenc_key key;
 	fenc_key key2;
@@ -202,7 +236,7 @@ void generate_keys(char *outfile)
 	memset(&secret_params_buf, 0, SIZE);
 	memset(output_str, 0, SIZE);
 	/* stores user's authorized attributes */
-	memset(&func_list_input, 0, sizeof(fenc_function_input));
+	memset(&func_object_input, 0, sizeof(fenc_function_input));
 	/* stores the user's private key */
 	memset(&key, 0, sizeof(fenc_key)); 
 	memset(&key2, 0, sizeof(fenc_key));
@@ -210,10 +244,10 @@ void generate_keys(char *outfile)
 	/* Initialize the library. */
 	result = libfenc_init();
 	/* Create a Sahai-Waters context. */
-	result = libfenc_create_context(&context, FENC_SCHEME_WATERSCP);
+	result = libfenc_create_context(&context, scheme);
 			
 	/* Load group parameters from a file. */
-	fp = fopen("d224.param", "r");
+	fp = fopen(PARAM, "r");
 	if (fp != NULL) {
 		libfenc_load_group_params_from_file(&group_params, fp);
 		libfenc_get_pbc_pairing(&group_params, pairing);
@@ -230,9 +264,9 @@ void generate_keys(char *outfile)
 	result = libfenc_gen_params(&context, &global_params);
 	report_error("Generating scheme parameters and secret key", result);
 		
-	printf("Reading the public parameters file = %s\n", public_params_file);	
+	printf("Reading the public parameters file = %s\n", public_params);	
 	/* read file */
-	fp = fopen(public_params_file, "r");
+	fp = fopen(public_params, "r");
 	if(fp != NULL) {
 		while (TRUE) {
 			c = fgetc(fp);
@@ -251,9 +285,9 @@ void generate_keys(char *outfile)
 	}
 	fclose(fp);
 
-	printf("Reading the secret parameters file = %s\n", secret_params_file);	
+	printf("Reading the secret parameters file = %s\n", secret_params);	
 	/* read file */
-	fp = fopen(secret_params_file, "r");
+	fp = fopen(secret_params, "r");
 	if(fp != NULL) {
 		while (TRUE) {
 			c = fgetc(fp);
@@ -285,13 +319,33 @@ void generate_keys(char *outfile)
 	result = libfenc_import_secret_params(&context, bin_secret_buf, serialized_len, NULL, 0);
 	report_error("Importing secret parameters", result);
 	
-	// char *attr[5] = {"ONE", "TWO", "THREE", "FOUR=100"};
-	libfenc_create_attribute_list_from_strings(&func_list_input, attributes, attributes_len);
-	// libfenc_create_attribute_list_from_strings(&func_list_input, attr, 4);
-	fenc_attribute_list_to_buffer((fenc_attribute_list*)(func_list_input.scheme_input), output_str, SIZE, &output_str_len);
-	printf("Attribute list: %s\n", output_str);
-
-	result = libfenc_extract_key(&context, &func_list_input, &key);
+	if(scheme == FENC_SCHEME_LSW) {
+		fenc_attribute_policy *parsed_policy = (fenc_attribute_policy *) malloc(sizeof(fenc_attribute_policy));
+		if(parsed_policy == NULL) {
+			printf("parsed_policy is NULL! Not good!");
+		}
+		memset(parsed_policy, 0, sizeof(fenc_attribute_policy)); 
+		
+		fenc_policy_from_string(parsed_policy, policy);
+		int len = 1024;
+		char pol_str[len];
+		memset(pol_str, 0, len);
+		fenc_attribute_policy_to_string(parsed_policy->root, pol_str, len);
+		printf("Policy: %s\n", pol_str);
+		
+		func_object_input.input_type = FENC_INPUT_NM_ATTRIBUTE_POLICY;
+		func_object_input.scheme_input = (void*)parsed_policy;
+	}
+	else if(scheme == FENC_SCHEME_WATERSCP) {
+		// construct attributes list and place in the func_list_input object
+		// char *attr[5] = {"ONE", "TWO", "THREE", "FOUR=100"};
+		libfenc_create_attribute_list_from_strings(&func_object_input, attributes, attributes_len);
+		// libfenc_create_attribute_list_from_strings(&func_list_input, attr, 4);
+		fenc_attribute_list_to_buffer((fenc_attribute_list*)(func_object_input.scheme_input), output_str, SIZE, &output_str_len);
+		printf("Attribute list: %s\n", output_str);
+	}
+		
+	result = libfenc_extract_key(&context, &func_object_input, &key);
 	report_error("Extracting a decryption key", result);
 
 	uint8 *buffer = malloc(KEYSIZE_MAX);
@@ -328,7 +382,8 @@ void generate_keys(char *outfile)
 	printf("Key-len2: '%zu'\n", serialized_len2);
 	printf("Buffer contents 2:\n");
 	print_buffer_as_hex(buffer2, serialized_len2);
-*/	
+*/
+cleanup:
 	/* Destroy the context. */
 	result = libfenc_destroy_context(&context);
 	report_error("Destroying context", result);

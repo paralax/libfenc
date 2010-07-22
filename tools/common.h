@@ -15,6 +15,12 @@
 #include <pbc/pbc_test.h> 
 #include "base64.h"
 
+#define SCHEME_LSW "KP"
+#define SCHEME_WCP "CP"
+#define LSW 0
+#define WCP 1
+#define SWCP 2
+
 #define KEYSIZE_MAX 4096
 #define SIZE 2048
 #define SIZE_MAX 8192
@@ -28,8 +34,11 @@
 #define ABE_TOKEN "ABE_CP"
 #define ABE_TOKEN_END "ABE_CP_END"
 
-static char *public_params_file = "public.param";
-static char *secret_params_file = "master_secret.param";
+#define PUBLIC_FILE "public.param"
+#define SECRET_FILE "secret.param"
+
+// static char *public_params_file = "public.param";
+// static char *secret_params_file = "master_secret.param";
 
 void report_error(char* action, FENC_ERROR result);
 ssize_t read_file(FILE *f, char** out);

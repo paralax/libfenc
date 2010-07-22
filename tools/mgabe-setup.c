@@ -1,5 +1,8 @@
+#include <ctype.h>
+#include <getopt.h>
 #include "common.h"
 
+void gen_abe_scheme_params(FENC_SCHEME_TYPE scheme, char *secret_params, char *public_params);
 /* Description: mgabe-setup takes no arguments and simply reads in the global parameters from the filesystem,
  and generates the public parameters (or public key) and the master secret parameters (or master secret key).
  
@@ -7,6 +10,63 @@
  
  */
 int main (int argc, char * argv[]) {
+	int c;
+	FENC_SCHEME_TYPE mode = FENC_SCHEME_NONE;
+	char *secret_params = NULL, *public_params = NULL;
+	
+	while ((c = getopt (argc, argv, "m:h")) != -1) {
+		
+		switch (c)
+		{
+			case 'm': 
+				if (strcmp(optarg, SCHEME_LSW) == 0) {
+					printf("Generating Lewko-Sahai-Waters KP scheme parameters...\n");
+					mode = FENC_SCHEME_LSW;
+					secret_params = SECRET_FILE".kp";
+					public_params = PUBLIC_FILE".kp";
+				}
+				else if(strcmp(optarg, SCHEME_WCP) == 0) {
+					printf("Generating Waters CP scheme parameters...\n");
+					mode = FENC_SCHEME_WATERSCP;
+					secret_params = SECRET_FILE".cp";
+					public_params = PUBLIC_FILE".cp";
+				}
+				break;
+			case 'h':
+				print_help();
+				exit(1);			  
+			case '?':
+				if (optopt == 'm')
+					fprintf (stderr, "Option -%o requires an argument.\n", optopt);
+				else if (isprint (optopt))
+					fprintf (stderr, "Unknown option `-%c'.\n", optopt);
+				else
+					fprintf (stderr,
+							 "Unknown option character `\\x%x'.\n", optopt);
+				return 1;
+			default:
+				print_help();
+				abort ();
+		}
+	}
+	
+	if(mode == FENC_SCHEME_NONE) {
+		fprintf(stderr, "Please specify a scheme type\n");
+		print_help();
+		exit(1);
+	}
+	
+	gen_abe_scheme_params(mode, secret_params, public_params);
+	return 0;
+}
+
+void print_help(void)
+{
+	printf("Usage: ./abe-setup -m [ KP or CP ]\n\n");
+}
+
+
+void gen_abe_scheme_params(FENC_SCHEME_TYPE scheme, char *secret_params, char *public_params) {
 	FENC_ERROR result;
 	fenc_context context;
 	fenc_group_params group_params;
@@ -29,11 +89,10 @@ int main (int argc, char * argv[]) {
 	// insert code here...
     printf("Generating master ABE system parameters...\n");
 	/* Create a Sahai-Waters context. */
-	result = libfenc_create_context(&context, FENC_SCHEME_WATERSCP);
-	report_error("Creating a Waters-CP encryption context", result);
+	result = libfenc_create_context(&context, scheme);	
 	
 	/* Load group parameters from a file. */
-	fp = fopen("d224.param", "r");
+	fp = fopen(PARAM, "r");
 	if (fp != NULL) {
 		libfenc_load_group_params_from_file(&group_params, fp);
 		libfenc_get_pbc_pairing(&group_params, pairing);
@@ -67,7 +126,7 @@ int main (int argc, char * argv[]) {
 	printf("'%s'\n", publicBuffer);
 			
 	/* base-64 encode the pub params and write to disk */
-	fp = fopen(public_params_file, "w");
+	fp = fopen(public_params, "w");
 	if(fp != NULL) {
 		fprintf(fp, "%s", publicBuffer);
 	}
@@ -87,13 +146,13 @@ int main (int argc, char * argv[]) {
 	result = libfenc_export_secret_params(&context, secret_params_buf, serialized_len, &serialized_len, NULL, 0);
 	report_error("Exporting secret parameters", result);
 	
-	printf("Base-64 encoding public parameters...\n");
+	printf("Base-64 encoding secret parameters...\n");
 	size_t secretLength;
 	char *secretBuffer = NewBase64Encode(secret_params_buf, serialized_len, FALSE, &secretLength);
 	printf("'%s'\n", secretBuffer);
 	
 	/* base-64 encode the pub params and write to disk */
-	fp = fopen(secret_params_file, "w");
+	fp = fopen(secret_params, "w");
 	if(fp != NULL) {
 		fprintf(fp, "%s", secretBuffer);
 	}
@@ -110,7 +169,6 @@ int main (int argc, char * argv[]) {
 	free(public_params_buf);
 	free(publicBuffer);
 	free(secretBuffer);
-    return 0;
 }
 
 
