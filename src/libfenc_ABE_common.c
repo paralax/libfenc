@@ -206,7 +206,7 @@ fenc_apply_N_function_to_attributes(fenc_attribute_list *result_list, fenc_attri
 	
 	/* This function isn't properly implemented yet.  For the moment we just spit out
 	 * the input list, unmodified. */
-	LOG_ERROR("fenc_apply_N_function_to_attributes: warning, NM access structures are not supported yet");
+	LOG_ERROR("%s: warning, NM access structures are not supported yet", __func__);
 	result = fenc_attribute_list_copy(result_list, input_list, pairing);
 	
 	return result;
@@ -241,6 +241,7 @@ fenc_attribute_list_initialize(fenc_attribute_list *attribute_list, uint32 num_a
 	for (i = 0; i < num_attributes; i++) {
 		attribute_list->attribute[i].is_hashed = FALSE;
 		attribute_list->attribute[i].attribute_str[0] = 0;
+		attribute_list->attribute[i].is_negated = FALSE;	// must check string for '!' to set this to TRUE
 	}
 
 	return FENC_ERROR_NONE;
@@ -407,10 +408,12 @@ fenc_buffer_to_attribute_list(char **str_list, fenc_attribute_list *attribute_li
 			memset(attribute_list->attribute[i].attribute_str, 0, MAX_ATTRIBUTE_STR);
 			strncpy((char *) attribute_list->attribute[i].attribute_str, token, token_len);
 		}
+		
+		// determine if it includes a NOT '!'
+		
 		/* retrieve next token */
 		token = strtok(NULL, delims);
 		i++;
-		// printf("%s: %i = token = '%s'?\n", __func__, i, token);
 	}
 	
 	attribute_list->num_attributes = i;
@@ -1003,7 +1006,7 @@ void debug_print_policy(fenc_attribute_policy *policy)
 
 void debug_print_attribute_list(fenc_attribute_list *attribute_list)
 {
-	int len = 1024;
+	size_t len = 1024;
 	char attr_str[len];
 	memset(attr_str, 0, len);
 	size_t result_len;

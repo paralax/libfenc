@@ -1138,7 +1138,7 @@ libfenc_import_secret_key_LSW(fenc_context *context, fenc_key *key, uint8 *buffe
 		err_code = FENC_ERROR_INVALID_INPUT;
 		goto cleanup;
 	}
-									   
+								   
 	/* deserialize rest of key components -- D1-D5 for each attribute. Worry about negation later. */
 	err_code = libfenc_deserialize_key_LSW(key_LSW, (uint8 *) (buffer + import_len), (buf_len - import_len));
 	if (err_code != FENC_ERROR_NONE) {
