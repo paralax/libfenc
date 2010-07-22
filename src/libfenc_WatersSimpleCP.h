@@ -172,7 +172,7 @@ FENC_ERROR	libfenc_decrypt_WatersSimpleCP(fenc_context *context, fenc_ciphertext
  *	For demo purposes only.
  */
 FENC_ERROR
-libfenc_retrieve_attribute_policy(fenc_context *context, fenc_ciphertext *ciphertext, uint8 *buffer, size_t buf_len);
+libfenc_retrieve_attribute_policy_WatersSimpleCP(fenc_context *context, fenc_ciphertext *ciphertext, uint8 *buffer, size_t buf_len);
 
 /*!
  * Export the public parameters (MPK) to a binary buffer.  Calling this function with buffer 

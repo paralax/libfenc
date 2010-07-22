@@ -348,4 +348,8 @@ char* fenc_get_policy_string(fenc_attribute_policy *policy);
 
 FENC_ERROR hash_attribute_string_to_Zr(fenc_attribute *attribute, pairing_t pairing);
 
+void debug_print_policy(fenc_attribute_policy *policy_tree);
+
+void debug_print_attribute_list(fenc_attribute_list *attribute_list);
+
 #endif /* ifdef __LIBFENC_ABE_COMMON_H__ */
