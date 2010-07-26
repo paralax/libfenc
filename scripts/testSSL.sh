@@ -244,11 +244,12 @@ elif [ "$1" == "-opt3" ]; then
 		echo "Executing (client): openssl pkcs12 -export -clcerts -in signed.pem -inkey client.key -out client.p12"
 		
 	fi
-	openssl req -new -sha1 -newkey rsa:1024 -nodes -keyout client.key -out request.pem -subj '/O=Test/OU=Test/CN=Individual User'
-	openssl ca -config $SSLDIR/openssl.cnf -policy policy_anything -extensions ssl_client -out $SSLDIR/requests/signed.pem -infiles $SSLDIR/requests/request.pem
-	openssl pkcs12 -export -clcerts -in signed.pem -inkey client.key -out client.p12
+	mkdir -p client/keys client/requests
+	openssl req -new -sha1 -newkey rsa:1024 -nodes -keyout client/keys/client.key -out client/requests/request.pem -subj '/O=Test/OU=Test/CN=Individual User'
+	openssl ca -config $SSLDIR/openssl.cnf -policy policy_anything -extensions ssl_client -out client/signed.pem -infiles client/requests/request.pem
+	openssl pkcs12 -export -clcerts -in client/signed.pem -inkey client/keys/client.key -out client.p12
 
-elif [ "$1" == "-s6" ]; then
+elif [ "$1" == "-s5" ]; then
 	if [ "$2" == "-v" ]; then
 		echo "server.crt: The self-signed server certificate."
 		echo "server.key: The private server key, does not require a password when starting Apache."
