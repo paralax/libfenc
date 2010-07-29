@@ -13,17 +13,25 @@ if [ $# -lt 1 ]; then
 
 elif [ "$1" == "CP" ]; then
 	# Create master secret and public params of ABE system (requires 'd224.param' in same dir)
+	echo "##################################################"
+	echo "./abe-setup -m CP"
 	./abe-setup -m CP
 
 	# Generate a key based on a user's attribute list. 
 	#(for now, requires secret and public params in same dir)
+	echo "##################################################"
+	echo "./abe-keygen -m CP -a 'ONE,TWO,THREE,FOUR,FIVE' -o usr_privCP.key"
 	./abe-keygen -m CP -a ONE,TWO,THREE,FOUR,FIVE -o usr_privCP.key
 
 	# How to encrypt
 	#(for now, requires public params in same dir).
+	echo "##################################################"
+	echo "./abe-enc -m CP -d 'some text here' -p '((ONE and TWO) or THREE)' -o outfile" 
 	./abe-enc -m CP -d "some text here" -p "((ONE and TWO) or THREE)" -o outfile 
 
 	# How to decrypt
+	echo "##################################################"
+	echo "./abe-dec -m CP -k usr_privCP.key -f outfile.cpabe"
 	./abe-dec -m CP -k usr_privCP.key -f outfile.cpabe
 
 	echo "Exit code: $?"
@@ -32,15 +40,23 @@ elif [ "$1" == "CP" ]; then
 
 elif [ "$1" == "KP" ]; then
 	# Create master secret and public params of ABE system (requires 'd224.param' in same dir)
+	echo "##################################################"
+	echo "./abe-setup -m KP"
 	./abe-setup -m KP
 
 	# Generate a key with a policy. 
+	echo "##################################################"
+	echo "./abe-keygen -m KP -p '((ONE and TWO) or THREE)' -o usr_privKP.key"
 	./abe-keygen -m KP -p "((ONE and TWO) or THREE)" -o usr_privKP.key
 
 	# How to encrypt
+	echo "##################################################"
+	echo "./abe-enc -m KP -d 'some text here' -a 'ONE, TWO, THREE, FOUR, FIVE' -o outfile" 
 	./abe-enc -m KP -d "some text here" -a "ONE, TWO, THREE, FOUR, FIVE" -o outfile 
 
 	# How to decrypt
+	echo "##################################################"
+	echo "./abe-dec -m KP -k usr_privKP.key -f outfile.kpabe"
 	./abe-dec -m KP -k usr_privKP.key -f outfile.kpabe
 
 	echo "Exit code: $?"
