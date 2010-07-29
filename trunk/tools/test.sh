@@ -1,20 +1,49 @@
 #!/bin/bash
-# Description: the purpose of this script is to demonstrate the capabilities of the ABE tools. Also, it exercises the interface and shows the user what options are available to each tool.
+# Description: the purpose of this script is to demonstrate the capabilities of the ABE tools. 
+# Also, it exercises the interface and shows the user what options are available to each tool.
 
-# Create master secret and public params of ABE system (requires 'd224.param' in same dir)
-./abe-setup 
+# Bash Arguments:
+# bash test.sh CP || bash test.sh KP
 
-# Generate a key based on a user's attribute list. 
-#(for now, requires secret and public params in same dir)
-./abe-keygen -a ONE,TWO,THREE,FOUR,FIVE -o usr_priv.key
+echo ""
 
-# How to encrypt
-#(for now, requires public params in same dir).
-./abe-enc -d "some text here" -p "((ONE and TWO) or THREE)" -o outfile 
+if [ $# -lt 1 ]; then
+        echo "You have not provided any arguments, please execute with arguments CP or KP."
+        exit -1
 
-# How to decrypt
-./abe-dec -k usr_priv.key -f outfile.abe
+elif [ "$1" == "CP" ]; then
+	# Create master secret and public params of ABE system (requires 'd224.param' in same dir)
+	./abe-setup -m CP
 
-echo "Exit code: $?"
+	# Generate a key based on a user's attribute list. 
+	#(for now, requires secret and public params in same dir)
+	./abe-keygen -m CP -a ONE,TWO,THREE,FOUR,FIVE -o usr_privCP.key
 
-exit 0
+	# How to encrypt
+	#(for now, requires public params in same dir).
+	./abe-enc -m CP -d "some text here" -p "((ONE and TWO) or THREE)" -o outfile 
+
+	# How to decrypt
+	./abe-dec -m CP -k usr_privCP.key -f outfile.cpabe
+
+	echo "Exit code: $?"
+
+	exit 0
+
+elif [ "$1" == "KP" ]; then
+	# Create master secret and public params of ABE system (requires 'd224.param' in same dir)
+	./abe-setup -m KP
+
+	# Generate a key with a policy. 
+	./abe-keygen -m KP -p "((ONE and TWO) or THREE)" -o usr_privKP.key
+
+	# How to encrypt
+	./abe-enc -m KP -d "some text here" -a "ONE, TWO, THREE, FOUR, FIVE" -o outfile 
+
+	# How to decrypt
+	./abe-dec -m KP -k usr_privKP.key -f outfile.kpabe
+
+	echo "Exit code: $?"
+
+	exit 0
+fi
