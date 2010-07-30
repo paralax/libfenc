@@ -284,7 +284,7 @@ elif [ "$1" == "--abecert" ]; then
 	fi
 	
 	shift
-	export strAttributes="$*"
+	export strAttributes="/C=US/ST=Baltimore/L=JHU/CN=$*"
 
 	echo "Files will be placed here... $ABEDIR."
 	mkdir -p $ABEDIR $ABEDIR/certs $ABEDIR/crl $ABEDIR/newcerts $ABEDIR/private $ABEDIR/requests
@@ -378,16 +378,13 @@ elif [ "$1" == "--abecert" ]; then
 	openssl req -new -x509 -days 361 -sha1 -newkey rsa:1024 -keyout $ABEDIR/private/ca.key -out $ABEDIR/ca.crt -subj '/C=US/ST=Baltimore/L=JHU/CN=ABE Attributes CA'
 	echo "Creating phone client directories for phone client at CERT/phoneClient/keys CERT/phoneClient/requests..."
 	mkdir -p CERT/phoneClient/keys CERT/phoneClient/requests
-	openssl req -config $ABEDIR/openssl.cnf -new -sha1 -newkey rsa:1024 -nodes -keyout CERT/phoneClient/keys/client.key -out CERT/phoneClient/requests/request.pem -subj '/O=iPhone/OU=JHU/CN=${strAttributes}'
+	openssl req -config $ABEDIR/openssl.cnf -new -sha1 -newkey rsa:1024 -nodes -keyout CERT/phoneClient/keys/client.key -out CERT/phoneClient/requests/request.pem -subj "${strAttributes}"
 	openssl ca -config $ABEDIR/openssl.cnf -policy policy_anything -extensions ssl_client -out CERT/phoneClient/signed.pem -infiles CERT/phoneClient/requests/request.pem
-	openssl pkcs12 -export -clcerts -in CERT/phoneClient/signed.pem -inkey CERT/phoneClient/keys/client.key -out CERT/phoneClient/client.p12		
+	openssl pkcs12 -export -clcerts -in CERT/phoneClient/signed.pem -inkey CERT/phoneClient/keys/client.key -out CERT/phoneClient/client.p12
 	echo "[client key]..."
 	openssl rsa -noout -text -in CERT/phoneClient/keys/client.key
 	echo "[request pem]..."
 	openssl req -noout -text -in CERT/phoneClient/requests/request.pem
-	echo "[pkcs12! Couple this with ABE keys]..."
-	openssl rsa -noout -text -in CERT/phoneClient/client.p12
-       
 
 fi
 
