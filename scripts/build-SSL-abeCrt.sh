@@ -5,13 +5,14 @@
 # Utilizing Openssl and Apache2 to setup our own Certificate Authority, and 
 # self-sign certificates to test with.  Client authentication also required.
 #
-# Command line arguments: -s#; -opt#; -h; -v; --sign 
+# Command line arguments: -ssl#; -opt#; -h; -v; --sign; --abecert attr1 attr2 attr3  
 # -s# = execute a step; -opt# = execute an optional step; -h = help; 
 # -v verbose output; --sign for signing a certificate.
 #
 # Not a sophisticated script, and mostly used for testing purposes.  Note 
 # this script can be reconfigured via the global variables (this has been
-# tested).  
+# tested).  Use this script to help quickly stand-up a test SSL server; or create
+# a public certificate for ABE attributes.
 #
 # Reference material:
 #   http://www.tc.umn.edu/~brams006/selfsign.html
@@ -24,29 +25,39 @@
 # Tweak as you feel necessary; additional information concerning openssl options.
 CMDS="openssl apache2"
 export SSLDIR=$HOME/ca
+export ABEDIR=$HOME/abe/ca
 
 if [ $# -lt 1 ]; then
 	echo "You have not provided any arguments, please execute with -h for help."
-	echo "This should be ran as root user."
+	echo "This should be ran as root user!"
 	exit -1
 elif [ "$1" == "-h" ]; then
-	echo "This script executes in steps, and thus requires you to provide the following:"
+	echo "This script executes in steps, and thus requires you to provide the following arguments:"
         echo ""
-	echo "./testSSL.sh -s# to execute a step #."
-	echo "./testSSL.sh -opt# to execute an optional step #."
-	echo "./testSSL.sh -h  to print this help."
-        echo "./testSSL.sh -v  to print verbose. This will echo additional information as the script runs."
+	echo "./testSSL.sh -ssl#      to execute a step #."
+	echo "./testSSL.sh -opt#      to execute an optional step #."
+	echo "./testSSL.sh -h         to print this help."
+        echo "./testSSL.sh -v         to print verbose. This will echo additional information as the script runs."
+	echo "./testSSL.sh --abecert attr1...attN to create a public certificate for ABE attributes."
         echo ""
-        echo "QUICKSTART: ./testSSL.sh -s1 through -s4."
-        echo ""
-        echo "How will SSL work for us?"
+	echo "----------------------------------------------------------------------------------------------------------------"
+        echo "How will SSL work for us? [QuickStart -ssl1 through -ssl4]"
+	echo ""
         echo "SSL Client: iHealthEMR Hello: I want to establish a seure connection with the Hospital Server.  I support SSL and some ciphers."
         echo "SSL Server: Hospital Hello  : I accept request; I choose SSL / this cipher suite."
-        echo "            Hospital Send   : Server Certificate (opt), Server Public Key (opt, if no certificate), Client Certificate Request to authenticate the iHealthEMR phone application by requesting a signed CA."
-        echo "SSL Client: iHealthEMR Send : Client Certificate (to authenticate), Client Key Exchange with more parameters encrypted under the servers public key, Certificate Verification by signing some info using private key of client that corresponds to it's certificate."
+        echo "            Hospital Send   : Server Certificate (opt), Server Public Key (opt, if no certificate), Client Certificate Request" 
+	echo "                              to authenticate the iHealthEMR phone application by requesting a signed CA."
+        echo "SSL Client: iHealthEMR Send : Client Certificate (to authenticate), Client Key Exchange with more parameters encrypted under"
+	echo "                              the servers public key, Certificate Verification by signing some info using private key of client" 
+	echo "			            that corresponds to it's certificate."
         echo "[Encrypted] Application Data Client <--> [Encrypted] Application Data Server"
 	echo ""
-	echo "In this sort of environment, one nees to consider where to store the attribute information to be parsed later.  A good assumption would be in the organization name, or unit (O/OU)."
+	echo "----------------------------------------------------------------------------------------------------------------"
+	echo "How does the ABE certificate work?"
+	echo ""
+	echo "Much like the SSL process, we will generate our own Certificate Authority and self-sign a phone.crt.  This certificate will"
+	echo "use the organization name to store its attributes as a string, to be parsed and verified later."
+	echo ""
 	exit -1
 else
 	echo "Running step $1..."
@@ -64,7 +75,7 @@ done
 echo "..."
 
 
-if [ "$1" == "-s1" ]; then
+if [ "$1" == "-ssl1" ]; then
 	if [ "$2" == "-v" ]; then
 		echo "Making our own CA, and self-signing a server certificate.  Step one, setting up the environment (Directory Structure, and openssl.cnf).  MODIFY openssl.cnf to your specifications prior to step 2 execution!"
                 echo "  config - Setup defaulted, satndard configuration information; template can be found in something similar to /etc/ssl/openssl.cnf."
@@ -161,7 +172,7 @@ if [ "$1" == "-s1" ]; then
 
 
 
-elif [ "$1" == "-s2" ]; then
+elif [ "$1" == "-ssl2" ]; then
 	if [ "$2" == "-v" ]; then
 		echo "Next, we will create our self-signed CA's certificate and private/public key pair.  Additionally, you will be prompted to provide information for the certificate request.  When asked for Common Name input, provide your domain name with a CA appended to the end (i.e. elbert.isi.jhu.edu CA).  This will ensure that CA and server CN are different."
                 echo "  req  - X.509 Certificate Signing Request (CSR) Management."
@@ -174,7 +185,7 @@ elif [ "$1" == "-s2" ]; then
 	openssl req -config $SSLDIR/openssl.cnf -new -x509 -days 361 -sha1 -newkey rsa:1024 -keyout $SSLDIR/private/ca.key -out $SSLDIR/ca.crt 
 	echo "You will want to publish the ca.crt to the web for client download and install to browser."
 
-elif [ "$1" == "-s3" ]; then
+elif [ "$1" == "-ssl3" ]; then
 	if [ "$2" == "-v" ]; then
 		echo "Server key public/private key pair creation, and creating the certificate request for CA signing. Remember that the CN has to be your fully qualified domain name (i.e. hostname --FQDN)."
 		echo "..."
@@ -217,7 +228,7 @@ elif [ "$1" == "-opt2" ]; then
 
 
 
-elif [ "$1" == "-s4" ]; then
+elif [ "$1" == "-ssl4" ]; then
 	if [ "$2" == "-v" ]; then
 		echo "Using Apache2 with client certificates.  First step, enable client authentication via modification of the ssl default vhost line SSLVerifyClient require, and SSLVerifyDepth 1."
 		echo "Than move the ca.crt with your other certs, and modify line SSLCACertificateFile to point to that cert."
@@ -249,7 +260,7 @@ elif [ "$1" == "-opt3" ]; then
 	openssl ca -config $SSLDIR/openssl.cnf -policy policy_anything -extensions ssl_client -out client/signed.pem -infiles client/requests/request.pem
 	openssl pkcs12 -export -clcerts -in client/signed.pem -inkey client/keys/client.key -out client.p12
 
-elif [ "$1" == "-s5" ]; then
+elif [ "$1" == "-ssl5" ]; then
 	if [ "$2" == "-v" ]; then
 		echo "server.crt: The self-signed server certificate."
 		echo "server.key: The private server key, does not require a password when starting Apache."
@@ -263,5 +274,122 @@ elif [ "$1" == "-s5" ]; then
 	openssl rsa -noout -text -in $SSLDIR/private/ca.key
 	echo "..."
 	openssl x509 -noout -text -in $SSLDIR/ca.crt
+
+
+elif [ "$1" == "--abecert" ]; then
+        if [ $# -lt 2 ]; then
+		echo "Come on, you need at least one attribute!"
+		echo "i.e. ./testSSL --abecert attrONE attrTWO attrTHREE"
+		exit -1
+	fi
+	
+	shift
+	export strAttributes="$*"
+
+	echo "Files will be placed here... $ABEDIR."
+	mkdir -p $ABEDIR $ABEDIR/certs $ABEDIR/crl $ABEDIR/newcerts $ABEDIR/private $ABEDIR/requests
+	touch $ABEDIR/index.txt
+	echo "01" > $ABEDIR/serial
+	chmod 700 $ABEDIR
+
+	# I'm sure there is an easier way to do this, but this will save us from problems with using the default openssl.cnf.
+	chmod 700 $ABEDIR
+	echo "# =================================================" > $ABEDIR/openssl.cnf 
+	echo "# OpenSSL configuration file " >> $ABEDIR/openssl.cnf
+	echo "# ================================================= " >> $ABEDIR/openssl.cnf
+	echo "RANDFILE         = $ABEDIR/.rnd " >> $ABEDIR/openssl.cnf
+	echo "[ ca ] " >> $ABEDIR/openssl.cnf
+	echo "default_ca       = CA_default " >> $ABEDIR/openssl.cnf
+	echo "[ CA_default ] " >> $ABEDIR/openssl.cnf
+	echo "dir              = $ABEDIR " >> $ABEDIR/openssl.cnf
+	echo "certs            = \$dir/certs " >> $ABEDIR/openssl.cnf
+	echo "new_certs_dir    = \$dir/newcerts " >> $ABEDIR/openssl.cnf
+	echo "crl_dir          = \$dir/crl " >> $ABEDIR/openssl.cnf
+	echo "database         = \$dir/index.txt " >> $ABEDIR/openssl.cnf
+	echo "private_key      = \$dir/private/ca.key " >> $ABEDIR/openssl.cnf
+	echo "certificate      = \$dir/ca.crt " >> $ABEDIR/openssl.cnf
+	echo "serial           = \$dir/serial " >> $ABEDIR/openssl.cnf
+	echo "crl              = \$dir/crl.pem " >> $ABEDIR/openssl.cnf
+	echo "RANDFILE         = \$dir/private/.rand " >> $ABEDIR/openssl.cnf
+	echo "default_days     = 365 " >> $ABEDIR/openssl.cnf
+	echo "default_crl_days = 30 " >> $ABEDIR/openssl.cnf
+	echo "default_md       = sha1 " >> $ABEDIR/openssl.cnf
+	echo "preserve         = no " >> $ABEDIR/openssl.cnf
+	echo "policy           = policy_anything " >> $ABEDIR/openssl.cnf
+	echo "name_opt         = ca_default " >> $ABEDIR/openssl.cnf
+	echo "cert_opt         = ca_default " >> $ABEDIR/openssl.cnf
+	echo "[ policy_anything ] " >> $ABEDIR/openssl.cnf
+	echo "countryName             = optional " >> $ABEDIR/openssl.cnf
+	echo "stateOrProvinceName     = optional " >> $ABEDIR/openssl.cnf
+	echo "localityName            = optional " >> $ABEDIR/openssl.cnf
+	echo "organizationName        = optional " >> $ABEDIR/openssl.cnf
+	echo "organizationalUnitName  = optional " >> $ABEDIR/openssl.cnf
+	echo "commonName              = supplied " >> $ABEDIR/openssl.cnf
+	echo "emailAddress            = optional " >> $ABEDIR/openssl.cnf
+	echo "[ req ] " >> $ABEDIR/openssl.cnf
+	echo "default_bits            = 1024 " >> $ABEDIR/openssl.cnf
+	echo "default_md              = sha1 " >> $ABEDIR/openssl.cnf
+	echo "default_keyfile         = privkey.pem " >> $ABEDIR/openssl.cnf
+	echo "distinguished_name      = req_distinguished_name " >> $ABEDIR/openssl.cnf
+	echo "x509_extensions         = v3_ca " >> $ABEDIR/openssl.cnf
+	echo "string_mask             = nombstr " >> $ABEDIR/openssl.cnf
+	echo "[ req_distinguished_name ] " >> $ABEDIR/openssl.cnf
+	echo "countryName             = Country Name (2 letter code) " >> $ABEDIR/openssl.cnf
+	echo "countryName_min         = 2 " >> $ABEDIR/openssl.cnf
+	echo "countryName_max         = 2 " >> $ABEDIR/openssl.cnf
+	echo "stateOrProvinceName     = State or Province Name (full name) " >> $ABEDIR/openssl.cnf
+	echo "localityName            = Locality Name (eg, city) " >> $ABEDIR/openssl.cnf
+	echo "0.organizationName      = Organization Name (eg, company) " >> $ABEDIR/openssl.cnf
+	echo "organizationalUnitName  = Organizational Unit Name (eg, section) " >> $ABEDIR/openssl.cnf
+	echo "commonName              = Common Name (eg, YOUR name) " >> $ABEDIR/openssl.cnf
+	echo "commonName_max          = 64 " >> $ABEDIR/openssl.cnf
+	echo "emailAddress            = Email Address " >> $ABEDIR/openssl.cnf
+	echo "emailAddress_max        = 64 " >> $ABEDIR/openssl.cnf
+	echo "[ usr_cert ] " >> $ABEDIR/openssl.cnf
+	echo "basicConstraints        = CA:FALSE " >> $ABEDIR/openssl.cnf
+	echo "nsCaRevocationUrl       = https://elbert.isi.jhu.edu/crl.pem " >> $ABEDIR/openssl.cnf
+	echo "[ ssl_server ] " >> $ABEDIR/openssl.cnf
+	echo "basicConstraints        = CA:FALSE " >> $ABEDIR/openssl.cnf
+	echo "nsCertType              = server " >> $ABEDIR/openssl.cnf
+	echo "keyUsage                = digitalSignature, keyEncipherment " >> $ABEDIR/openssl.cnf
+	echo "extendedKeyUsage        = serverAuth, nsSGC, msSGC " >> $ABEDIR/openssl.cnf
+	echo "nsComment               = 'OpenSSL Certificate for SSL Web Server' " >> $ABEDIR/openssl.cnf
+	echo "[ ssl_client ] " >> $ABEDIR/openssl.cnf
+	echo "basicConstraints        = CA:FALSE " >> $ABEDIR/openssl.cnf
+	echo "nsCertType              = client " >> $ABEDIR/openssl.cnf 
+	echo "keyUsage                = digitalSignature, keyEncipherment " >> $ABEDIR/openssl.cnf 
+	echo "extendedKeyUsage        = clientAuth " >> $ABEDIR/openssl.cnf
+	echo "nsComment               = 'OpenSSL Certificate for SSL Client'" >> $ABEDIR/openssl.cnf 
+	echo "[ v3_req ] " >> $ABEDIR/openssl.cnf
+	echo "basicConstraints = CA:FALSE " >> $ABEDIR/openssl.cnf
+	echo "keyUsage         = nonRepudiation, digitalSignature, keyEncipherment " >> $ABEDIR/openssl.cnf 
+	echo "[ v3_ca ] " >> $ABEDIR/openssl.cnf
+	echo "basicConstraints        = critical, CA:true, pathlen:0 " >> $ABEDIR/openssl.cnf
+	echo "nsCertType              = sslCA " >> $ABEDIR/openssl.cnf
+	echo "keyUsage                = cRLSign, keyCertSign " >> $ABEDIR/openssl.cnf
+	echo "extendedKeyUsage        = serverAuth, clientAuth " >> $ABEDIR/openssl.cnf
+	echo "nsComment               = 'OpenSSL CA Certificate' " >> $ABEDIR/openssl.cnf 
+	echo "[ crl_ext ] " >> $ABEDIR/openssl.cnf
+	echo "basicConstraints        = CA:FALSE " >> $ABEDIR/openssl.cnf
+	echo "keyUsage                = digitalSignature, keyEncipherment" >> $ABEDIR/openssl.cnf 
+	echo "nsComment               = 'OpenSSL generated CRL' " >> $ABEDIR/openssl.cnf
+
+	echo "Creating Certificate Authority..."
+	openssl req -new -x509 -days 361 -sha1 -newkey rsa:1024 -keyout $ABEDIR/private/ca.key -out $ABEDIR/ca.crt -subj '/C=US/ST=Baltimore/L=JHU/CN=ABE Attributes CA'
+	echo "Creating phone client directories for phone client at CERT/phoneClient/keys CERT/phoneClient/requests..."
+	mkdir -p CERT/phoneClient/keys CERT/phoneClient/requests
+	openssl req -config $ABEDIR/openssl.cnf -new -sha1 -newkey rsa:1024 -nodes -keyout CERT/phoneClient/keys/client.key -out CERT/phoneClient/requests/request.pem -subj '/O=iPhone/OU=JHU/CN=${strAttributes}'
+	openssl ca -config $ABEDIR/openssl.cnf -policy policy_anything -extensions ssl_client -out CERT/phoneClient/signed.pem -infiles CERT/phoneClient/requests/request.pem
+	openssl pkcs12 -export -clcerts -in CERT/phoneClient/signed.pem -inkey CERT/phoneClient/keys/client.key -out CERT/phoneClient/client.p12		
+	echo "[client key]..."
+	openssl rsa -noout -text -in CERT/phoneClient/keys/client.key
+	echo "[request pem]..."
+	openssl req -noout -text -in CERT/phoneClient/requests/request.pem
+	echo "[pkcs12! Couple this with ABE keys]..."
+	openssl rsa -noout -text -in CERT/phoneClient/client.p12
+       
+
 fi
+
+
 
