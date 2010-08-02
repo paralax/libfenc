@@ -31,6 +31,12 @@ int main (int argc, char * argv[]) {
 					secret_params = SECRET_FILE".cp";
 					public_params = PUBLIC_FILE".cp";
 				}
+				else if(strcmp(optarg, SCHEME_WSCP) == 0) {
+					printf("Generating Waters Simple CP scheme parameters...\n");
+					mode = FENC_SCHEME_WATERSSIMPLECP;
+					secret_params = SECRET_FILE".scp";
+					public_params = PUBLIC_FILE".scp";					
+				}
 				break;
 			case 'h':
 				print_help();
@@ -62,7 +68,7 @@ int main (int argc, char * argv[]) {
 
 void print_help(void)
 {
-	printf("Usage: ./abe-setup -m [ KP or CP ]\n\n");
+	printf("Usage: ./abe-setup -m [ KP,CP or SCP]\n\n");
 }
 
 
