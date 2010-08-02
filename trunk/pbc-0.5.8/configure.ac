@@ -74,12 +74,12 @@ with_enable_optimized="no"
 AC_ARG_ENABLE( optimized, 
 	       [AC_HELP_STRING([--enable-optimized],
 			[Enable optimized build])],
-         [with_enable_optimized="$withval"],
+         [with_enable_optimized="yes"],
 	 [with_enable_optimized="no"])
 
 CFLAGS="$CFLAGS -Wall -W -Wfloat-equal -Wpointer-arith -Wcast-align -Wstrict-prototypes -Wredundant-decls \
 -Wendif-labels -Wshadow -pipe -ffast-math -U__STRICT_ANSI__ -std=gnu99"
-if test "x$with_enable_optimized" != "no"; then
+if test "x$with_enable_optimized" = "no"; then
    	CFLAGS="$CFLAGS -g -O2"
 else
 	CFLAGS="$CFLAGS -fomit-frame-pointer -O3"
