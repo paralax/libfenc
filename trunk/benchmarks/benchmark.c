@@ -1,13 +1,16 @@
 #include "common.h"
 #include <time.h>
 #include <fenc/libfenc_LSW.h>
+#include <fenc/libfenc_WatersSimpleCP.h>
 
-char *abe_priv_keyfile = "private.key";
+char *kp_abe_priv_keyfile = "private-kp.key";
+char *cp_abe_priv_keyfile = "private-cp.key";
+char *scp_abe_priv_keyfile = "private-scp.key";
 void benchmark_schemes(void);
 int get_key(char *keyfile, fenc_context *context, fenc_key *secret_key);
-void apply_LSW(void);
-void apply_WatersCP(char *policy, char *outfile);
-void apply_WatersSimpleCP(void);
+//void apply_LSW(void);
+void apply_scheme(FENC_SCHEME_TYPE scheme, char *public_params, char *policy, char *outfile);
+//void apply_WatersSimpleCP(void);
 void test_secret_sharing(fenc_attribute_policy *policy, pairing_t pairing);
 void test_libfenc(char *policy);
 fenc_attribute_policy *construct_test_policy();
@@ -20,7 +23,7 @@ int main(int argc, char *argv[])
 	// argv[2] => scheme type
 	// argv[3] => outfile name
 	if(argc != 4) {	
-		printf("Usage %s: [ policy ] [ scheme ] [ outfile ]", argv[0]);
+		printf("Usage %s: [ policy or attributes ] [ scheme ] [ outfile ]\n", argv[0]);
 		exit(1);
 	}
 	
@@ -28,14 +31,14 @@ int main(int argc, char *argv[])
 	char *scheme = argv[2];
 	char *outfile = argv[3];
 	printf("Benchmarking libfenc ABE schemes...\n");
-	if(strcmp(scheme, "WCP") == 0) {
-		apply_WatersCP(string, outfile);
+	if(strcmp(scheme, "KP") == 0) {
+		apply_scheme(FENC_SCHEME_LSW, PUBLIC_FILE".kp", string, outfile);
 	}
-	else if(strcmp(scheme, "WSCP") == 0) {
-		// apply_WatersSimpleCP(string, outfile);
-	}	
-	else if(strcmp(scheme, "LSW") == 0) {
-		// apply_LSW(string, outfile);
+	else if(strcmp(scheme, "CP") == 0) {
+		apply_scheme(FENC_SCHEME_WATERSCP, PUBLIC_FILE".cp", string, outfile);
+	}
+	else if(strcmp(scheme, "SCP") == 0) {
+		apply_scheme(FENC_SCHEME_WATERSSIMPLECP, PUBLIC_FILE".scp", string, outfile);
 	}
 	else {
 		// run some tests
@@ -86,22 +89,25 @@ int get_key(char *keyfile, fenc_context *context, fenc_key *secret_key)
 	return TRUE;
 }
 
-void apply_WatersCP(char *policy, char *outfile) 
+void apply_scheme(FENC_SCHEME_TYPE scheme, char *public_params, char *data, char *outfile) 
 {
 	FENC_ERROR result;
 	fenc_context context;
 	fenc_group_params group_params;
 	fenc_global_params global_params;
-	fenc_function_input policy_input;
+	fenc_function_input func_input;
 	fenc_ciphertext ciphertext;
 	fenc_key master_key;
 	pairing_t pairing;
 	FILE *fp;
-	char *public_params_buf = NULL;
+	char *public_params_buf = NULL, *scheme_text = NULL;
 	char session_key[SESSION_KEY_LEN];
 	fenc_plaintext rec_session_key;
 	size_t serialized_len;
 	clock_t start, stop;
+	uint32 num_leaves;
+	fenc_attribute_policy *parsed_policy = NULL;
+	fenc_attribute_list *parsed_attributes = NULL;
 	
 	memset(&context, 0, sizeof(fenc_context)); 
 	memset(&group_params, 0, sizeof(fenc_group_params));
@@ -114,7 +120,7 @@ void apply_WatersCP(char *policy, char *outfile)
 	report_error("Initializing library", result);
 	
 	/* Create a Sahai-Waters context. */
-	result = libfenc_create_context(&context, FENC_SCHEME_WATERSCP);
+	result = libfenc_create_context(&context, scheme);
 	report_error("Creating context for Waters CP scheme", result);
 	
 	/* Load group parameters from a file. */
@@ -133,7 +139,7 @@ void apply_WatersCP(char *policy, char *outfile)
 	result = libfenc_gen_params(&context, &global_params);
 	
 	/* Set up the publci parameters */
-	fp = fopen(public_params_file, "r");
+	fp = fopen(public_params, "r");
 	if(fp != NULL) {
 		size_t pub_len = read_file(fp, &public_params_buf);
 		/* base-64 decode */
@@ -149,33 +155,71 @@ void apply_WatersCP(char *policy, char *outfile)
 		return;
 	}
 	fclose(fp);
+	
+	if(scheme == FENC_SCHEME_LSW) {
+		/* convert the list of attributes into a fenc_attribute_list structure */
+		parsed_attributes = (fenc_attribute_list *) malloc(sizeof(fenc_attribute_list));		
+		fenc_buffer_to_attribute_list(&data, parsed_attributes);
+						
+		func_input.input_type = FENC_INPUT_ATTRIBUTE_LIST;
+		func_input.scheme_input = (void *) parsed_attributes;
 		
-	/* encrypt under given policy */ 
+		/* store attribute list for future reference */
+		char attr_str[SIZE];
+		memset(attr_str, 0, SIZE);
+		size_t attr_str_len;
+		fenc_attribute_list_to_buffer((fenc_attribute_list*)(func_input.scheme_input), attr_str, SIZE, &attr_str_len);
+		printf("Attribute list: %s\n", attr_str);
+		
+		/* test */
+		num_leaves = 0;
+		
+	}
+	else {
+	//else if(scheme == FENC_SCHEME_WATERSCP) {
+		/* encrypt under given policy */ 
 	// fenc_attribute_policy *parsed_policy = construct_test_policy2();
-	fenc_attribute_policy *parsed_policy = (fenc_attribute_policy *) malloc(sizeof(fenc_attribute_policy));
-	memset(parsed_policy, 0, sizeof(fenc_attribute_policy));
+		parsed_policy = (fenc_attribute_policy *) malloc(sizeof(fenc_attribute_policy));
+		memset(parsed_policy, 0, sizeof(fenc_attribute_policy));
 
-	fenc_policy_from_string(parsed_policy, policy); 
-	policy_input.input_type = FENC_INPUT_NM_ATTRIBUTE_POLICY;
-	policy_input.scheme_input = (void *) parsed_policy;
-	
-	/* store the policy for future reference */
-	char policy_str[1024];
-	memset(policy_str, 0, 1024);
-	fenc_attribute_policy_to_string(parsed_policy->root, policy_str, 1024);	
-	
+		fenc_policy_from_string(parsed_policy, data); 
+		func_input.input_type = FENC_INPUT_NM_ATTRIBUTE_POLICY;
+		func_input.scheme_input = (void *) parsed_policy;
+		
+		/* store the policy for future reference */
+		char policy_str[SIZE];
+		memset(policy_str, 0, SIZE);
+		fenc_attribute_policy_to_string(parsed_policy->root, policy_str, SIZE);	
+		printf("POLICY => '%s'\n", policy_str);	
+	}
+		
 	/* perform encryption */
-	result = libfenc_kem_encrypt(&context, &policy_input, SESSION_KEY_LEN, (uint8 *) session_key, &ciphertext);	
+	result = libfenc_kem_encrypt(&context, &func_input, SESSION_KEY_LEN, (uint8 *) session_key, &ciphertext);	
 	
 	printf("Decryption key:\t");
 	print_buffer_as_hex(session_key, SESSION_KEY_LEN);
 	
-	/* now perform decryption with session key */
-	printf("Successful import => '%d'\n", get_key(abe_priv_keyfile, &context, &master_key));
+	/* now perform decryption with session key */		
 	
-	fenc_key_WatersCP *key_WatersCP = (fenc_key_WatersCP *) master_key.scheme_key;	
-	uint32 num_leaves = prune_tree(parsed_policy->root, &(key_WatersCP->attribute_list));
-
+	if(scheme == FENC_SCHEME_LSW) {
+		printf("Successful import => '%d'\n", get_key(kp_abe_priv_keyfile, &context, &master_key));
+		fenc_key_LSW *key_LSW = (fenc_key_LSW *) master_key.scheme_key;
+		num_leaves = prune_tree(key_LSW->policy->root, parsed_attributes);
+		scheme_text = "KP";
+	}
+	else if(scheme == FENC_SCHEME_WATERSCP) {
+		printf("Successful import => '%d'\n", get_key(cp_abe_priv_keyfile, &context, &master_key));
+		fenc_key_WatersCP *key_WatersCP = (fenc_key_WatersCP *) master_key.scheme_key;	
+		num_leaves = prune_tree(parsed_policy->root, &(key_WatersCP->attribute_list));
+		scheme_text = "CP";
+	}
+	else {
+		printf("Successful import => '%d'\n", get_key(scp_abe_priv_keyfile, &context, &master_key));
+		fenc_key_WatersSimpleCP *key_WatersSimpleCP = (fenc_key_WatersSimpleCP *) master_key.scheme_key;	
+		num_leaves = prune_tree(parsed_policy->root, &(key_WatersSimpleCP->attribute_list));	
+		scheme_text = "SCP";
+	}
+	
 	printf("Start timer.\n");
 	/* start timer */
 	start = clock();
@@ -192,13 +236,15 @@ void apply_WatersCP(char *policy, char *outfile)
 	if(memcmp(rec_session_key.data, session_key, rec_session_key.data_len) == 0) {
 		printf("\nDECRYPTION TIME => %f secs.\n", diff);
 		printf("NUMBER OF LEAVES => %d\n", num_leaves);		
-		printf("POLICY => '%s'\n", policy_str);	
 		fp = fopen(outfile, "a");
-		fprintf(fp, "TIME=%f:LEAVES=%d:SCHEME=WCP\n", diff, num_leaves);
+		fprintf(fp, "%s:%d:%f\n", scheme_text, num_leaves, diff);
 		fclose(fp);
 	}
-		
-	free(parsed_policy);
+	
+	if(parsed_attributes != NULL)
+		free(parsed_attributes);
+	if(parsed_policy != NULL)
+		free(parsed_policy);
 	/* Shutdown the library. */
 	result = libfenc_shutdown();
 	report_error("Shutting down library", result);		
@@ -604,7 +650,7 @@ void test_libfenc(char *policy)
 	result = libfenc_gen_params(&context, &global_params);
 	
 	/* Set up the publci parameters */
-	fp = fopen(public_params_file, "r");
+	fp = fopen(PUBLIC_FILE".cp", "r");
 	if(fp != NULL) {
 		size_t pub_len = read_file(fp, &public_params_buf);
 		/* base-64 decode */
