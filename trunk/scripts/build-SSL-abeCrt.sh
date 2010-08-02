@@ -66,7 +66,7 @@ else
 	fi
 fi
 
-# Buffer some space; check for apache2 and opensslâ.
+# Buffer some space; check for apache2 and openssl.
 echo "..."
 for i in $CMDS
 do
@@ -374,18 +374,31 @@ elif [ "$1" == "--abecert" ]; then
 	echo "keyUsage                = digitalSignature, keyEncipherment" >> $ABEDIR/openssl.cnf 
 	echo "nsComment               = 'OpenSSL generated CRL' " >> $ABEDIR/openssl.cnf
 
-	echo "Creating Certificate Authority..."
-	openssl req -new -x509 -days 361 -sha1 -newkey rsa:1024 -keyout $ABEDIR/private/ca.key -out $ABEDIR/ca.crt -subj '/C=US/ST=Baltimore/L=JHU/CN=ABE Attributes CA'
-	echo "Creating phone client directories for phone client at CERT/phoneClient/keys CERT/phoneClient/requests..."
-	mkdir -p CERT/phoneClient/keys CERT/phoneClient/requests
-	openssl req -config $ABEDIR/openssl.cnf -new -sha1 -newkey rsa:1024 -nodes -keyout CERT/phoneClient/keys/client.key -out CERT/phoneClient/requests/request.pem -subj "${strAttributes}"
-	openssl ca -config $ABEDIR/openssl.cnf -policy policy_anything -extensions ssl_client -out CERT/phoneClient/signed.pem -infiles CERT/phoneClient/requests/request.pem
-	openssl pkcs12 -export -clcerts -in CERT/phoneClient/signed.pem -inkey CERT/phoneClient/keys/client.key -out CERT/phoneClient/client.p12
-	echo "[client key]..."
-	openssl rsa -noout -text -in CERT/phoneClient/keys/client.key
-	echo "[request pem]..."
-	openssl req -noout -text -in CERT/phoneClient/requests/request.pem
+	echo "Generate DSA Parameters..."
+	openssl dsaparam 2048 -out $ABEDIR/private/dsaparams.pem
+	echo "Generate a DSA key..."
+	openssl gendsa -out $ABEDIR/private/dsarootkey.pem $ABEDIR/private/dsaparams.pem
+	echo "Generating self-signed root certificate..."
+	openssl req -config $ABEDIR/openssl.cnf -newkey dsa:$ABEDIR/private/dsaparams.pem -keyout $ABEDIR/private/dsarootkey.pem -new -x509 -days 365 -out $ABEDIR/certs/rootcert_CA.pem -subj '/C=US/ST=Baltimore/L=JHU/CN=ABE Attributes CA'
+	echo "Printing self-signed root certificate..."
+	openssl x509 -text -in $ABEDIR/certs/rootcert_CA.pem
+	echo "----- asn1parse -----"
+	openssl asn1parse -in $ABEDIR/certs/rootcert_CA.pem 
+	echo "Generate certificate request..."
+	openssl req -config $ABEDIR/openssl.cnf -newkey dsa:$ABEDIR/private/dsaparams.pem -keyout $ABEDIR/requests/abe_dsakey.pem -new -days 365 -out $ABEDIR/requests/abe_dsareq.pem -subj "${strAttributes}"
+	echo "Printing certificate request..."
+	openssl req -text -in $ABEDIR/requests/abe_dsareq.pem
+	echo "Issue a certificate per request..."
+	openssl x509 -days 180 -CA $ABEDIR/certs/rootcert_CA.pem -CAkey $ABEDIR/private/dsarootkey.pem -req -CAcreateserial -CAserial $ABEDIR/ca.sri -in $ABEDIR/requests/abe_dsareq.pem -out $ABEDIR/newcerts/abe_attr.pem
+	echo "View issued certificate..."
+	openssl x509 -text -in $ABEDIR/newcerts/abe_attr.pem
+	echo "----- asn1parse -----"
+	openssl asn1parse -in $ABEDIR/newcerts/abe_attr.pem
+	echo "..."
+	echo "The certificate you want for the iPhone application is in $ABEDIR/newcerts/abe_attr.pem" 
+	echo "The key / request pair can both be found under $ABEDIR/requests/"
 
+       # CRL not yet implemented.
 fi
 
 
