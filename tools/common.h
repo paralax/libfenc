@@ -19,6 +19,7 @@
 
 #define SCHEME_LSW "KP"
 #define SCHEME_WCP "CP"
+#define SCHEME_WSCP "SCP"
 #define LSW 0
 #define WCP 1
 #define SWCP 2

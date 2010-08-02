@@ -52,6 +52,12 @@ int main (int argc, char* argv[]) {
 				  secret_params = SECRET_FILE".cp";
 				  public_params = PUBLIC_FILE".cp";
 			  }
+			  else if(strcmp(optarg, SCHEME_WSCP) == 0) {
+				  printf("Generating private key for Waters Simple CP scheme...\n");
+				  mode = FENC_SCHEME_WATERSSIMPLECP;
+				  secret_params = SECRET_FILE".scp";
+				  public_params = PUBLIC_FILE".scp";				  
+			  }
 			  break;
 		case 'h':
 			  print_help();
@@ -112,7 +118,7 @@ cleanup:
 
 void print_help(void)
 {
-	printf("Usage: ./abe-keygen -m [ KP or CP ] -a [ ATTR1,ATTR2,ATT3,etc ] -o [ key file ]\n\n");
+	printf("Usage: ./abe-keygen -m [ KP,CP or SCP ] -a [ ATTR1,ATTR2,ATT3,etc ] -o [ key file ]\n\n");
 }
 
 int parse_attributes(char *input)
@@ -320,7 +326,7 @@ void generate_keys(char *outfile, FENC_SCHEME_TYPE scheme, char *secret_params, 
 		func_object_input.input_type = FENC_INPUT_NM_ATTRIBUTE_POLICY;
 		func_object_input.scheme_input = (void*)parsed_policy;
 	}
-	else if(scheme == FENC_SCHEME_WATERSCP) {
+	else if(scheme == FENC_SCHEME_WATERSCP || scheme == FENC_SCHEME_WATERSSIMPLECP) {
 		// construct attributes list and place in the func_list_input object
 		// char *attr[5] = {"ONE", "TWO", "THREE", "FOUR=100"};
 		libfenc_create_attribute_list_from_strings(&func_object_input, attributes, attributes_len);
