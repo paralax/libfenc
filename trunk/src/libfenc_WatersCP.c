@@ -328,7 +328,7 @@ libfenc_decrypt_WatersCP(fenc_context *context, fenc_ciphertext *ciphertext, fen
 	fenc_attribute_list				attribute_list;
 	fenc_attribute_policy			policy;
 	fenc_lsss_coefficient_list		coefficient_list;
-	element_t						tempGT, temp2GT, tempONE, temp2ONE, temp3ONE, tempZ, temp2Z;
+	element_t						tempGT, temp2GT, tempONE, temp2ONE, temp3ONE, tempZ, temp2Z, prodONE;
 	element_t						temp3GT, temp4GT, prodT, finalT;
 	uint32							i, j;
 	int32							index_ciph, index_key;
@@ -401,6 +401,7 @@ libfenc_decrypt_WatersCP(fenc_context *context, fenc_ciphertext *ciphertext, fen
 	element_init_GT(temp4GT, scheme_context->global_params->pairing);
 	element_init_GT(prodT, scheme_context->global_params->pairing);
 	element_init_GT(finalT, scheme_context->global_params->pairing);
+	element_init_G1(prodONE, scheme_context->global_params->pairing);
 	element_init_G1(tempONE, scheme_context->global_params->pairing);
 	element_init_G1(temp2ONE, scheme_context->global_params->pairing);
 	element_init_G1(temp3ONE, scheme_context->global_params->pairing);
@@ -411,6 +412,7 @@ libfenc_decrypt_WatersCP(fenc_context *context, fenc_ciphertext *ciphertext, fen
 	 *		prodT = \prod_{i=0}^num_attributes (Z_i^{coefficient[i]}).  
 	 * We compute one of these for every value in attribute_list_N.	 */
 	element_set1(prodT);
+	element_set1(prodONE);
 	for (i = 0; i < coefficient_list.num_coefficients; i++) {		
 
 		if (coefficient_list.coefficients[i].is_set == TRUE) {
@@ -435,19 +437,27 @@ libfenc_decrypt_WatersCP(fenc_context *context, fenc_ciphertext *ciphertext, fen
 				goto cleanup;
 			}
 			
-			/* Compute tempGT = e(D1ONE[index_ciph] , LTWO) / e(E3ONE[index_ciph] , D2TWO[index_key]).		*/
-			pairing_apply(tempGT, ciphertext_WatersCP.CONE[index_ciph], key_WatersCP->LTWO, scheme_context->global_params->pairing);
-			pairing_apply(temp2GT, key_WatersCP->KXONE[index_key], ciphertext_WatersCP.DTWO[index_ciph], scheme_context->global_params->pairing);
-			element_mul(finalT, tempGT, temp2GT);
+			/* Compute prodONE *= CONE[index_ciph]^{coefficient[i]} */
+			element_pow_zn(tempONE, ciphertext_WatersCP.CONE[index_ciph], coefficient_list.coefficients[i].coefficient);
+			element_mul(temp2ONE, tempONE, prodONE);
+			element_set(prodONE, temp2ONE);
 			
-			/* We computed the intermediate value as "finalT", now raise it to coefficient[i] and multiply it into 
-			 * prodT.	*/
-			element_pow_zn(tempGT, finalT, coefficient_list.coefficients[i].coefficient);
-			element_mul(temp2GT, tempGT, prodT);
+			/* Compute finalT = e(KXONE[index_key]^{coefficient[i]}, DTWO[index_ciph]).		*/
+			element_pow_zn(tempONE, key_WatersCP->KXONE[index_key], coefficient_list.coefficients[i].coefficient);
+			pairing_apply(finalT, tempONE, ciphertext_WatersCP.DTWO[index_ciph], scheme_context->global_params->pairing);
+			
+			/* We computed the intermediate value as "finalT".
+			 * Now compute prodT *= finalT.	*/
+			element_mul(temp2GT, finalT, prodT);
 			element_set(prodT, temp2GT);
 		} /* end of if coefficient.is_set clause */
 	} /* end of for clause */
 	
+	/* Now compute prodT *= e(prodONE, LTWO).	*/
+	pairing_apply(finalT, prodONE, key_WatersCP->LTWO, scheme_context->global_params->pairing);
+	element_mul(temp2GT, finalT, prodT);
+	element_set(prodT, temp2GT);
+
 	/* Final computation: prodT = e(CprimeONE, KTWO) / prodT.	*/
 	pairing_apply(tempGT, ciphertext_WatersCP.CprimeONE, key_WatersCP->KTWO, scheme_context->global_params->pairing);
 	element_invert(temp2GT, prodT);
@@ -484,6 +494,7 @@ cleanup:
 		element_clear(temp2GT);	
 		element_clear(temp3GT);	
 		element_clear(temp4GT);	
+		element_clear(prodONE);
 		element_clear(tempONE);
 		element_clear(temp2ONE);	
 		element_clear(temp3ONE);	
@@ -1232,7 +1243,7 @@ libfenc_serialize_ciphertext_WatersCP(fenc_ciphertext_WatersCP *ciphertext, unsi
 		
 	*serialized_len += strlen(ciphertext->policy_str) + 1;							/* policy string + NULL terminator	*/
 	if (buffer != NULL && *serialized_len <= max_len) {
-		sprintf(buf_ptr, "%s", ciphertext->policy_str);
+		sprintf((char*)buf_ptr, "%s", ciphertext->policy_str);
 		buf_ptr = buffer + *serialized_len;
 	}
 	
@@ -1353,7 +1364,7 @@ libfenc_deserialize_ciphertext_WatersCP(unsigned char *buffer, size_t buf_len, f
 	}
 	ciphertext->kem_key_len = kem_key_len;
 	
-	strncpy((char *)ciphertext->policy_str, buf_ptr, MAX_POLICY_STR);			/* policy string	*/
+	strncpy((char *)ciphertext->policy_str, (char*)buf_ptr, MAX_POLICY_STR);			/* policy string	*/
 	deserialized_len += strlen(ciphertext->policy_str) + 1;				/* TODO: This isn't terribly safe.	*/
 	if (deserialized_len <= buf_len) {
 		buf_ptr = buffer + deserialized_len;
