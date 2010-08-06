@@ -124,7 +124,7 @@ libfenc_gen_params_WatersSimpleCP(fenc_context *context, fenc_global_params *glo
 	element_random(scheme_context->public_params.gTWO);
 	element_random(scheme_context->secret_params.alphaZ);
 	element_random(aZ);												
-	element_random(scheme_context->secret_params.alphaZ);								
+	//element_random(scheme_context->secret_params.alphaZ);								
 	
 	/* Compute g^a, */
 	element_pow_zn(scheme_context->public_params.gaONE, scheme_context->public_params.gONE, aZ);	/* gaONE = gONE^a */
@@ -335,14 +335,13 @@ libfenc_decrypt_WatersSimpleCP(fenc_context *context, fenc_ciphertext *ciphertex
 	int32							index_ciph, index_key;
 	Bool							elements_initialized = FALSE, coefficients_initialized = FALSE;
 	Bool							attribute_list_N_initialized = FALSE;
-	char							test_str[MAX_POLICY_STR];
-	
+	//char							test_str[MAX_POLICY_STR];
+
 	/* Get the scheme-specific context. */
 	scheme_context = (fenc_scheme_context_WatersSimpleCP*)context->scheme_context;
 	if (scheme_context == NULL) {
 		return FENC_ERROR_INVALID_CONTEXT;
 	}
-	
 	/* Obtain the WatersSimpleCP-specific key data structure and make sure it's correct.	*/
 	if (key->scheme_key == NULL) {
 		LOG_ERROR("%s: could not obtain scheme-specific decryption key", __func__);
@@ -359,20 +358,18 @@ libfenc_decrypt_WatersSimpleCP(fenc_context *context, fenc_ciphertext *ciphertex
 		goto cleanup;
 	}
 #ifdef FENC_DEBUG	
-	libfenc_fprint_ciphertext_WatersSimpleCP(&ciphertext_WatersSimpleCP, stdout); 
+	// libfenc_fprint_ciphertext_WatersSimpleCP(&ciphertext_WatersSimpleCP, stdout); 
 #endif		
 	/* Now deserialize the policy string into a data structure and make sure all attributes are hashed.	*/
 	fenc_policy_from_string(&policy, ciphertext_WatersSimpleCP.policy_str);
-	strcpy(test_str, "");
-	fenc_attribute_policy_to_string(policy.root, test_str, MAX_POLICY_STR);
+	//strcpy(test_str, "");
+	//fenc_attribute_policy_to_string(policy.root, test_str, MAX_POLICY_STR);
 #ifdef FENC_DEBUG	
-	printf("PARSED ATTRIBUTE STRING: %s\n", test_str);
+	//printf("PARSED ATTRIBUTE STRING: %s\n", test_str);
 #endif
 	err_code = attribute_tree_compute_hashes(policy.root, scheme_context->global_params->pairing);
-
 	
 	//libfenc_fprint_ciphertext_WatersSimpleCP(&ciphertext_WatersSimpleCP, stdout);
-
 	
 	/* Use the LSSS-associated procedure to recover the coefficients.  This gives us a list of coefficients
 	 * that should match up in a 1-to-1 fashion with the components of the decryption key. 
@@ -1322,9 +1319,9 @@ libfenc_serialize_ciphertext_WatersSimpleCP(fenc_ciphertext_WatersSimpleCP *ciph
 			buf_ptr = buffer + *serialized_len;
 		}
 		
-		*serialized_len += element_length_in_bytes_compressed(ciphertext->CONE[i]);		/* CONE[i]		*/
+		*serialized_len += element_length_in_bytes(ciphertext->CONE[i]);		/* CONE[i]		*/
 		if (buffer != NULL && *serialized_len <= max_len) {
-			element_to_bytes_compressed(buf_ptr, ciphertext->CONE[i]);
+			element_to_bytes(buf_ptr, ciphertext->CONE[i]);
 			buf_ptr = buffer + *serialized_len;
 		}
 	}
@@ -1446,14 +1443,14 @@ libfenc_deserialize_ciphertext_WatersSimpleCP(unsigned char *buffer, size_t buf_
 		ciphertext->attribute_list.attribute[i].is_hashed = TRUE;
 		buf_ptr = buffer + deserialized_len;
 		
-		deserialized_len += element_from_bytes_compressed(ciphertext->CONE[i], buf_ptr);	/* CONE[i]			*/
+		deserialized_len += element_from_bytes(ciphertext->CONE[i], buf_ptr);	/* CONE[i]			*/
 		if (deserialized_len > buf_len) {											
 			result = FENC_ERROR_BUFFER_TOO_SMALL;
 			goto cleanup;
 		}
 		buf_ptr = buffer + deserialized_len;
 	}
-	
+
 	/* Success!	*/
 	result = FENC_ERROR_NONE;
 	
