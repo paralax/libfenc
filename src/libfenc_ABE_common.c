@@ -386,6 +386,7 @@ fenc_buffer_to_attribute_list(char **str_list, fenc_attribute_list *attribute_li
 	char *list_cpy = strdup(*str_list);
 	char *token = strtok(list_cpy, delims);
 	
+	/* count the number of attributes in the list */
 	do {	
 		num_attributes++;
 		token = strtok(NULL, delims);
