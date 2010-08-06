@@ -24,9 +24,9 @@
 #define WCP 1
 #define SWCP 2
 
-#define KEYSIZE_MAX 4096
+#define KEYSIZE_MAX 20480
 #define SIZE 2048
-#define SIZE_MAX 8192
+#define SIZE_MAX KEYSIZE_MAX
 #define MAX_ATTRIBUTES 100
 #define SESSION_KEY_LEN 16
 #define BITS 64

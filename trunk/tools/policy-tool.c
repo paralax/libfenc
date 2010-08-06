@@ -36,7 +36,41 @@ int main(int argc, char *argv[]) {
 
 	//char *test = parse_policy_lang_as_str(policy_str);
 	//printf("\nOriginal? '%s'\n", test);
-
+	printf("Leaf count: '%d'\n", count_leaves(parsed_policy->root));
+	
 	return 0;
 }
 
+int count_leaves(fenc_attribute_subtree *subtree)
+{
+	int count = 0;
+	if(subtree == NULL) {
+		return 0;
+	}
+	
+	switch(subtree->node_type) {
+		case FENC_ATTRIBUTE_POLICY_NODE_LEAF:
+			printf("found a leaf node: '%s'\n", subtree->attribute.attribute_str);
+			return 1;
+			break;
+		case FENC_ATTRIBUTE_POLICY_NODE_OR:
+			count = subtree->num_subnodes;
+			break;
+		case FENC_ATTRIBUTE_POLICY_NODE_AND:
+			count = subtree->num_subnodes;
+			break;
+		case FENC_ATTRIBUTE_POLICY_NODE_THRESHOLD:
+			count = subtree->num_subnodes;
+			break;
+		default:
+			break;
+	}
+	
+	int i, leaf = 0;
+	for(i = 0; i < count; i++)
+	{
+		leaf += count_leaves(subtree->subnode[i]);
+	}
+	
+	return leaf;
+}

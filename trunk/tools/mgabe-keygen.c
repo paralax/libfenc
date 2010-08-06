@@ -118,7 +118,7 @@ cleanup:
 
 void print_help(void)
 {
-	printf("Usage: ./abe-keygen -m [ KP,CP or SCP ] -a [ ATTR1,ATTR2,ATT3,etc ] -o [ key file ]\n\n");
+	printf("Usage: ./abe-keygen -m [ KP,CP or SCP ] -a [ ATTR1,ATTR2,ATT3,etc ] -p [ 'ATTR1 and ATTR2',etc ] -o [ key file ]\n\n");
 }
 
 int parse_attributes(char *input)
@@ -317,11 +317,11 @@ void generate_keys(char *outfile, FENC_SCHEME_TYPE scheme, char *secret_params, 
 		memset(parsed_policy, 0, sizeof(fenc_attribute_policy)); 
 		
 		fenc_policy_from_string(parsed_policy, policy);
-		int len = 1024;
+		int len = MAX_ATTRIBUTE_STR*8;
 		char pol_str[len];
 		memset(pol_str, 0, len);
 		fenc_attribute_policy_to_string(parsed_policy->root, pol_str, len);
-		printf("Policy: %s\n", pol_str);
+		printf("Policy: '%s'\n", pol_str);
 		
 		func_object_input.input_type = FENC_INPUT_NM_ATTRIBUTE_POLICY;
 		func_object_input.scheme_input = (void*)parsed_policy;
@@ -345,7 +345,7 @@ void generate_keys(char *outfile, FENC_SCHEME_TYPE scheme, char *secret_params, 
 	
 	size_t keyLength;
 	char *secret_key_buf = NewBase64Encode(buffer, serialized_len, FALSE, &keyLength);
-	printf("Your secret-key:\t'%s'\nKey-len:\t'%zd'\n", secret_key_buf, serialized_len);	
+	// printf("Your secret-key:\t'%s'\nKey-len:\t'%zd'\n", secret_key_buf, serialized_len);	
 	
 	fp = fopen(outfile, "w");
 	if(fp != NULL) {
@@ -356,8 +356,8 @@ void generate_keys(char *outfile, FENC_SCHEME_TYPE scheme, char *secret_params, 
 	}
 	fclose(fp);
 	
-	printf("Buffer contents:\n");
-	print_buffer_as_hex(buffer, serialized_len);
+	// printf("Buffer contents:\n");
+	// print_buffer_as_hex(buffer, serialized_len);
 /*	
 	if(scheme == FENC_SCHEME_LSW) {
 		result = libfenc_import_secret_key(&context, &key2, buffer, serialized_len);
