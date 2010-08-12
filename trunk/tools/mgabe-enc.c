@@ -6,6 +6,7 @@
 #include "openssl/evp.h"
 #include "openssl/err.h"
 #include "openssl/rand.h"
+#include <math.h>
 
 /* include code that creates policy by hand */
 
@@ -83,13 +84,13 @@ int main (int argc, char *argv[]) {
 				break;
 			case 'm': 
 				if (strcmp(optarg, SCHEME_LSW) == 0) {
-					printf("Generating private key for Lewko-Sahai-Waters KP scheme...\n");
+					printf("Encrypting for Lewko-Sahai-Waters KP scheme...\n");
 					mode = FENC_SCHEME_LSW;
 					public_params = PUBLIC_FILE".kp";
 					ext = "kpabe";
 				}
 				else if(strcmp(optarg, SCHEME_WCP) == 0) {
-					printf("Generating private key for Waters CP scheme...\n");
+					printf("Encrypting for Waters CP scheme...\n");
 					mode = FENC_SCHEME_WATERSCP;
 					public_params = PUBLIC_FILE".cp";
 					ext = "cpabe";
@@ -233,7 +234,7 @@ void cpabe_encrypt(FENC_SCHEME_TYPE scheme, char *public_params, char *policy, c
 		
 	if(scheme == FENC_SCHEME_LSW) {
 		libfenc_create_attribute_list_from_strings(&func_object_input, attr, attr_len);
-		debug_print_attribute_list((fenc_attribute_list*)(func_object_input.scheme_input));
+		// debug_print_attribute_list((fenc_attribute_list*)(func_object_input.scheme_input));
 	}
 	else if(scheme == FENC_SCHEME_WATERSCP) {
 		parsed_policy = (fenc_attribute_policy *) malloc(sizeof(fenc_attribute_policy));
@@ -242,7 +243,7 @@ void cpabe_encrypt(FENC_SCHEME_TYPE scheme, char *public_params, char *policy, c
 		fenc_policy_from_string(parsed_policy, policy);
 		func_object_input.input_type = FENC_INPUT_NM_ATTRIBUTE_POLICY;
 		func_object_input.scheme_input = (void*)parsed_policy;
-		debug_print_policy(parsed_policy);
+		// debug_print_policy(parsed_policy);
 	}
 	
 	// printf("public params input = '%s'\n", public_params_buf);
@@ -263,13 +264,12 @@ void cpabe_encrypt(FENC_SCHEME_TYPE scheme, char *public_params, char *policy, c
 	print_buffer_as_hex((uint8 *) session_key, SESSION_KEY_LEN);
 
 	/* encrypted blob that belongs in the <ABED></ABE> tags */
-	// printf("\tABE Ciphertex is: ");
 	// print_buffer_as_hex(ciphertext.data, ciphertext.data_len);
 		
 	/* use the PSK to encrypt using openssl functions here */
 	AES_KEY key;
 	char iv[AES_BLOCK_SIZE*4];
-	int data_len = strlen(data)*5; // consider padding?
+	int data_len = ceil(strlen(data)/(double)(AES_BLOCK_SIZE)) * AES_BLOCK_SIZE; // round to nearest multiple of 16-bytes
 	char aes_ciphertext[data_len], data_magic[strlen(data)+6];
 	
 	memset(iv, 0, AES_BLOCK_SIZE*4);
@@ -293,14 +293,17 @@ void cpabe_encrypt(FENC_SCHEME_TYPE scheme, char *public_params, char *policy, c
 		if(RAND_bytes((char *) rand_id, BYTES) == 0) {
 			perror("Unusual failure.\n");
 			strcpy((char *)rand_id, "0123");
-		}		
+		}
+		printf("Generated random id: %08x\n", (unsigned int *) rand_id[0]);
 	}
 	else {
 		sprintf(filename, "%s.%s", enc_file, ext);
 		fp = fopen(filename, "w");
 	}
 	printf("\tCiphertext stored in '%s'.\n", filename);
-		
+	printf("\tABE Ciphertex size is: '%d'\n", ciphertext.data_len);
+	printf("\tAES Ciphertext size is: '%d'\n", data_len);
+
 	/* base-64 both ciphertexts and write to the stdout -- in XML? */
 	size_t abe_length, aes_length;
 	char *ABE_cipher_base64 = NewBase64Encode(ciphertext.data, ciphertext.data_len, FALSE, &abe_length);
@@ -309,7 +312,7 @@ void cpabe_encrypt(FENC_SCHEME_TYPE scheme, char *public_params, char *policy, c
 	/* output ciphertext to disk: either xml or custom format */
 	if(isXML) {
 		fprintf(fp,"<Encrypted id='");
-		fprintf(fp, "%08x", (unsigned int)* rand_id[0]);
+		fprintf(fp, "%08x", (unsigned int *) rand_id[0]);
 		fprintf(fp,"'><ABE type='CP'>%s</ABE>", ABE_cipher_base64);
 		fprintf(fp,"<EncryptedData>%s</EncryptedData></Encrypted>", AES_cipher_base64);
 		fclose(fp);
@@ -319,10 +322,13 @@ void cpabe_encrypt(FENC_SCHEME_TYPE scheme, char *public_params, char *policy, c
 		fprintf(fp, AES_TOKEN":%s:"AES_TOKEN_END, AES_cipher_base64);
 		fclose(fp);		
 	}
-			
-	free(ABE_cipher_base64);
-	free(AES_cipher_base64);
-	free(parsed_policy);
+		
+	if(ABE_cipher_base64 != NULL)
+		free(ABE_cipher_base64);
+	if(ABE_cipher_base64 != NULL)
+		free(AES_cipher_base64);
+	if(parsed_policy != NULL)
+		free(parsed_policy);
 	
 	/* Shutdown the library. */
 	result = libfenc_shutdown();

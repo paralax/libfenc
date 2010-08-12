@@ -17,12 +17,13 @@ void print_buffer_as_hex(uint8* data, size_t len)
 
 ssize_t read_file(FILE *f, char** out) {
 	
+	ssize_t MAX_LEN = SIZE_MAX * 4;
 	if(f != NULL) {
 		/* See how big the file is */
 		fseek(f, 0L, SEEK_END);
 		ssize_t out_len = ftell(f);
-		printf("out_len: %zd\n", out_len);
-		if(out_len <= SIZE_MAX) {
+		printf("DEBUG: out_len: %zd\n", out_len);
+		if(out_len <= MAX_LEN) {
 			/* allocate that amount of memory only */
 			if((*out = (char *) malloc(out_len+1)) != NULL) {
 				fseek(f, 0L, SEEK_SET);
