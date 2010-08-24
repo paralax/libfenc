@@ -227,7 +227,7 @@ libfenc_extract_key_LSW(fenc_context *context, fenc_function_input *input, fenc_
 		LOG_ERROR("%s: could not calculate shares", __func__);
 		result = FENC_ERROR_INVALID_INPUT;
 		goto cleanup;
-	}
+	}	
 	
 	/* Initialize the LSW-specific key data structure and allocate some temporary variables.	*/
 	key_LSW = fenc_key_LSW_initialize(&attribute_list, policy, FALSE, scheme_context->global_params);
@@ -289,7 +289,7 @@ libfenc_extract_key_LSW(fenc_context *context, fenc_function_input *input, fenc_
 			err_code = hash2_attribute_element_to_G1(&(key_LSW->attribute_list.attribute[i].attribute_hash), &tempONE);	/* result in tempONE  */
 			DEBUG_ELEMENT_PRINTF("extract key -- hashed to G1: %B\n", tempONE);
 			if (err_code != FENC_ERROR_NONE) {
-				LOG_ERROR("libfenc_extract_key_LSW: could not compute hash2");
+				LOG_ERROR("%s: could not compute hash2", __func__);
 				result = FENC_ERROR_UNKNOWN;
 				goto cleanup;
 			}
@@ -1138,7 +1138,7 @@ libfenc_import_secret_key_LSW(fenc_context *context, fenc_key *key, uint8 *buffe
 		err_code = FENC_ERROR_INVALID_INPUT;
 		goto cleanup;
 	}
-								   
+
 	/* deserialize rest of key components -- D1-D5 for each attribute. Worry about negation later. */
 	err_code = libfenc_deserialize_key_LSW(key_LSW, (uint8 *) (buffer + import_len), (buf_len - import_len));
 	if (err_code != FENC_ERROR_NONE) {
@@ -1146,7 +1146,7 @@ libfenc_import_secret_key_LSW(fenc_context *context, fenc_key *key, uint8 *buffe
 		err_code = FENC_ERROR_INVALID_INPUT;
 		goto cleanup;
 	}
-	
+
 	/* Stash the key_WatersCP structure inside of the fenc_key.		*/
 	memset(key, 0, sizeof(fenc_key));
 	key->scheme_type = FENC_SCHEME_LSW;
@@ -1293,7 +1293,7 @@ libfenc_serialize_key_LSW(fenc_key_LSW *key, unsigned char *buffer, size_t max_l
 		if (buffer != NULL) {	buf_ptr = buffer + *serialized_len;	}
 		max_len -= result_len;	/* TODO: may be a problem.	*/
 	}
-	
+
 	/* All done.	*/
 	return err_code;
 }

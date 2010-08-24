@@ -48,7 +48,7 @@ fenc_LSSS_calculate_shares_from_policy(element_t *secret, fenc_attribute_policy 
 		result = err_code;
 		goto cleanup;
 	}
-	
+		
 	/* Recursively compute the share list, placing each into the attribute list.	*/
 	err_code = LSSS_compute_shares_on_subtree(secret, policy->root, attribute_list, &list_index, pairing);
 	if (err_code != FENC_ERROR_NONE) {
@@ -154,7 +154,7 @@ LSSS_compute_shares_on_subtree(element_t *secret, fenc_attribute_subtree *subtre
 			element_init_Zr(attribute_list->attribute[*list_index].share, pairing);
 			attribute_list->attribute[*list_index].is_hashed = subtree->attribute.is_hashed;
 			attribute_list->attribute[*list_index].contains_share = TRUE;
-			attribute_list->attribute[*list_index].is_negated = subtree->is_negated;	/* TODO: make this block cleaner.	*/
+			// attribute_list->attribute[*list_index].is_negated = subtree->is_negated;	/* TODO: make this block cleaner.	*/
 			element_set(attribute_list->attribute[*list_index].share, *secret);
 			if (subtree->attribute.is_hashed == TRUE) {
 				element_set(attribute_list->attribute[*list_index].attribute_hash, subtree->attribute.attribute_hash);
@@ -162,7 +162,14 @@ LSSS_compute_shares_on_subtree(element_t *secret, fenc_attribute_subtree *subtre
 			if (subtree->attribute.attribute_str[0] != 0) {
 				memcpy(attribute_list->attribute[*list_index].attribute_str, subtree->attribute.attribute_str, MAX_ATTRIBUTE_STR);
 			}
+			if (subtree->attribute.attribute_str[0] == '!') {
+				attribute_list->attribute[*list_index].is_negated = TRUE;
+			}
+			else {
+				attribute_list->attribute[*list_index].is_negated = FALSE;
+			}
 			(*list_index)++;
+			// LOG_ERROR("%s: found the missing negated attribute? '%s' => '%d'", __func__, subtree->attribute.attribute_str, subtree->is_negated);
 			
 			/* No need to recurse.	*/
 			return FENC_ERROR_NONE;

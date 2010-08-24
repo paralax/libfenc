@@ -2199,7 +2199,7 @@ yylex()
 		free(s);
 		r = INTLIT;
 	}
-	else if( isalpha(c) )
+	else if( isalpha(c) || c == '!')
 	{
 		int len = 50;
 		char *s = s_string_new(len);

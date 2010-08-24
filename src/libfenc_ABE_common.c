@@ -140,7 +140,7 @@ libfenc_parse_input_as_attribute_policy(fenc_function_input *input, fenc_attribu
 	// TODO: Do we still need a copy here?
 	// LOG_ERROR("libfenc_parse_input_as_attribute_policy: need to add a copy");
 	memcpy(policy, (fenc_attribute_policy*)(input->scheme_input), sizeof(fenc_attribute_policy));
-
+		
 	return FENC_ERROR_NONE;
 }
 
@@ -390,7 +390,7 @@ fenc_attribute_list_copy(fenc_attribute_list *attribute_list_DST, fenc_attribute
 
 	/* Duplicate the contents of each fenc_attribute structure.	*/
 	for (i = 0; (unsigned) i < attribute_list_SRC->num_attributes; i++) {
-		/* Copy attribute #i	*/
+		/* Copy attribute #i	*/		
 		err_code = fenc_attribute_copy((fenc_attribute*)&(attribute_list_DST->attribute[i]), (fenc_attribute*)&(attribute_list_SRC->attribute[i]), pairing);
 		if (err_code != FENC_ERROR_NONE) {
 			fenc_attribute_list_clear(attribute_list_DST);
@@ -433,7 +433,6 @@ fenc_attribute_list_to_buffer(fenc_attribute_list *attribute_list, uint8 *buffer
 	/* Serialize all of the elements.	*/
 	for (i = 0; i < attribute_list->num_attributes; i++) {
 		// printf("%i:%s\n", i, attribute_list->attribute[i].attribute_str);
-		
 		/* We prefer the attribute string.	*/
 			if (i != 0) {
 				if (buffer != NULL) {	
@@ -752,12 +751,12 @@ fenc_attribute_policy_to_string(fenc_attribute_subtree *subtree, char *output_st
 	/* Base case (leaf)	*/
 	if (subtree->node_type == FENC_ATTRIBUTE_POLICY_NODE_LEAF) {
 		// printf("Parsing a leaf node\n");
-		/* Is it negated?
+		/* Is it negated? 
 		 if (subtree->attribute.is_negated == TRUE )	{
 		 if (output_str != NULL) {	snprintf((output_str+*str_index), buf_len - *str_index, "!");	}
 		 (*str_index) += 1;
 		 } */
-		
+
 		/* Use either the hash or the attribute string, whichever is shortest.	
 		 if (subtree->attribute.is_hashed == TRUE) {
 		 if (element_snprintf(token, 400, "{%B}", subtree->attribute.attribute_hash) == 0) {
@@ -923,6 +922,12 @@ fenc_policy_create_leaf(char *attribute_str)
 	
 	/* Copy the string into the attribute and set up the node.	*/
 	strcpy((char*)leaf->attribute.attribute_str, attribute_str);
+	
+	/* look for presence of '!' (not) */
+	if(attribute_str[0] == '!') {
+		leaf->attribute.is_negated = TRUE;
+	}
+	
 	leaf->node_type = FENC_ATTRIBUTE_POLICY_NODE_LEAF;
 	
 	return leaf;
