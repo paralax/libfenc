@@ -2407,7 +2407,7 @@ parse_policy_lang( char* s )
 	cur_string = s;
 	
 	yyparse();
-	printf("Bison-Parsing... '%s'\n", s);
+	// printf("Bison-Parsing... '%s'\n", s);
  	fenc_policy_compact(final_policy);
  	//tidy(final_policy);
 	

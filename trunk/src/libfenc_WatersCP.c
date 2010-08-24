@@ -651,7 +651,7 @@ encrypt_WatersCP_internal(fenc_context *context, fenc_function_input *input, fen
 	
 	/* Compute CprimeONE = gONE^{sZ}.	*/
 	element_pow_zn(ciphertext_WatersCP.CprimeONE, scheme_context->public_params.gONE, sZ);
-	double diff_time = 0.0;
+
 	/* For every share/attribute, create one component of the secret key.	*/
 	for (i = 0; i < ciphertext_WatersCP.attribute_list.num_attributes; i++) {		
 		/* Hash the attribute string to Zr, if it hasn't already been.	*/
@@ -674,10 +674,8 @@ encrypt_WatersCP_internal(fenc_context *context, fenc_function_input *input, fen
 		element_mul(ciphertext_WatersCP.CONE[i], tempONE, temp2ONE);											/* CONE = tempONE * temp2ONE.	*/
 	}
 
-#ifdef FENC_DEBUG
 	/* DEBUG: Print out the ciphertext.	*/
 	// libfenc_fprint_ciphertext_WatersCP(&ciphertext_WatersCP, stdout);
-#endif	
 	/* Serialize the WatersCP ciphertext structure into a fenc_ciphertext container 
 	 * (which is essentially just a binary buffer).  First we get the length, then we 
 	 * allocate the ciphertext buffer, then we serialize.	*/
@@ -703,7 +701,6 @@ cleanup:
 	}
 	
 	return result;
-
 }
 
 /*!
