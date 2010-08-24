@@ -29,7 +29,6 @@
 #define SIZE_MAX KEYSIZE_MAX
 #define MAX_ATTRIBUTES 100
 #define SESSION_KEY_LEN 16
-#define BITS 64
 
 #define PARAM "d224.param"
 #define MAGIC "ABE|"
@@ -48,7 +47,6 @@ void report_error(char* action, FENC_ERROR result);
 ssize_t read_file(FILE *f, char** out);
 void print_help(void);
 void print_buffer_as_hex(uint8* data, size_t len);
-int ret_num_bits(int value1);
-int construct_attribute_list(char *input, char** attributes, size_t *attributes_len);
+//int construct_attribute_list(char *input, char** attributes, size_t *attributes_len);
 
 #endif

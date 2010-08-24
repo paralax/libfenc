@@ -11,9 +11,10 @@
 /* include code that creates policy by hand */
 
 #define BYTES 4
-size_t attr_len = 0;
-char *attr[MAX_CIPHERTEXT_ATTRIBUTES];
-void cpabe_encrypt(FENC_SCHEME_TYPE scheme, char *public_params, char *policy, char *data, char *enc_file, int isXML, char *ext);
+// size_t attr_len = 0;
+// char *attr[MAX_CIPHERTEXT_ATTRIBUTES];
+char *attribute_string = NULL, *policy_string = NULL;
+void abe_encrypt(FENC_SCHEME_TYPE scheme, char *public_params, char *data, char *enc_file, int isXML, char *ext);
 fenc_attribute_policy *construct_test_policy();
 
 /* Description: mgabe-keygen takes the outfile to write the users keys, and the .
@@ -21,7 +22,7 @@ fenc_attribute_policy *construct_test_policy();
  */
 int main (int argc, char *argv[]) {
 	int aflag,pflag,dflag,oflag,iflag,xflag,err;
-	char *policy = NULL, *data = NULL, *enc_file = NULL,*string = NULL;
+	char *policy = NULL, *data = NULL, *enc_file = NULL;
 	char *ext = NULL;
 	FENC_SCHEME_TYPE mode = FENC_SCHEME_NONE;
 	char *public_params = NULL;
@@ -40,17 +41,11 @@ int main (int argc, char *argv[]) {
 		{
 			case 'a': // retrieve attributes from user 
 				aflag = TRUE;
-				string = strdup(optarg);
-				construct_attribute_list(string, attr, &attr_len);
-				free(string);
+				attribute_string = strdup(optarg);
 				break;
 			case 'p': /* holds policy string */
 				pflag = TRUE;
-				if((policy = malloc(strlen(optarg)+1)) == NULL) {
-					perror("malloc failed");
-					exit(-1);
-				}
-				strncpy(policy, optarg, strlen(optarg));			  
+				policy_string = strdup(optarg);
 				break;
 			case 'i':
 				if(dflag == TRUE) /* i or d option, but not both */
@@ -71,7 +66,6 @@ int main (int argc, char *argv[]) {
 				if(iflag == TRUE) /* i or d */
 					break;
 				dflag = TRUE;
-				// printf("optarg = '%s'\n", optarg);
 				if((data = malloc(strlen(optarg)+1)) == NULL) {
 					perror("malloc failed");
 					exit(-1);
@@ -147,7 +141,7 @@ int main (int argc, char *argv[]) {
 		goto clean;
 	}
 	
-	cpabe_encrypt(mode, public_params, policy, data, enc_file, xflag, ext);
+	abe_encrypt(mode, public_params, data, enc_file, xflag, ext);
 	exit_status = 0;
 clean:	
 	free(data);
@@ -160,7 +154,7 @@ void print_help(void)
 	printf("Usage: ./abe-enc -m [ KP or CP ] -d [ \"data\" ] -i [ input-filename ]\n\t\t -a Attr1,Attr2,Attr3 -p '((Attr1 and Attr2) or Attr3)' -o [ output-filename ]\n\n");
 }
 
-void cpabe_encrypt(FENC_SCHEME_TYPE scheme, char *public_params, char *policy, char *data, char *enc_file, int isXML, char *ext)
+void abe_encrypt(FENC_SCHEME_TYPE scheme, char *public_params, char *data, char *enc_file, int isXML, char *ext)
 {
 	FENC_ERROR result;
 	fenc_context context;
@@ -168,8 +162,6 @@ void cpabe_encrypt(FENC_SCHEME_TYPE scheme, char *public_params, char *policy, c
 	fenc_global_params global_params;
 	fenc_ciphertext ciphertext;
 	fenc_function_input func_object_input;
-	fenc_attribute_policy *parsed_policy = NULL;
-	fenc_attribute_list *parsed_attributes = NULL;
 	pairing_t pairing;
 	FILE *fp;
 	char c;
@@ -233,20 +225,15 @@ void cpabe_encrypt(FENC_SCHEME_TYPE scheme, char *public_params, char *policy, c
 	fclose(fp);
 		
 	if(scheme == FENC_SCHEME_LSW) {
-		libfenc_create_attribute_list_from_strings(&func_object_input, attr, attr_len);
-		// debug_print_attribute_list((fenc_attribute_list*)(func_object_input.scheme_input));
+		fenc_create_func_input_for_attributes(attribute_string, &func_object_input);
+		debug_print_attribute_list((fenc_attribute_list*)(func_object_input.scheme_input));
+		free(attribute_string);
 	}
 	else if(scheme == FENC_SCHEME_WATERSCP) {
-		parsed_policy = (fenc_attribute_policy *) malloc(sizeof(fenc_attribute_policy));
-		memset(parsed_policy, 0, sizeof(fenc_attribute_policy)); 
-		
-		fenc_policy_from_string(parsed_policy, policy);
-		func_object_input.input_type = FENC_INPUT_NM_ATTRIBUTE_POLICY;
-		func_object_input.scheme_input = (void*)parsed_policy;
-		// debug_print_policy(parsed_policy);
+		fenc_create_func_input_for_policy(policy_string, &func_object_input);
+		debug_print_policy((fenc_attribute_policy *)(func_object_input.scheme_input));
+		free(policy_string);
 	}
-	
-	// printf("public params input = '%s'\n", public_params_buf);
 	
 	/* base-64 decode */
 	uint8 *bin_public_buf = NewBase64Decode((const char *) public_params_buf, pub_len, &serialized_len);
@@ -269,8 +256,8 @@ void cpabe_encrypt(FENC_SCHEME_TYPE scheme, char *public_params, char *policy, c
 	/* use the PSK to encrypt using openssl functions here */
 	AES_KEY key;
 	char iv[AES_BLOCK_SIZE*4];
-	int data_len = ceil(strlen(data)/(double)(AES_BLOCK_SIZE)) * AES_BLOCK_SIZE; // round to nearest multiple of 16-bytes
-	char aes_ciphertext[data_len], data_magic[strlen(data)+6];
+	int data_len = ceil((strlen(data) + strlen(MAGIC))/(double)(AES_BLOCK_SIZE)) * AES_BLOCK_SIZE; // round to nearest multiple of 16-bytes
+	char aes_ciphertext[data_len], data_magic[data_len];
 	
 	memset(iv, 0, AES_BLOCK_SIZE*4);
 	memset(aes_ciphertext, 0, data_len);
@@ -327,8 +314,8 @@ void cpabe_encrypt(FENC_SCHEME_TYPE scheme, char *public_params, char *policy, c
 		free(ABE_cipher_base64);
 	if(ABE_cipher_base64 != NULL)
 		free(AES_cipher_base64);
-	if(parsed_policy != NULL)
-		free(parsed_policy);
+	
+	fenc_func_input_clear(&func_object_input);
 	
 	/* Shutdown the library. */
 	result = libfenc_shutdown();
