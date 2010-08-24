@@ -206,6 +206,15 @@ FENC_ERROR	fenc_create_func_input_for_attributes(char *attributes, fenc_function
 FENC_ERROR	fenc_create_func_input_for_policy(char *policy, fenc_function_input *input);
 
 /*!
+ * Clear an fenc_function_input structure for attributes or policy and deallocates memory.
+ *
+ * @param input				functional input structure
+ * @return					FENC_ERROR_NONE or an error code.
+ */
+
+FENC_ERROR	fenc_func_input_clear(fenc_function_input *input);
+
+/*!
  * Clear an attribute list data structure, deallocating memory.
  *
  * @param attribute_list	fenc_attribute_list structure

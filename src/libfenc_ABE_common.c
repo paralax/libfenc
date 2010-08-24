@@ -321,6 +321,30 @@ fenc_attribute_list_initialize(fenc_attribute_list *attribute_list, uint32 num_a
 }
 
 /*!
+ * Clear an fenc_function_input structure for attributes or policy and deallocates memory.
+ *
+ * @param input				functional input structure
+ * @return					FENC_ERROR_NONE or an error code.
+ */
+
+FENC_ERROR
+fenc_func_input_clear(fenc_function_input *input)
+{	
+	if(input->input_type == FENC_INPUT_ATTRIBUTE_LIST) {
+		fenc_attribute_list *attribute_list = (fenc_attribute_list *) input->scheme_input;
+		fenc_attribute_list_clear(attribute_list);
+	}
+	else if(input->input_type == FENC_INPUT_NM_ATTRIBUTE_POLICY) {
+		fenc_attribute_policy *attribute_policy = (fenc_attribute_policy *) input->scheme_input;
+		free(attribute_policy->string);
+		free(attribute_policy->root);
+		free(attribute_policy);
+	}
+	
+	return FENC_ERROR_NONE;
+}
+
+/*!
  * Clear an attribute list data structure, deallocating memory.
  *
  * @param attribute_list	fenc_attribute_list structure
@@ -1074,7 +1098,7 @@ fenc_policy_from_string(fenc_attribute_policy *policy, char *policy_str)
 	
 	subtree = parse_policy_lang( policy_str );
 	policy->root = subtree;
-	policy->string = policy_str;
+	policy->string = strdup(policy_str);
 	return FENC_ERROR_NONE;
 }
 
