@@ -197,14 +197,14 @@ export_components_to_buffer(uint8* buffer, size_t max_len, size_t *result_len, c
 				result = fenc_attribute_policy_to_string(policy->root, (char *)buf_ptr, (max_len - *result_len));
 				index = strchr((char *) buf_ptr, 0) - (char *) buf_ptr;
 				*result_len += index + 1;
-				printf("policy_root: '%s', strlen: '%d', index: '%d'\n", (char *) buf_ptr, strlen((char *) buf_ptr), index);
+				// printf("policy_root: '%s', strlen: '%d', index: '%d'\n", (char *) buf_ptr, strlen((char *) buf_ptr), index);
 				break;
 				
 			case 'A':
 				attribute_list = va_arg(comp_list, fenc_attribute_list*);
 				fenc_attribute_list_to_buffer(attribute_list, buf_ptr, (max_len - *result_len), &index);
 				*result_len += index + 1;
-				printf("attribute_list: '%s'\n\tlength: '%zu'\n", (char *)buf_ptr, strlen((char *)buf_ptr));
+				// printf("attribute_list: '%s'\n\tlength: '%zu'\n", (char *)buf_ptr, strlen((char *)buf_ptr));
 				break;
 				
 			case 's':
