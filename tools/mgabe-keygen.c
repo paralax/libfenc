@@ -256,10 +256,12 @@ void generate_keys(char *outfile, FENC_SCHEME_TYPE scheme, char *secret_params, 
 		perror("Error writing private key.");
 	}
 	fclose(fp);
-	
-	// printf("Buffer contents:\n");
-	// print_buffer_as_hex(buffer, serialized_len);
-/*	
+
+	/*
+	printf("........Confirming contents of exported key......\n");
+	printf("Buffer contents:\n");
+	print_buffer_as_hex(buffer, serialized_len);
+
 	if(scheme == FENC_SCHEME_LSW) {
 		result = libfenc_import_secret_key(&context, &key2, buffer, serialized_len);
 		report_error("Import secret key", result);
@@ -275,7 +277,7 @@ void generate_keys(char *outfile, FENC_SCHEME_TYPE scheme, char *secret_params, 
 		printf("Key-len2: '%zu'\n", serialized_len2);
 		printf("Buffer contents 2:\n");
 		print_buffer_as_hex(buffer2, serialized_len2);
-	}*/
+	} */
 cleanup:
 	fenc_func_input_clear(&func_object_input);
 	
@@ -288,6 +290,6 @@ cleanup:
 	report_error("Shutting down library", result);	
 		
 	/* free buffer */
-	// free(buffer);
+	free(buffer);
 	return;
 }
