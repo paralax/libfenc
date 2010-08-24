@@ -29,6 +29,8 @@ typedef enum _FENC_ATTRIBUTE_NODE_TYPE {
 /* Maximum serialized policy string in bytes (this includes a NULL termination byte.) */
 #define	MAX_POLICY_STR		2048
 
+#define BITS 32
+
 /**
  *  Attribute structure.  Contains a null-terminated string (or NULL) and/or a hashed attribute
  *	typically an element of Zr.  The attribute_hash member should only be accessed if the
@@ -178,6 +180,30 @@ FENC_ERROR	fenc_attribute_list_initialize(fenc_attribute_list *attribute_list, u
  */
 
 int32	libfenc_get_attribute_index_in_list(fenc_attribute *attribute, fenc_attribute_list *attribute_list);
+
+/*!
+ * Convert an array of attribute strings into a fenc_function_input.  The input
+ * structure must be initialized, although some additional memory allocation will
+ * occur.
+ *
+ * @param input				Pointer to an allocated fenc_function_input structure
+ * @param attribute_list	Array of char* strings containing attributes
+ * @return					FENC_ERROR_NONE or an error code.
+ */
+
+FENC_ERROR	fenc_create_func_input_for_attributes(char *attributes, fenc_function_input *input);
+
+/*!
+ * Convert an policy string into a fenc_function_input.  The input
+ * structure must be initialized, although some additional memory allocation will
+ * occur.
+ *
+ * @param input				Pointer to an allocated fenc_function_input structure
+ * @param policy			char* strings containing policy using attributes
+ * @return					FENC_ERROR_NONE or an error code.
+ */
+
+FENC_ERROR	fenc_create_func_input_for_policy(char *policy, fenc_function_input *input);
 
 /*!
  * Clear an attribute list data structure, deallocating memory.
@@ -347,6 +373,8 @@ char* fenc_get_policy_string(fenc_attribute_policy *policy);
  */
 
 FENC_ERROR hash_attribute_string_to_Zr(fenc_attribute *attribute, pairing_t pairing);
+
+int num_bits(int value);
 
 void debug_print_policy(fenc_attribute_policy *policy_tree);
 

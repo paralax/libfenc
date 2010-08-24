@@ -151,10 +151,83 @@ libfenc_parse_input_as_attribute_policy(fenc_function_input *input, fenc_attribu
  *
  * @param input				Pointer to an allocated fenc_function_input structure
  * @param attribute_list	Array of char* strings containing attributes
- * @param num_attributes	Number of attributes in list
  * @return					FENC_ERROR_NONE or an error code.
  */
 
+FENC_ERROR
+fenc_create_func_input_for_attributes(char *attributes, fenc_function_input *input)
+{
+	FENC_ERROR err_code = FENC_ERROR_NONE;
+	fenc_attribute_list *attribute_list = NULL;
+	
+	/* Allocate an attribute list data structure.	*/
+	attribute_list = (fenc_attribute_list*)SAFE_MALLOC(sizeof(fenc_attribute_list));
+	if (attribute_list == NULL) {
+		LOG_ERROR("%s: could not allocate attribute list", __func__);
+		return FENC_ERROR_OUT_OF_MEMORY;
+	}
+	
+	/* Construct attribute list from string */
+	err_code = fenc_buffer_to_attribute_list(&attributes, attribute_list);
+	if(err_code != FENC_ERROR_NONE) {
+		free(attribute_list);
+		LOG_ERROR("%s: invalid attribute string", __func__);		
+		return err_code;
+	}
+	
+	input->scheme_input = (void*)attribute_list;
+	input->input_type = FENC_INPUT_ATTRIBUTE_LIST;
+	
+	return err_code;
+}
+
+/*!
+ * Convert an policy string into a fenc_function_input.  The input
+ * structure must be initialized, although some additional memory allocation will
+ * occur.
+ *
+ * @param input				Pointer to an allocated fenc_function_input structure
+ * @param policy			char* strings containing policy using attributes
+ * @return					FENC_ERROR_NONE or an error code.
+ */
+
+FENC_ERROR
+fenc_create_func_input_for_policy(char *policy, fenc_function_input *input)
+{
+	FENC_ERROR err_code = FENC_ERROR_NONE;
+	fenc_attribute_policy *fenc_policy = NULL;
+	
+	/* Allocate an fenc_attribute_policy data structure */
+	fenc_policy = (fenc_attribute_policy *) SAFE_MALLOC(sizeof(fenc_attribute_policy));
+	if(fenc_policy == NULL) {
+		LOG_ERROR("%s: could not allocate fenc policy", __func__);
+		return FENC_ERROR_OUT_OF_MEMORY;			
+	}
+	memset(fenc_policy, 0, sizeof(fenc_attribute_policy));
+	
+	/* Construct/parse policy string into a structure */
+	err_code = fenc_policy_from_string(fenc_policy, policy);
+	if(err_code != FENC_ERROR_NONE) {
+		free(fenc_policy);
+		LOG_ERROR("%s: invalid fenc policy string", __func__);
+		return err_code;
+	}
+	
+	input->scheme_input = (void *) fenc_policy;
+	input->input_type = FENC_INPUT_NM_ATTRIBUTE_POLICY;
+}
+
+/*!
+ * Convert an array of attribute strings into a fenc_function_input.  The input
+ * structure must be initialized, although some additional memory allocation will
+ * occur.
+ *
+ * @param input				Pointer to an allocated fenc_function_input structure
+ * @param attribute_list	Array of char* strings containing attributes
+ * @param num_attributes	Number of attributes in list
+ * @return					FENC_ERROR_NONE or an error code.
+ * @DEPRECATED
+ */
 FENC_ERROR
 libfenc_create_attribute_list_from_strings(fenc_function_input *input, char **attributes, uint32 num_attributes)
 {
@@ -379,20 +452,44 @@ FENC_ERROR
 fenc_buffer_to_attribute_list(char **str_list, fenc_attribute_list *attribute_list)
 {
 	// form "( 'ATTR1' , 'ATTRX' )" => token '(' ','
-	FENC_ERROR err_code;
-	int i = 0, token_len;
+	FENC_ERROR err_code = FENC_ERROR_NONE;
+	int i = 0, j, token_len;
 	uint32 num_attributes = 0;
-	char delims[] = "(,)";
+	char delims[] = "(,)", tmp[BITS+1];
 	char *list_cpy = strdup(*str_list);
 	char *token = strtok(list_cpy, delims);
+	char *s;	
+	memset(tmp, 0, BITS+1);
 	
 	/* count the number of attributes in the list */
-	do {	
-		num_attributes++;
+	do {
+		/* check for '=' => numerical attributes */
+		if((s = strchr(token, '=')) != NULL) {
+			char *value = malloc(strlen(s+1));
+			strncpy(value, s+1, strlen(s+1));
+			int num = atoi(value);
+			if(num > 0) {
+				num_attributes += num_bits(num) + 1;		
+			}
+			else {
+				free(value);
+				LOG_ERROR("%s: cannot have negative non-numerical attributes");
+				return FENC_ERROR_INVALID_INPUT;
+			}
+			// num_attributes++;
+			free(value);
+		}
+		else {
+			num_attributes++;
+		}
 		token = strtok(NULL, delims);
 	} while(token != NULL);
 		
 	/* Initialize the structure.	*/
+	if(attribute_list == NULL) {
+		/* malloc in case the pointer is NULL */
+		attribute_list = (fenc_attribute_list *) malloc(sizeof(fenc_attribute_list));
+	}
 	memset(attribute_list, 0, sizeof(fenc_attribute_list));
 	err_code = fenc_attribute_list_initialize(attribute_list, num_attributes);
 	if (err_code != FENC_ERROR_NONE) {
@@ -403,22 +500,61 @@ fenc_buffer_to_attribute_list(char **str_list, fenc_attribute_list *attribute_li
 	/* tokenize and store in fenc_attribute_list */
 	token = strtok(*str_list, delims);
 	// printf("%s: %i = token = '%s'?\n", __func__, i, token);
-	while (token != NULL && i < MAX_CIPHERTEXT_ATTRIBUTES) {
+	while (token != NULL && i <= MAX_CIPHERTEXT_ATTRIBUTES) {
 		token_len = strlen(token);
-		if (token_len < MAX_ATTRIBUTE_STR) {
-			memset(attribute_list->attribute[i].attribute_str, 0, MAX_ATTRIBUTE_STR);
-			strncpy((char *) attribute_list->attribute[i].attribute_str, token, token_len);
-		}
+
+		/* check for '=' => numerical attributes */
+		if((s = strchr(token, '=')) != NULL) {
+			char *attr = malloc(s - token);
+			char *value = malloc(strlen(s+1));
+			strncpy(attr, token, (s - token));
+			strncpy(value, s+1, strlen(s+1));
+			int val = atoi(value);			
+			int num = num_bits(val);
+			int str_len = token_len + 13;
+			
+			if(str_len < MAX_ATTRIBUTE_STR) {
+				memset(attribute_list->attribute[i].attribute_str, 0, MAX_ATTRIBUTE_STR);
+				sprintf(attribute_list->attribute[i].attribute_str, "%s_flexint_uint", attr);
+				i++;
+			}
+			
+			str_len = strlen(attr) + strlen(tmp) + 9;
+			for(j = 0; j < num; j++) {
+				memset(tmp, 'x', BITS);
+				if (val & (1 << j))
+		    		tmp[BITS-j-1] = '1';
+				else
+					tmp[BITS-j-1] = '0';
+				if(str_len < MAX_ATTRIBUTE_STR) {
+					memset(attribute_list->attribute[i+j].attribute_str, 0, MAX_ATTRIBUTE_STR);
+					sprintf(attribute_list->attribute[i+j].attribute_str, "%s_flexint_%s", attr, tmp);
+				}
+			}
+			i += num - 1;
+			free(attr);
+			free(value);
+		}		
+		else { /* regular attributes */
+			if (token_len < MAX_ATTRIBUTE_STR) {
+				memset(attribute_list->attribute[i].attribute_str, 0, MAX_ATTRIBUTE_STR);
+				strncpy((char *) attribute_list->attribute[i].attribute_str, token, token_len);
+			}
 		
-		// determine if it includes a NOT '!'
+			// determine if it includes a NOT '!'
+			if(token[0] == '!') {
+				// printf("negated token\n");
+				attribute_list->attribute[i].is_negated = TRUE;
+			}
+		}
 		
 		/* retrieve next token */
 		token = strtok(NULL, delims);
 		i++;
 	}
-	
+		
 	attribute_list->num_attributes = i;
-	return FENC_ERROR_NONE;
+	return err_code;
 }
 
 /*!
@@ -996,22 +1132,42 @@ hash_attribute_string_to_Zr(fenc_attribute *attribute, pairing_t pairing)
 	return FENC_ERROR_NONE;
 }
 
+/* Returns the number of bits necessary represent integer in binary */ 
+int num_bits(int value)
+{
+	int j;
+	
+	for(j = 0; j < BITS; j++) {
+		if(value < pow(2,j)) {
+			double x = (double)j;
+			// round to nearest multiple of 4
+			int newj = (int) ceil(x/4)*4;
+			// printf("numberOfBits => '%d'\n", newj);
+			return newj;
+		}
+	}
+	return 0;
+}
+
+
 void debug_print_policy(fenc_attribute_policy *policy)
 {
-	int len = 1024;
-	char pol_str[len];
+	int len = MAX_POLICY_STR * 2;
+	char *pol_str = (char *) malloc(len);
 	memset(pol_str, 0, len);
 	fenc_attribute_policy_to_string(policy->root, pol_str, len);
 	printf("DEBUG: Policy -- '%s'\n", pol_str);
+	free(pol_str);
 }
 
 void debug_print_attribute_list(fenc_attribute_list *attribute_list)
 {
-	size_t len = 1024;
-	char attr_str[len];
+	size_t len = MAX_POLICY_STR * 2;
+	char *attr_str = (char *) malloc(len);
 	memset(attr_str, 0, len);
 	size_t result_len;
 	fenc_attribute_list_to_buffer(attribute_list, attr_str, len, &result_len);
 	printf("DEBUG: Attribute list -- '%s'\n", attr_str);
+	free(attr_str);
 }
 

@@ -191,9 +191,9 @@ libfenc_extract_key_LSW(fenc_context *context, fenc_function_input *input, fenc_
 	int							i;
 	element_t					rZ, hashONE, tempONE, temp2ONE, tempZ, temp2Z, tempTWO, temp2TWO;
 	Bool						elements_initialized = FALSE;
-	int length = 1024;
-	char output_str[length];
-	memset(output_str, 0, length);
+	int length = MAX_ATTRIBUTE_STR*8;
+	//char output_str[length];
+	//memset(output_str, 0, length);
 	
 	/* Get the scheme-specific context. */
 	scheme_context = (fenc_scheme_context_LSW*)context->scheme_context;
@@ -213,9 +213,9 @@ libfenc_extract_key_LSW(fenc_context *context, fenc_function_input *input, fenc_
 	}
 	
 	/* test print out */
-//	fenc_attribute_policy_to_string(policy->root, output_str, length);
-//	printf("Copied policy: '%s'\n", output_str);
-//	print_buffer_as_hex((uint8 *) output_str, strlen(output_str));
+	//fenc_attribute_policy_to_string(policy->root, output_str, length);
+	//printf("Copied policy: '%s'\n", output_str);
+	//print_buffer_as_hex((uint8 *) output_str, strlen(output_str));
 	
 	/* Use the Linear Secret Sharing Scheme (LSSS) to compute an enumerated list of all
 	 * attributes and corresponding secret shares.  The shares will be placed into 
@@ -1417,21 +1417,21 @@ libfenc_serialize_ciphertext_LSW(fenc_ciphertext_LSW *ciphertext, unsigned char 
 			buf_ptr = buffer + *serialized_len;
 		}
 		
-		*serialized_len += element_length_in_bytes_compressed(ciphertext->E3ONE[i]);	/* E3ONE[i]		*/
+		*serialized_len += element_length_in_bytes(ciphertext->E3ONE[i]);	/* E3ONE[i]		*/
 		if (buffer != NULL && *serialized_len <= max_len) {
-			element_to_bytes_compressed(buf_ptr, ciphertext->E3ONE[i]);
+			element_to_bytes(buf_ptr, ciphertext->E3ONE[i]);
 			buf_ptr = buffer + *serialized_len;
 		}
 		
-		*serialized_len += element_length_in_bytes_compressed(ciphertext->E4ONE[i]);	/* E4ONE[i]		*/
+		*serialized_len += element_length_in_bytes(ciphertext->E4ONE[i]);	/* E4ONE[i]		*/
 		if (buffer != NULL && *serialized_len <= max_len) {
-			element_to_bytes_compressed(buf_ptr, ciphertext->E4ONE[i]);
+			element_to_bytes(buf_ptr, ciphertext->E4ONE[i]);
 			buf_ptr = buffer + *serialized_len;
 		}
 		
-		*serialized_len += element_length_in_bytes_compressed(ciphertext->E5ONE[i]);	/* E5ONE[i]		*/
+		*serialized_len += element_length_in_bytes(ciphertext->E5ONE[i]);	/* E5ONE[i]		*/
 		if (buffer != NULL && *serialized_len <= max_len) {
-			element_to_bytes_compressed(buf_ptr, ciphertext->E5ONE[i]);
+			element_to_bytes(buf_ptr, ciphertext->E5ONE[i]);
 			buf_ptr = buffer + *serialized_len;
 		}
 	}
@@ -1545,21 +1545,21 @@ libfenc_deserialize_ciphertext_LSW(unsigned char *buffer, size_t buf_len, fenc_c
 		ciphertext->attribute_list.attribute[i].is_hashed = TRUE;
 		buf_ptr = buffer + deserialized_len;
 		
-		deserialized_len += element_from_bytes_compressed(ciphertext->E3ONE[i], buf_ptr);	/* E3ONE[i]			*/
+		deserialized_len += element_from_bytes(ciphertext->E3ONE[i], buf_ptr);	/* E3ONE[i]			*/
 		if (deserialized_len > buf_len) {											
 			result = FENC_ERROR_BUFFER_TOO_SMALL;
 			goto cleanup;
 		}
 		buf_ptr = buffer + deserialized_len;
 		
-		deserialized_len += element_from_bytes_compressed(ciphertext->E4ONE[i], buf_ptr);	/* E4ONE[i]			*/
+		deserialized_len += element_from_bytes(ciphertext->E4ONE[i], buf_ptr);	/* E4ONE[i]			*/
 		if (deserialized_len > buf_len) {											
 			result = FENC_ERROR_BUFFER_TOO_SMALL;
 			goto cleanup;
 		}
 		buf_ptr = buffer + deserialized_len;
 		
-		deserialized_len += element_from_bytes_compressed(ciphertext->E5ONE[i], buf_ptr);	/* E5ONE[i]			*/
+		deserialized_len += element_from_bytes(ciphertext->E5ONE[i], buf_ptr);	/* E5ONE[i]			*/
 		if (deserialized_len > buf_len) {											
 			result = FENC_ERROR_BUFFER_TOO_SMALL;
 			goto cleanup;

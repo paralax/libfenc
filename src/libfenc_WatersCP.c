@@ -15,7 +15,7 @@
 #include "libfenc_WatersCP.h"
 #include "libfenc_LSSS.h"
 #include "libfenc_LSW.h"
-
+#include <time.h>
 /********************************************************************************
  * Waters Ciphertext-Policy Implementation
  ********************************************************************************/
@@ -563,7 +563,7 @@ encrypt_WatersCP_internal(fenc_context *context, fenc_function_input *input, fen
 	Bool elements_initialized = FALSE;
 	size_t serialized_len = 0;
 	fenc_attribute_list attribute_list;
-	char temp_policy_str[MAX_POLICY_STR];
+	// char temp_policy_str[MAX_POLICY_STR];
 
 	/* Get the scheme-specific context. */
 	scheme_context = (fenc_scheme_context_WatersCP*)context->scheme_context;
@@ -595,13 +595,13 @@ encrypt_WatersCP_internal(fenc_context *context, fenc_function_input *input, fen
 	element_pow_zn(eggalphasT, scheme_context->public_params.eggalphaT, sZ);
 	
 	/* Export the policy to a string and draw it back in again.  This clears up some issues in the way		*/
-	strcpy(temp_policy_str, "");
-	err_code = fenc_attribute_policy_to_string(policy->root, temp_policy_str, MAX_POLICY_STR);
-	if (err_code != FENC_ERROR_NONE) {
-		LOG_ERROR("%s: could not serialize policy", __func__);
-		result = err_code;
-		goto cleanup;
-	}
+	//strcpy(temp_policy_str, "");
+	//err_code = fenc_attribute_policy_to_string(policy->root, temp_policy_str, MAX_POLICY_STR);
+	//if (err_code != FENC_ERROR_NONE) {
+	//	LOG_ERROR("%s: could not serialize policy", __func__);
+	//	result = err_code;
+	//	goto cleanup;
+	//}
 	// fenc_policy_from_string(policy, temp_policy_str);
 	
 	// printf("Original policy string: '%s'\n", policy->string);
@@ -609,9 +609,7 @@ encrypt_WatersCP_internal(fenc_context *context, fenc_function_input *input, fen
 	//err_code = fenc_attribute_policy_to_string(policy->root, temp_policy_str, MAX_POLICY_STR);
 	//printf("Revised policy string: %s\n", temp_policy_str);
 	
-	
-	
-	
+		
 	/* Use the Linear Secret Sharing Scheme (LSSS) to compute an enumerated list of all
 	 * attributes and corresponding secret shares of sZ.  The shares will be placed into 
 	 * a fenc_attribute_list structure that we'll embed within the fenc_key_WatersCP struct.	*/
@@ -653,7 +651,7 @@ encrypt_WatersCP_internal(fenc_context *context, fenc_function_input *input, fen
 	
 	/* Compute CprimeONE = gONE^{sZ}.	*/
 	element_pow_zn(ciphertext_WatersCP.CprimeONE, scheme_context->public_params.gONE, sZ);
-	
+	double diff_time = 0.0;
 	/* For every share/attribute, create one component of the secret key.	*/
 	for (i = 0; i < ciphertext_WatersCP.attribute_list.num_attributes; i++) {		
 		/* Hash the attribute string to Zr, if it hasn't already been.	*/
@@ -661,12 +659,12 @@ encrypt_WatersCP_internal(fenc_context *context, fenc_function_input *input, fen
 		
 		/* Pick a random value r_i (rZ).	*/
 		element_random(rZ);
-		
-		/* Set DTWO[i] = gTWO^{rZ}.	*/
+		/* Set DTWO[i] = gTWO^{rZ}.	*/ // very expensive
 		element_pow_zn(ciphertext_WatersCP.DTWO[i], scheme_context->public_params.gTWO, rZ);
-
+				
 		/* Hash the attribute (already hashed to Zr) into an element of G1 (tempONE).	*/
 		err_code = hash2_attribute_element_to_G1(&(ciphertext_WatersCP.attribute_list.attribute[i].attribute_hash), &tempONE);	/* result in tempONE  */
+		
 		element_pow_zn(temp2ONE, tempONE, rZ);		/* temp2ONE = H(attribute)^{rZ}	*/
 		element_invert(tempONE, temp2ONE);			/* tempONE = H(attribute)^{-rZ} */
 			
@@ -678,7 +676,7 @@ encrypt_WatersCP_internal(fenc_context *context, fenc_function_input *input, fen
 
 #ifdef FENC_DEBUG
 	/* DEBUG: Print out the ciphertext.	*/
-	libfenc_fprint_ciphertext_WatersCP(&ciphertext_WatersCP, stdout);
+	// libfenc_fprint_ciphertext_WatersCP(&ciphertext_WatersCP, stdout);
 #endif	
 	/* Serialize the WatersCP ciphertext structure into a fenc_ciphertext container 
 	 * (which is essentially just a binary buffer).  First we get the length, then we 
@@ -688,7 +686,7 @@ encrypt_WatersCP_internal(fenc_context *context, fenc_function_input *input, fen
 	if (err_code != FENC_ERROR_NONE) {	result = err_code;	goto cleanup;	}
 	err_code = libfenc_serialize_ciphertext_WatersCP(&ciphertext_WatersCP, ciphertext->data, ciphertext->max_len, &ciphertext->data_len);	/* Serialization. */
 	if (err_code != FENC_ERROR_NONE) {	result = err_code;	goto cleanup;	}
-	
+		
 	/* Success!		*/
 	result = FENC_ERROR_NONE;
 	
