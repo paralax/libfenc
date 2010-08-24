@@ -4,10 +4,9 @@
 #include "common.h"
 
 #define DEFAULT_KEYFILE "private.key"
-char *attributes[MAX_CIPHERTEXT_ATTRIBUTES];
-char *policy = NULL;
-int attributes_len = 0;
-int parse_attributes(char *input);
+char *policy_string = NULL, *attribute_string = NULL;
+// int attributes_len = 0;
+// int parse_attributes(char *input);
 void generate_keys(char *outfile, FENC_SCHEME_TYPE scheme, char *secret_params, char *public_params);
 /* Description: mgabe-keygen takes the outfile to write the users keys, and the .
  
@@ -18,22 +17,23 @@ int main (int argc, char* argv[]) {
 	int  c,err;
 	FENC_SCHEME_TYPE mode = FENC_SCHEME_NONE;
 	char *secret_params = NULL, *public_params = NULL;
+	// fenc_attribute_list *attr_list = (fenc_attribute_list *) malloc(sizeof(fenc_attribute_list));
+	char buf[SIZE];
+	memset(buf, 0, SIZE);
+	size_t out_size;
 	opterr = 0;
 	
 	while ((c = getopt (argc, argv, "a:o:m:p:h")) != -1) {
 	
 	switch (c)
-	  {
+	  {			  
 		case 'a': // retrieve attributes from user 
 			  aflag = TRUE;
-			  printf("Generating list of attributes....\n");
-			  string = strdup(optarg);
-			  err = parse_attributes(string);
-			  free(string);
+			  attribute_string = strdup(optarg);
 			  break;
 		case 'p':
-			  pflag = TRUE;
-			  policy = strdup(optarg);
+			  pflag = TRUE;			  
+			  policy_string = strdup(optarg);
 			  break;
 		case 'o':
 			  oflag = TRUE;
@@ -100,101 +100,17 @@ int main (int argc, char* argv[]) {
 		print_help();
 		goto cleanup;
 	}
-	
-	
-	printf("Generating your private-key...\n");
+		
+	printf("Generating your private key...\n");
 	generate_keys(keyfile, mode, secret_params, public_params);
 
 cleanup:
-/*	if(keyfile != NULL)
-		free(keyfile);
- */
-	// free attribute list 
-	for (c = 0; c < attributes_len; c++) {
-		free(attributes[c]);
-	}
 	return 0;
 }
 
 void print_help(void)
 {
 	printf("Usage: ./abe-keygen -m [ KP,CP or SCP ] -a [ ATTR1,ATTR2,ATT3,etc ] -p [ 'ATTR1 and ATTR2',etc ] -o [ key file ]\n\n");
-}
-
-int parse_attributes(char *input)
-{
-	printf("%s\n", input);
-	char *s;
-	char *token = strtok(input, ",");
-	int ctr = 0, i = 0, j, bin_attrs = 0;
-	char tmp[BITS+1];
-	
-	while (token != NULL) {
-		// check if token has '=' operator
-		if((s = strchr(token, '=')) != NULL) {
-			/* convert to binary form */
-			char *attr = malloc(s - token);
-			char *value = malloc(strlen(s+1));
-			strncpy(attr, token, (s - token));
-			strncpy(value, s+1, strlen(s+1));
-			/* add code to remove whitespace */
-			// printf("attr = '%s', value = '%s'\n", attr, value);
-			int v = atoi(value);
-			if(v < 0) {
-				// report error?
-				free(attr);
-				free(value);
-				fprintf(stderr, "Numerical attribute must be non-negative.\n");
-				return -1;
-			}
-			//printf("attr => '%s'\n", attr);
-			bin_attrs = ret_num_bits(v);
-			//printf("bin_attrs = '%d'\n", bin_attrs);
-			//printf("bit rep of '%d'\n", v);
-			/* convert v into n-bit attributes */
-		    attributes[ctr] = malloc(MAX_ATTRIBUTE_STR);
-	    	memset(attributes[ctr], 0, MAX_ATTRIBUTE_STR);
-			sprintf(attributes[ctr], "%s_flexint_uint", attr);
-			ctr++;
-
-		    for(j = 0; j < bin_attrs; j++)
-		    {
-		    	memset(tmp, 'x', BITS);
-		    	if (v & (1 << j))
-		    		tmp[BITS-j-1] = '1';
-				else
-					tmp[BITS-j-1] = '0';
-		    	attributes[ctr] = malloc(MAX_ATTRIBUTE_STR);
-		    	memset(attributes[ctr], 0, MAX_ATTRIBUTE_STR);
-		    	sprintf(attributes[ctr], "%s_flexint_%s", attr, tmp);
-				//printf("Attribute '%d' = '%s'\n", ctr, attributes[ctr]);
-		    	ctr++;
-			}
-
-			free(attr);
-			free(value);
-			// move on to next token
-			token = strtok(NULL, ",");
-		}
-		else {
-		// else case for regular attributes?
-			if((attributes[ctr] = malloc(MAX_ATTRIBUTE_STR)) != NULL) {
-				memset(attributes[ctr], 0, MAX_ATTRIBUTE_STR);
-				strncpy(attributes[ctr], token, MAX_ATTRIBUTE_STR);
-				token = strtok(NULL, ",");
-				ctr++;
-			}
-		}
-
-		if(ctr >= MAX_CIPHERTEXT_ATTRIBUTES) /* if we've reached max attributes */
-			break;
-	}
-	
-	attributes_len = ctr;
-	/*for (i = 0; i < attributes_len; i++) {
-		printf("Attribute '%i' = '%s'\n", i, attributes[i]);
-	}*/
-	return 0;
 }
 
 void generate_keys(char *outfile, FENC_SCHEME_TYPE scheme, char *secret_params, char *public_params)
@@ -310,29 +226,14 @@ void generate_keys(char *outfile, FENC_SCHEME_TYPE scheme, char *secret_params, 
 	report_error("Importing secret parameters", result);
 	
 	if(scheme == FENC_SCHEME_LSW) {
-		fenc_attribute_policy *parsed_policy = (fenc_attribute_policy *) malloc(sizeof(fenc_attribute_policy));
-		if(parsed_policy == NULL) {
-			printf("parsed_policy is NULL! Not good!");
-		}
-		memset(parsed_policy, 0, sizeof(fenc_attribute_policy)); 
-		
-		fenc_policy_from_string(parsed_policy, policy);
-		int len = MAX_ATTRIBUTE_STR*8;
-		char pol_str[len];
-		memset(pol_str, 0, len);
-		fenc_attribute_policy_to_string(parsed_policy->root, pol_str, len);
-		printf("Policy: '%s'\n", pol_str);
-		
-		func_object_input.input_type = FENC_INPUT_NM_ATTRIBUTE_POLICY;
-		func_object_input.scheme_input = (void*)parsed_policy;
+		fenc_create_func_input_for_policy(policy_string, &func_object_input);
+		debug_print_policy((fenc_attribute_policy *)(func_object_input.scheme_input));
+		free(policy_string);
 	}
 	else if(scheme == FENC_SCHEME_WATERSCP || scheme == FENC_SCHEME_WATERSSIMPLECP) {
-		// construct attributes list and place in the func_list_input object
-		// char *attr[5] = {"ONE", "TWO", "THREE", "FOUR=100"};
-		libfenc_create_attribute_list_from_strings(&func_object_input, attributes, attributes_len);
-		// libfenc_create_attribute_list_from_strings(&func_list_input, attr, 4);
-		fenc_attribute_list_to_buffer((fenc_attribute_list*)(func_object_input.scheme_input), output_str, SIZE, &output_str_len);
-		printf("Attribute list: %s\n", output_str);
+		fenc_create_func_input_for_attributes(attribute_string, &func_object_input);
+		debug_print_attribute_list((fenc_attribute_list*)(func_object_input.scheme_input));
+		free(attribute_string);
 	}
 		
 	result = libfenc_extract_key(&context, &func_object_input, &key);
@@ -376,6 +277,8 @@ void generate_keys(char *outfile, FENC_SCHEME_TYPE scheme, char *secret_params, 
 		print_buffer_as_hex(buffer2, serialized_len2);
 	}*/
 cleanup:
+	fenc_func_input_clear(&func_object_input);
+	
 	/* Destroy the context. */
 	result = libfenc_destroy_context(&context);
 	report_error("Destroying context", result);
@@ -385,6 +288,6 @@ cleanup:
 	report_error("Shutting down library", result);	
 		
 	/* free buffer */
-	free(buffer);
+	// free(buffer);
 	return;
 }

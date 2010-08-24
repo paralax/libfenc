@@ -21,7 +21,7 @@ elif [ "$1" == "CP" ]; then
 	#(for now, requires secret and public params in same dir)
 	echo "##################################################"
 	echo "./abe-keygen -m CP -a 'ONE,TWO,THREE,FOUR,FIVE' -o usr_privCP.key"
-	./abe-keygen -m CP -a ONE,TWO,THREE,FOUR,FIVE -o usr_privCP.key
+	./abe-keygen -m CP -a 'ONE,TWO,THREE,FOUR,FIVE' -o usr_privCP.key
 
 	# How to encrypt
 	#(for now, requires public params in same dir).

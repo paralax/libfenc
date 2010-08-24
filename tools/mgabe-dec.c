@@ -9,7 +9,7 @@
 
 /* test encryption of "hello world" under policy of "ONE or TWO" */
 #define MAX_ATTRIBUTES 100
-Bool cpabe_decrypt(FENC_SCHEME_TYPE scheme, char *public_params, char *inputfile, char *keyfile);
+Bool abe_decrypt(FENC_SCHEME_TYPE scheme, char *public_params, char *inputfile, char *keyfile);
 void tokenize_inputfile(char* in, char** abe, char** aes);
 
 /* 
@@ -85,7 +85,7 @@ int main (int argc, char *argv[]) {
 		fprintf(stderr, "Please specify a scheme type\n");
 		goto error;	
 	}
-	return cpabe_decrypt(mode, public_params, file, key);
+	return abe_decrypt(mode, public_params, file, key);
 error:
 	print_help();
 	exit(-1);
@@ -123,7 +123,7 @@ void tokenize_inputfile(char* in, char** abe, char** aes)
 	}
 }
 
-Bool cpabe_decrypt(FENC_SCHEME_TYPE scheme, char *public_params, char *inputfile, char *keyfile)
+Bool abe_decrypt(FENC_SCHEME_TYPE scheme, char *public_params, char *inputfile, char *keyfile)
 {
 	FENC_ERROR result;
 	fenc_context context;
