@@ -1,0 +1,52 @@
+This is BibTeX, Version 0.99c (Web2C 7.5.7)
+The top-level auxiliary file: libfenc-manual.aux
+A level-1 auxiliary file: localdefs.aux
+The style file: alpha.bst
+A level-1 auxiliary file: introduction.aux
+A level-1 auxiliary file: usage.aux
+A level-1 auxiliary file: api.aux
+Database file #1: main.bib
+Warning--I didn't find a database entry for "sw05"
+Warning--I didn't find a database entry for "OSW07"
+You've used 3 entries,
+            2543 wiz_defined-function locations,
+            586 strings with 4941 characters,
+and the built_in function-call counts, 1384 in all, are:
+= -- 137
+> -- 52
+< -- 5
++ -- 17
+- -- 17
+* -- 84
+:= -- 212
+add.period$ -- 10
+call.type$ -- 3
+change.case$ -- 18
+chr.to.int$ -- 3
+cite$ -- 3
+duplicate$ -- 61
+empty$ -- 111
+format.name$ -- 21
+if$ -- 303
+int.to.chr$ -- 1
+int.to.str$ -- 0
+missing$ -- 2
+newline$ -- 20
+num.names$ -- 9
+pop$ -- 24
+preamble$ -- 2
+purify$ -- 21
+quote$ -- 0
+skip$ -- 59
+stack$ -- 0
+substring$ -- 73
+swap$ -- 23
+text.length$ -- 5
+text.prefix$ -- 1
+top$ -- 0
+type$ -- 24
+warning$ -- 0
+while$ -- 13
+width$ -- 5
+write$ -- 45
+(There were 2 warnings)
