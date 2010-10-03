@@ -1,0 +1,236 @@
+\section{Lewko-Sahai-Waters KP-ABE \protect\cite{lsw09}}
+
+\newcommand{\zkip}{{\textsc{zkip}}}
+\newcommand{\vci}{{\textsc{vci}}}
+\newcommand{\fip}{{\textsc{fip}}}
+\newcommand{\start}{{\small{START}}}
+\newcommand{\transcript}{{\small{TRANSCRIPT}}}
+%\newcommand{\adv}{{\textbf{Adv}}}
+\newcommand{\expe}{{\textbf{Exp}}}
+%\newcommand{\hash}{$\mathcal{H}$}
+\newcommand{\pe}{$\mathcal{PE}$}
+%\newcommand{\s}{$\mathcal{SS}$}
+\newcommand{\enc}{$\mathcal{E}$}
+\newcommand{\dec}{$\mathcal{D}$}
+\newcommand{\key}{$\mathcal{K}$}
+%\newcommand{\G}{\ensuremath{\mathbb{G}}}
+\newcommand{\GT}{\ensuremath{\mathbb{G}_T}}
+%\newcommand{\Zp}{\ensuremath{\mathbb{Z}_p}}
+%\newcommand{\G}{$\mathcal{G}$}
+%\newcommand{\GT}{$\mathcal{G}_T$}
+\newcommand{\univ}{\mathcal{U}}
+\newcommand{\zz}{\mathbb{Z}}
+\newcommand{\parent}{\mathrm{parent}}
+\newcommand{\sons}{\mathrm{CHILD}}
+\newcommand{\ind}{\mathrm{index}}
+\newcommand{\att}{\mathrm{att}}
+\newcommand{\ghat}{e(g,g)}
+%\newcommand{\egg12}{$e(g_1,g_2)}
+%\newcommand{\egg2}{e(g,g_2)}
+\newcommand{\msp}{\mathrm{MSP}}
+\newcommand{\PK}{params}
+\newcommand{\genOne}{g}
+\newcommand{\genTwo}{\bar{g}}
+\newcommand{\hOne}{h}
+\newcommand{\hTwo}{\bar{h}}
+
+%\newcommand{\brent}[1]{\texttt{[brent: #1]}}
+%\newcommand{\anote}[1]{\texttt{[Amit: #1]}}
+%\newcommand{\comment}[1]{}
+\newcommand{\MK}{\ensuremath{\textrm{MK}}}
+%\newcommand{\PK}{\ensuremath{\textrm{PK}}}
+
+
+\newcommand{\Decnode}{\ensuremath{\mathrm{DecryptNode}}}
+\newcommand{\PolySat}{\ensuremath{\mathrm{PolySat}}}
+\newcommand{\PolyUnsat}{\ensuremath{\mathrm{PolyUnsat}}}
+
+This section documents some of the implementation-specific decisions made in implementing the Lewko-Sahai-Waters scheme.  In particular, the original scheme description specifies the use of symmetric groups; in our implementation we are required to specify which elements belong to $\gOne$ and $\gTwo$.  
+
+The following quotes the original scheme description from \cite{lsw09} with minor modifications.  All group elements marked normally ({\it e.g.,} $g$) are in $\gOne$, while those marked with a bar ($\genTwo$) are in $\gTwo$.
+
+\paragraph{Setup.}
+The setup algorithm chooses generators $\genOne \in \gOne, \genTwo \in \gTwo$ and picks random exponents
+$z, \alpha', \alpha'', b \in \Zp$. We define $\hOne = \genOne^z \in \gOne, \hTwo = \genTwo^z \in \gTwo, \alpha = \alpha' \cdot \alpha''$, $\genOne_1 = \genOne^{\alpha'}$ and $\genOne_2 = g^{\alpha''}$. The public parameters are published as the following, where $H$ is a random oracle that outputs elements of the elliptic curve group:
+\[
+\PK=( g,
+g^{b},
+g^{b^{2}},
+h^{b},
+e(g,g)^{\alpha}, H(\cdot) ).
+\]
+The authority keeps $(\alpha', \alpha'', b)$ as the master key $\MK$.
+
+
+%Two secrets $\alpha, \beta$ are chosen uniformly at random from $\zz_p$,
+%and we denote $g_1 = g^\alpha$ and $g_2 = g^\beta$.
+%In addition, two polynomials $h(x)$ and $q(x)$ of degree $d$ are chosen
+% at random subject to the constraint that $q(0)=\beta$. (There is no constraint on $h(x)$.)
+%The public parameters $\PK$ are $(g, g_1;\mbox{  } g_2=g^{q(0)}, g^{q(1)}, g^{q(2)}, \dots, g^{q(d)};\mbox{  }$
+%$g^{h(0)}, g^{h(1)}, \dots, g^{h(d)})$.  The master key $\MK$ is $\alpha$.
+%
+%These public parameters define two publicly computable functions $T, V : \zz_p \rightarrow \G$.
+%The function $T(x)$
+%maps to $g_2^{x^d}\cdot g^{h(x)}$, and the function $V(x)$ maps to $g^{q(x)}$.
+% Note that both $g^{h(x)}$ and $g^{q(x)}$ can be
+%evaluated from the public parameters by interpolation in the exponent. (For further details on how to do this using
+%Lagrange coefficients, see, e.g.,~\cite{sw05,GPSW06}.)
+
+\paragraph{Encryption} ($M,\gamma,\PK$).
+To encrypt a
+message $M \in \GT$ under a set of $d$ attributes $\gamma \subset \zz_p^*$,
+choose a random value $s\in\zz_p$, and choose a random set of $d$ values $\{s_x\}_{x \in \gamma}$
+such that $s= \sum_{x \in \gamma} s_x$. Output the ciphertext
+as
+\begin{eqnarray*}
+E = (
+\gamma, E^{(1)} = M e(g, g)^{\alpha \cdot s},
+E^{(2)} = g^s,
+\{E^{(3)}_x = H(x)^s\}_{x\in\gamma}, \\
+\{E^{(4)}_x = g^{b\cdot s_x}\}_{x\in\gamma},
+\{E^{(5)}_x = g^{b^2\cdot s_x x} h^{b \cdot s_x}\}_{x\in\gamma}
+)
+\end{eqnarray*}
+%Note that
+%$g^{q(i)}$ can be computed through interpolation in the exponent using the public parameters, and then $g^{sq(i)}$ can be computed by raising $g^{q(i)}$ to the $s$ power.
+
+\paragraph{Key Generation} ($\mathbb{\tilde{A}},\MK,\PK$).
+This
+algorithm outputs a key that enables the user to decrypt an encrypted message \emph{only}
+ if the attributes of that ciphertext
+satisfy the access structure $\mathbb{\tilde{A}}$.  We require that the
+access structure $\mathbb{\tilde{A}}$ is $NM(\mathbb{A})$ for some monotonic access structure $\mathbb{A}$, (see~\cite{OSW07} for a definition of the $NM(\cdot)$ operator)
+over a set $\mathcal{P}$ of attributes, associated with a linear secret-sharing scheme $\Pi$.
+First, we apply the linear secret-sharing mechanism $\Pi$ to obtain shares $\{\lambda_i\}$ of the
+secret $\alpha'$.  We denote the
+party corresponding to the share $\lambda_i$ as $\breve{x}_i \in \mathcal{P}$,
+where $x_i$
+is the attribute underlying $\breve{x}_i$.  Note that $\breve{x}_i$
+can be primed (negated) or unprimed (non negated).
+For each $i$, we also choose a random value $r_i\in\zz_p$.
+
+The private key $D$ will consist of the following group elements:
+For every $i$ such that $\breve{x}_i$ is \emph{not} primed (i.e., is a non-negated
+attribute), we have $$D_i =
+(D^{(1)}_i = g_2^{\lambda_i} \cdot H(x_i)^{r_i},
+D^{(2)}_i = g^{r_i})$$
+For every $i$ such that $\breve{x}_i$ is primed (i.e., is a negated attribute), we have
+$$D_i = (
+D^{(3)}_i = g_2^{\lambda_i}g^{b^2r_i},
+D^{(4)}_i = g^{r_ibx_i}h^{r_i},
+D^{(5)}_i = g^{-r_i})$$  The key $D$ consists of $D_i$ for all shares $i$.
+
+
+\paragraph{Decryption} ($E,D$).
+Given a ciphertext $E$ and a decryption key $D$, the following procedure is executed:
+ (All notation here is taken from the above descriptions of $E$ and $D$, unless the
+notation is introduced below.)
+First, the key holder checks if $\gamma \in \mathbb{\tilde{A}}$ (we assume that
+ this can be checked efficiently).
+If not, the output is $\bot$.
+If $\gamma \in \mathbb{\tilde{A}}$, then we recall that $\mathbb{\tilde{A}} = NM(\mathbb{A})$,
+where $\mathbb{A}$ is an access structure, over a
+set of parties $\mathcal{P}$, for a
+linear secret sharing-scheme $\Pi$.
+Denote $\gamma' = N(\gamma) \in \mathbb{A}$,
+and let $I = \{i: \breve{x}_i \in \gamma' \}$.
+Since $\gamma'$ is authorized, an efficient procedure associated with the
+linear secret-sharing scheme yields a set of coefficients
+$\Omega = \{\omega_i\}_{i \in I}$ such that
+$\sum_{i \in I} \omega_i \lambda_i = \alpha$.
+(Note, however, that these $\lambda_i$ are not known to the decryption procedure, so neither is $\alpha$.)
+
+For every positive (non negated) attribute $\breve{x}_i \in \gamma'$
+(so $x_i \in \gamma$), the decryption procedure computes the following:
+\begin{eqnarray*}
+Z_i &=& e\left(D^{(1)}_i, E^{(2)}\right) / e\left(D^{(2)}_i, E^{(3)}_i\right)\\
+&=& e\left(g_2^{\lambda_i} \cdot H(x_i)^{r_i}, g^s\right) /
+e\left(g^{r_i}, H(x)^s\right) \\
+&=& e\left(g,g_2\right)^{s \lambda_i}
+\end{eqnarray*}
+
+For every negated attribute $\breve{x}_i \in \gamma'$
+(so $x_i \notin \gamma$), the decryption procedure computes the following, following a simple analogy to the basic revocation scheme:
+%
+%The decryption algorithm computes:
+%\[
+%\frac{e(C_0,D_0)}
+%{
+%e\left(D_1, \prod_{i=1}^{n}C_{i,1}^{1/(\ID-\ID_i)}\right)
+%\cdot
+%e\left(D_2, \prod_{i=1}^{n}C_{i,2}^{1/(\ID-\ID_i)}\right)
+%}
+%\]
+%which gives us $e(g,g)^{\alpha s}$; this can immediately be used to recover the message $M$ from $C'$.
+%Note that this computation is only defined
+%if $\forall i \quad \ID \neq \ID_i$.
+%
+%We consider the set $\gamma_i = \gamma \cup \{x_i\}$.
+%Note that $|\gamma_i| = d+1$ and recall that the degree of the polynomial
+% $q$ underlying the function $V$ is $d$.  Using the points in $\gamma_i$
+%as an interpolation set, compute Lagrangian coefficients
+%$\{\sigma_x\}_{x \in \gamma_i}$ such that
+%$\sum_{x \in \gamma_i} \sigma_x q(x) = q(0) = \beta$.
+%Now, perform the following computation:
+\begin{eqnarray*}
+Z_i &=&
+\frac{e\left(D^{(3)}_i, E^{(2)}\right)}
+{
+e\left(D^{(4)}_i,
+\prod_{x \in \gamma} \left(E^{(4)}_x\right)^{1/(x_i-x)}\right)
+\cdot
+e\left(D^{(5)}_i,
+\prod_{x \in \gamma} \left(E^{(5)}_x\right)^{1/(x_i-x)}\right)
+} \\
+&=&
+%\frac{e\left(g_2^{\lambda_i + r_i}, g^s\right)}
+%{
+%e\left(
+%g^{r_i},
+%\prod_{x \in \gamma} \left( V(x)^s \right)^{\sigma_x}\right)
+%\cdot
+%e\left(V(x_i)^{r_i}, g^s\right)^{\sigma_{x_i}}
+%}
+%\\
+%&=&
+%\frac{
+%e\left(g_2^{\lambda_i}, g^s\right)
+%\cdot
+%e\left(g_2^{r_i}, g^s\right)
+%}
+%{
+%e\left(
+%g^{r_i},
+%g^{s \sum_{x \in \gamma} \sigma_x q(x)}
+%\right)
+%\cdot
+%e\left(
+%g^{r_i \sigma_{x_i} q(x_i)},
+%g^s\right)
+%}
+%\\
+%&=&
+%\frac{
+%e\left(g_2,g\right)^{s \lambda_i}
+%\cdot
+%e\left(g, g\right)^{r_i s \beta}
+%}
+%{
+%e(g,g)^
+%{r_i s \sum_{x \in \gamma'} \sigma_x q(x)}
+%}
+%\\
+%&=&
+e\left(g,g_2\right)^{s \lambda_i}
+\end{eqnarray*}
+
+
+Finally, the decryption is obtained by computing
+
+$$
+\frac{E^{(1)}}{\prod_{i \in I} Z_i^{\omega_i}}
+=
+\frac{M e(g,g)^{s \alpha}}{e(g,g_2)^{s \alpha'}} = M$$
+
+
+\paragraph{Note on Efficiency and Use of Random Oracle Model.}
