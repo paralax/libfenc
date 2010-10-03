@@ -1,0 +1,21 @@
+\contentsline {chapter}{\numberline {1}Introduction}{5}
+\contentsline {section}{\numberline {1.1}Background: Functional Encryption}{5}
+\contentsline {section}{\numberline {1.2}Overview of the {Functional Encryption Library}}{6}
+\contentsline {subsection}{\numberline {1.2.1}Supported encryption schemes}{6}
+\contentsline {subsection}{\numberline {1.2.2}What {{\sf libfenc}} doesn't do}{6}
+\contentsline {subsection}{\numberline {1.2.3}Dependencies}{6}
+\contentsline {section}{\numberline {1.3}Outline of this Manual}{6}
+\contentsline {chapter}{\numberline {2}Using the Library}{7}
+\contentsline {section}{\numberline {2.1}Building the Library}{7}
+\contentsline {section}{\numberline {2.2}Using {{\sf libfenc}} in an application}{7}
+\contentsline {subsection}{\numberline {2.2.1}Compiling the application}{7}
+\contentsline {subsection}{\numberline {2.2.2}A brief tutorial}{7}
+\contentsline {chapter}{\numberline {3}The API}{9}
+\contentsline {chapter}{\numberline {A}Scheme Details}{13}
+\contentsline {section}{\numberline {A.1}Lewko-Sahai-Waters KP-ABE \cite {lsw09}}{13}
+\contentsline {paragraph}{Setup.}{13}
+\contentsline {paragraph}{Encryption}{13}
+\contentsline {paragraph}{Key Generation}{13}
+\contentsline {paragraph}{Decryption}{14}
+\contentsline {paragraph}{Note on Efficiency and Use of Random Oracle Model.}{14}
+\contentsline {chapter}{\numberline {B}License and Attribution}{15}

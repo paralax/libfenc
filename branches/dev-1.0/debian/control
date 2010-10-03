@@ -1,0 +1,25 @@
+Source: libfenc
+Priority: extra
+Maintainer: Matthew D. Green <mgreen at cs dot jhu dot edu>
+Build-Depends: debhelper (>= 7), autotools-dev
+Standards-Version: 3.8.0
+Section: libs
+Homepage: http://code.google.com/p/libfenc/
+
+Package: libfenc-dev
+Section: libdevel
+Architecture: any
+Depends: libfenc0 (= ${binary:Version})
+Description: The Functional Encryption Library
+ The functional encryption library is an extensible library implementing several 
+ functional encryption schemes. Functional encryption is a new class of encryption 
+ that includes Attribute-Based (ABE) and Identity-Based encryption (IBE).
+
+Package: libfenc0
+Section: libs
+Architecture: any
+Depends: ${shlibs:Depends}, ${misc:Depends}
+Description: The Functional Encryption Library
+ The functional encryption library is an extensible library implementing several 
+ functional encryption schemes. Functional encryption is a new class of encryption 
+ that includes Attribute-Based (ABE) and Identity-Based encryption (IBE).
