@@ -1,0 +1,49 @@
+LIBFENC -- The Fenc Library
+
+Overview
+
+The Fenc Library, libfenc, is an extensible library implementing several functional encryption schemes.
+See the INSTALL text file for instructions on how to build libfenc for your particular environment;
+the NEWS text file for latest version changes, and; AUTHORS if you're interested in the latest contributions.
+
+See the online wiki for more information. The source files and pdf(s) found in the ./manual ./papers directories
+contain more in-depth details of current and background information.
+
+The Fenc library is released under the Open Source Initiative OSI - BSD License. See the
+file COPYING for details.
+
+------------------------
+
+The remainder of this file contains a possibly dated list of TODO(s), build notes, and error logs.
+
+  TODO: 
+     * Decode/Encode plaintexts to GT
+     * The NM (negated attributes) functionality isn't working
+       - Figure out the N() function and NM() functions
+     * Decode attribute policies from strings
+     * Plaintext/ciphertext structures should be more abstract
+     * Hashing currently assumes element_t (Zr) structs
+
+  MDG_NOTES:
+    To build PBC on MacOS Leopard, 64-bit:
+
+    * Get the latest version of gmp, make sure configure is using it
+    * Copy "gmp.h" into this directory and comment out the following line:
+
+      #define __GMP_EXTERN_INLINE extern __inline__ __attribute__ ((__gnu_inline__))
+      (I've already done it in this directory.)
+
+    * At the command line, set "CPPFLAGS" and "CFLAGS" to "-m64"
+      (in an earlier version, this was "-m64 -arch x86_64", but doesn't work now)
+
+    * Make clean and re-configure.
+
+    * It may be necessary to manually edit the Makefiles including ./example
+      and ./gen to include the "-m64" directive in the CFLAGS definition.
+      I'm sure there's a way to get Configure to do this automatically,
+      I'm just too lazy to figure it out
+
+    This should give a 64-bit library with no problems...
+
+  Unknown Error:
+    libfenc_group_params.c:159: error: 'param_buf' undeclared (first use in this function)
