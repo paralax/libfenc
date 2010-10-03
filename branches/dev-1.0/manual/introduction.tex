@@ -1,0 +1,49 @@
+\chapter{Introduction}
+
+The {\libraryname} ({\libraryshort}) is a general-purpose framework for implementing {\em functional encryption} schemes.  Functional encryption is a generalization that encompasses a number of novel encryption technologies, including Attribute-Based Encryption (ABE), Identity-Based Encryption (IBE) and several other new primitives.  
+
+%\medskip \noindent
+%{\bf Functional Encryption.}  
+\section{Background: Functional Encryption}
+
+%One of the foremost uses of cryptography is to control access to data.  Encryption is an excellent tool for this purpose.  In a public key encryption scheme, users encrypt data for a specific user under her {\em public key}.  The user then decrypts this information using her corresponding secret key.  This approach is limited in that the encryptor must $(1)$ know the precise identity of the user he is encrypting for, and $(2)$ must first obtain the user's public key.
+
+%One approach to simplifying this problem is to use Identity-Based Encryption (IBE).  In an IBE scheme the encryptor need not obtain the user's public key prior to encrypting: instead, he encrypts under the user's identity (name, email address, etc.) along with some set of master public parameters that are shared by all users.  The user obtains a corresponding decryption key from a trusted authority known as the Private Key Generator.
+
+%While IBE simplifies problem $(2)$ above, it does not answer the first problem: what if the encryptor doesn't know the precise identity of the user to whom he is encrypting?  What if, instead, he simply wishes to encrypt to some specific set of users?  
+
+In a functional encryption scheme, encryptors associate ciphertext values with some value $X$.  Decryptors may request a decryption key associated with a value $Y$; these are produced by a trusted authority known as the Private Key Generator (PKG).  For some function $F: a \times b \rightarrow \{0,1\}$ associated with the encryption scheme, cecryption is permitted if and only if the following relationship is satisfied:  
+
+$$F(X, Y) = 1$$
+
+The choice of encryption scheme typically defines the function $F$ as well as the form of the inputs $X, Y$.  This formulation encompasses the following encryption types:
+
+\begin{enumerate}
+\item {\em Identity Based Encryption.}  In an IBE scheme \cite{shamir84,bf01}, both $X$ and $Y$ are identities (arbitrary bitstrings $\{0,1\}^*$) and $F$ outputs $1$ iff $X = Y$.
+
+\item {\em Key-Policy Attribute Based Encryption.}  In a KP-ABE \cite{sw05} scheme, the value $X$ is a list of attributes associated with the ciphertext, while the key-assocated value $Y$ contains a complex ``policy'', which is typically represented by an access tree.  The function $F$ outputs 1 iff the ciphertext's attributes satisfy the policy.
+
+\item {\em Ciphertext-Policy Attribute Based Encryption.}  In a CP-ABE \cite{} scheme, the value $X$ is an attribute policy that will be associated with the ciphertext, while $Y$ is an attribute list associated with the key. 
+
+\end{enumerate}
+
+\section{Overview of the {\libraryname}}
+
+\subsection{Supported encryption schemes}
+\label{sec:supportedschemes}
+
+The {\libraryname} currently implements the following encryption schemes.  This list is expected to grow in later releases.
+
+\begin{enumerate}
+
+\item {\bf Lewko-Sahai-Waters KP-ABE \cite{lsw09}.}  An efficient ABE scheme supporting non-monotonic access structures.  Secure under the $q$-MEBDH assumption in prime-order bilinear groups.
+\end{enumerate}
+
+\subsection{What {\libraryshort} doesn't do}
+
+\subsection{Dependencies}
+
+\section{Outline of this Manual}
+
+The remainder of this manual is broken into several sections.  Chapter~\ref{chap:usage} gives a basic overview of the library's usage, from the point of view of an application writer.  Chapter~\ref{chap:api} provides a canonical description of the library API.  Finally, Chapter~\ref{chap:schemes} provides an detailed description of the schemes that are currently supported by {\libraryshort}, with some details on their internal workings.
+

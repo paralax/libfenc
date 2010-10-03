@@ -1,0 +1,45 @@
+The functional encryption library is an extensible library implementing several 
+functional encryption schemes. Functional encryption is a new class of encryption 
+that includes Attribute-Based (ABE) and Identity-Based encryption (IBE).
+
+The library known as libfenc has a few dependencies: the Pairing-based Crypto (PBC)
+library which you can download at http://crypto.stanford.edu/pbc/download.html,
+the GNU Multi-Precision (GMP) library which you can download at http://gmplib.org/.
+Your operating system may have packages for installing these automatically.  If not,
+Follow the README documents found within the libraries to install on your system.
+
+TO BUILD EVERYTHING, simply cd to the top-level directory and run: sh build.sh all
+
+Within the sub-directories you will find very useful tools and documentation to 
+help you get acclimated with the libfenc source code. The following describes what is 
+contained in each directory:
+
+ - manual: this directory provides documentation for the libfenc design as 
+           well as the libfenc API and a useful tutorial for how to use the
+           API under various ABE schemes. 
+
+ - papers: this directory provides the research papers of the ABE cryptosystems
+           that the library implements.
+
+ - scripts: sample scripts to build the PBC and GMP in Mac OS X environments for 
+            standard (Intel) and mobile platforms (ARM). Also, this directory contains 
+            extinct sample code that uses various aspects of the libfenc library. 
+
+ - src: the libfenc source code that implements a few cryptosystems based on ABE. This
+        code is research quality and is currently in pre-release stage.
+	
+ - tools: a tool chain that only uses the Ciphertext-policy ABE scheme implemented by 
+          libfenc. This directory contains abe-setup (initializes the scheme parameters -
+          master public and private parameters), abe-keygen (generates ABE private-keys 
+          for users), abe-enc (performs encryption on files under various policies), 
+          and abe-dec (performs corresponding decryption).
+
+ - benchmarks: this directory will contain tools to determine the decryption time under 
+          different environments
+
+The build.sh script in the current directory will allow you to build all components of the
+library and is the quickest way to get libfenc working on your system. Currently, the library
+works well on 32-bit systems but we have a few notable bugs on 64-bit systems. If you have
+feature suggestions, bug reports, questions, or want to let us know how your using the library,
+you can reach us at waldoayo AT gmail DOT com or mgreen AT cs DOT jhu DOT edu.
+
