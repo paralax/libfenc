@@ -13,14 +13,14 @@ void generate_keys(char *outfile, FENC_SCHEME_TYPE scheme, char *secret_params, 
  */
 int main (int argc, char* argv[]) {
 	int oflag = FALSE, aflag = FALSE, pflag = FALSE;
-	char *keyfile = NULL, *string = NULL;
-	int  c,err;
+	char *keyfile = NULL;
+	int  c;
 	FENC_SCHEME_TYPE mode = FENC_SCHEME_NONE;
 	char *secret_params = NULL, *public_params = NULL;
 	// fenc_attribute_list *attr_list = (fenc_attribute_list *) malloc(sizeof(fenc_attribute_list));
 	char buf[SIZE];
 	memset(buf, 0, SIZE);
-	size_t out_size;
+
 	opterr = 0;
 	
 	while ((c = getopt (argc, argv, "a:o:m:p:h")) != -1) {
@@ -131,7 +131,7 @@ void generate_keys(char *outfile, FENC_SCHEME_TYPE scheme, char *secret_params, 
 	uint8 secret_params_buf[SIZE];
 	// char session_key[SESSION_KEY_LEN];
 	uint8 output_str[SIZE];
-	size_t output_str_len = 0;
+
 	// size_t session_key_len;
 	
 	/* Clear data structures. */
