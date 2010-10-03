@@ -1,0 +1,32 @@
+
+LIBFENC -- The Functional Encryption Library
+
+-------------------------------------------------------------------------------------------
+
+The FENC library has a few dependancies, GMP and PBC libraries, which are found at:
+
+    GMP http://www.swox.com/gmp/
+    PBC http://crypto.stanford.edu/pbc/news.html 
+
+This library has been tested under Linux and Mac OS X with a fink/macports installation.
+You may need to appropriately assign library and include paths to satisfy the above 
+dependancies if not installed in the default /usr/ location.  See ./configure --help for
+more help.
+
+The common installation trial should look similar to:
+./configure LDFLAGS=-L"/path/to/library/above" CPPFLAGS=-I"/path/to/includes/above"
+make
+make install
+
+
+KNOWN ISSUES
+---------------
+Under the 64-bit Linux environment, we noted a problem with linking libraries that
+were installed to /usr/local/lib/.  To mitigate this error, attempt a sudo ldconfig as your
+first step.  This should link your libraries in.
+
+Under MacOSX environment, if you have installed GMP via macports, you will run into a 
+build error in libfenc concerning a missing gmp.h include.  To mitigate this error you 
+will need to adjust the header, pbc.h, in the PBC source ./include/.  Modify the 
+#include <gmp.h> to "/opt/local/include/gmp.h".  
+

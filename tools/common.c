@@ -56,7 +56,8 @@ int construct_attribute_list(char *input, char** attributes, size_t *attributes_
 	printf("%s\n", input);
 	char *s;
 	char *token = strtok(input, ",");
-	int ctr = 0, i = 0, j, bin_attrs = 0;
+	int ctr = 0, j = 0, bin_attrs = 0;
+	unsigned int i = 0;
 	char tmp[BITS+1];
 	
 	while (token != NULL) {
@@ -124,4 +125,6 @@ int construct_attribute_list(char *input, char** attributes, size_t *attributes_
 	for (i = 0; i < *attributes_len; i++) {
 		printf("Attribute '%i' = '%s'\n", i, attributes[i]);
 	}
+
+	return 0;
 }

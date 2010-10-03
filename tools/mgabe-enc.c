@@ -21,8 +21,8 @@ fenc_attribute_policy *construct_test_policy();
  
  */
 int main (int argc, char *argv[]) {
-	int aflag,pflag,dflag,oflag,iflag,xflag,err;
-	char *policy = NULL, *data = NULL, *enc_file = NULL;
+	int aflag,pflag,dflag,oflag,iflag,xflag;
+	char *data = NULL, *enc_file = NULL;
 	char *ext = NULL;
 	FENC_SCHEME_TYPE mode = FENC_SCHEME_NONE;
 	char *public_params = NULL;
@@ -277,11 +277,11 @@ void abe_encrypt(FENC_SCHEME_TYPE scheme, char *public_params, char *data, char 
 		sprintf(filename, "%s.%s.xml", enc_file, ext);
 		fp = fopen(filename, "w");
 		/* generate the random unique id */
-		if(RAND_bytes((char *) rand_id, BYTES) == 0) {
+		if(RAND_bytes((unsigned char *) rand_id, BYTES) == 0) {
 			perror("Unusual failure.\n");
 			strcpy((char *)rand_id, "0123");
 		}
-		printf("Generated random id: %08x\n", (unsigned int *) rand_id[0]);
+		printf("Generated random id: %08x\n", (unsigned int) rand_id[0]);
 	}
 	else {
 		sprintf(filename, "%s.%s", enc_file, ext);
@@ -299,7 +299,7 @@ void abe_encrypt(FENC_SCHEME_TYPE scheme, char *public_params, char *data, char 
 	/* output ciphertext to disk: either xml or custom format */
 	if(isXML) {
 		fprintf(fp,"<Encrypted id='");
-		fprintf(fp, "%08x", (unsigned int *) rand_id[0]);
+		fprintf(fp, "%08x", (unsigned int) rand_id[0]);
 		fprintf(fp,"'><ABE type='CP'>%s</ABE>", ABE_cipher_base64);
 		fprintf(fp,"<EncryptedData>%s</EncryptedData></Encrypted>", AES_cipher_base64);
 		fclose(fp);

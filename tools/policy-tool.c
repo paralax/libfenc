@@ -3,6 +3,8 @@
 
 #define MAX_STR 4096
 
+int count_leaves(fenc_attribute_subtree *subtree);
+
 /* tool to test policy parsing */
 int main(int argc, char *argv[]) {
 	

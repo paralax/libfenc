@@ -130,17 +130,14 @@ Bool abe_decrypt(FENC_SCHEME_TYPE scheme, char *public_params, char *inputfile, 
 	fenc_group_params group_params;
 	fenc_global_params global_params;
 	fenc_ciphertext ciphertext;
-	fenc_function_input func_list_input;
 	fenc_plaintext aes_session_key;
 	pairing_t pairing;
 	fenc_key secret_key;
-	
 	FILE *fp;
 	char c;
-	int pub_len = 0, sec_len = 0;
+	int pub_len = 0;
 	size_t serialized_len = 0;
 	uint8 public_params_buf[SIZE];
-	char session_key[SESSION_KEY_LEN];
 	char output_str[200];
 	int output_str_len = 200;
 	int magic_failed;

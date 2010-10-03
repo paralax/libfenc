@@ -1,15 +1,21 @@
+#
+#
+# LIBFENC -- The Functional Encryption Library
+#
+#-------------------------------------------------------------------------------------------
+
 # Have configure setup a Makefile in a subdirectory.
 SUBDIRS = .
 
 # Maintain a pretty and effective make clean.
 CLEANFILES = *~
 maintainer-clean-local:
-	-rm -rf Makefile.in ltmain.sh config.h.in configure \
-	aclocal.m4 install-sh autom4te.cache
-
-# Link in those libraries.
-AM_LDFLAGS = -lgmp -lpbc -lcrypto -lfenc
-AM_CPPFLAGS = -I/usr/local/include -I/usr/include
+	-rm -rf Makefile.in
+	
+# Link in those libraries. Can't use -lfenc yet.
+AM_LDFLAGS = -lgmp -lpbc -lcrypto
+AM_CPPFLAGS = -I/usr/local/include -I/usr/include -I../
+LDADD = ../libfenc.la
 
 bin_PROGRAMS = abe-setup abe-keygen abe-enc abe-dec policy-test
 
