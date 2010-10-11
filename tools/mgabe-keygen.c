@@ -5,8 +5,6 @@
 
 #define DEFAULT_KEYFILE "private.key"
 char *policy_string = NULL, *attribute_string = NULL;
-// int attributes_len = 0;
-// int parse_attributes(char *input);
 void generate_keys(char *outfile, FENC_SCHEME_TYPE scheme, char *secret_params, char *public_params);
 /* Description: mgabe-keygen takes the outfile to write the users keys, and the .
  

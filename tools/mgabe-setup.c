@@ -9,7 +9,7 @@ void gen_abe_scheme_params(FENC_SCHEME_TYPE scheme, char *secret_params, char *p
  It serializes and writes to disk the public parameters and the master secret key.
  
  */
-int main (int argc, char * argv[]) {
+int main(int argc, char * argv[]) {
 	int c;
 	FENC_SCHEME_TYPE mode = FENC_SCHEME_NONE;
 	char *secret_params = NULL, *public_params = NULL;

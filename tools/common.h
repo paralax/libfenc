@@ -40,13 +40,9 @@
 #define PUBLIC_FILE "public.param"
 #define SECRET_FILE "secret.param"
 
-// static char *public_params_file = "public.param";
-// static char *secret_params_file = "master_secret.param";
-
 void report_error(char* action, FENC_ERROR result);
 ssize_t read_file(FILE *f, char** out);
 void print_help(void);
 void print_buffer_as_hex(uint8* data, size_t len);
-//int construct_attribute_list(char *input, char** attributes, size_t *attributes_len);
 
 #endif
