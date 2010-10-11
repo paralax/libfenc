@@ -21,6 +21,7 @@ maintainer-clean-local:
 	-rm -rf Makefile.in ltmain.sh config.h.in configure \
 	aclocal.m4 install-sh autom4te.cache
 
+
 # Library.
 lib_LTLIBRARIES = libfenc.la
 
@@ -50,3 +51,5 @@ libfenc_la_ARARGS = rcs
 
 libfenc_la_BISON = bison
 
+abe_policy.tab.c: abe_policy.y
+	${libfenc_la_BISON} $<
