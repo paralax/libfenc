@@ -8,11 +8,11 @@
 #include <errno.h>
 #include <libfenc.h>
 #include <libfenc_group_params.h>
-#include <libfenc_ABE_common.h>			
+#include <libfenc_ABE_common.h>
 #include <libfenc_LSSS.h>
 #include <libfenc_WatersCP.h>
 #include <libfenc_LSW.h>
-#include <policy_lang.h>
+#include <abe_policy.h>
 #include <pbc/pbc_test.h> 
 #include <math.h>
 #include "base64.h"

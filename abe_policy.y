@@ -2,7 +2,6 @@
 #include <stdio.h>
 #include <ctype.h>
 #include <string.h>
-#include <stdlib.h>
 #include <stdint.h>
 #include <stdarg.h>
 #include <pbc/pbc.h>	
@@ -106,7 +105,7 @@ arg_list: policy                     { $$ = ptr_array_new();
 void
 die(char *fmt, ...)
 {
-	char* str;
+	// char* str;
 	va_list args;
 	
 	va_start( args, fmt );
@@ -125,7 +124,8 @@ char* s_strnfill(size_t num, char fill)
 	for (i = 0; i < num; i++) {
 		str[i] = fill;
 	}
-	str[i] = 0;
+	str[i] = '\0';
+	return str;
 }
 
 char* s_string_new(int max)
@@ -134,7 +134,8 @@ char* s_string_new(int max)
 	
 	g = SAFE_MALLOC(max);
 	if(g == NULL) {
-		die("g doesnt exist\n");
+		fprintf(stderr, "g doesnt exist\n");
+		return NULL;
 	}
 	memset(g, 0, max);
 	
@@ -144,9 +145,10 @@ char* s_string_new(int max)
 void s_string_append_c(char *left, int max, char right)
 {
 	size_t len;
+	size_t dmax = max - 1;
 
 	len = strlen(left);
-	if ( len < (max - 1) ) {
+	if ( len < dmax ) {
 		left[len] = right;
 		left[len+1] = 0;
 	}
@@ -159,6 +161,7 @@ ptr_array_t* ptr_array_new()
 	ptr->num_components = 0;
 	ptr->array_size = NUM_ARRAY_COMPONENTS;
 	ptr->components = SAFE_MALLOC(sizeof(fenc_attribute_subtree*) * NUM_ARRAY_COMPONENTS);
+	return ptr;
 }
 
 void ptr_array_add(ptr_array_t *ptr, fenc_attribute_subtree* subtree)
@@ -227,8 +230,6 @@ flexint( uint64_t value )
 void
 policy_free( fenc_attribute_subtree* p )
 {
-	int i;
-
 	if( p != NULL )	{
 		fenc_attribute_subtree_clear(p);
 	}
@@ -267,12 +268,13 @@ kof2_policy( int k, fenc_attribute_subtree* l, fenc_attribute_subtree* r )
 }
 
 fenc_attribute_subtree*
-kof_policy( int k, ptr_array_t* list )
+kof_policy( int m, ptr_array_t* list )
 {
 	fenc_attribute_subtree **attributes;
 	fenc_attribute_subtree* p;
 	uint32 i;
-
+	uint32 k = (uint32) m;
+	
 	if( k < 1 )
 		die("error parsing policy: trivially satisfied operator \"%dof\"\n", k);
 	else if( k > list->num_components )
@@ -349,32 +351,32 @@ fenc_attribute_subtree*
 flexint_leader( int gt, char* attr, uint64_t value )
 {
 	// printf("called flexint_leader: gt=%d, attr=%s, value=%d\n", gt, attr, value);
-	fenc_attribute_subtree* p;
+	// fenc_attribute_subtree* p;
 	int k;
 	fenc_attribute_subtree* attributes[256];
-	uint32 index = 0;
+	uint32 i = 0;
 
 	for( k = 2; k <= 32; k *= 2 )
 		if( ( gt && ((uint64_t)1<<k) >  value) ||(!gt && ((uint64_t)1<<k) >= value) )
-			attributes[index] = leaf_policy
+			attributes[i] = leaf_policy
 				 // (s_strdup_printf(gt ? "%s_ge_2^%02d" : "%s_lt_2^%02d", attr, k));
 				 (s_strdup_printf("%s_flexint_uint" , attr));
-			index++;
+			i++;
 
 	//p->k = gt ? 1 : p->children->len;
 
-	if( index == 0 )
+	if( i == 0 )
 	{
 		return NULL;		
 		//policy_free(p);
 		//p = 0;
 	}
-	else if( index == 1 )
+	else if( i == 1 )
 	{
 		return attributes[0];
 	}
 
-	return fenc_policy_create_node(FENC_ATTRIBUTE_POLICY_NODE_THRESHOLD, index, (gt ? 1 : index), attributes);
+	return fenc_policy_create_node(FENC_ATTRIBUTE_POLICY_NODE_THRESHOLD, i, (gt ? 1 : i), attributes);
 }
 
 fenc_attribute_subtree*
@@ -575,7 +577,7 @@ tidy( fenc_attribute_subtree* p )
 char*
 format_policy_postfix( fenc_attribute_subtree* p )
 {
-	int i;
+	size_t i;
 	char* r;
 	char* s;
 	char* t;
@@ -687,7 +689,7 @@ parse_attribute( GSList** l, char* a )
 fenc_attribute_subtree*
 parse_policy_lang( char* s )
 {
-	char* parsed_policy;
+	// char* parsed_policy;
 	
 	cur_string = s;
 	
