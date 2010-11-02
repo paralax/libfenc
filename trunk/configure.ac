@@ -30,6 +30,7 @@ AC_PROG_LIBTOOL
 # If you want to set specific options, check here:
 #    http://www.gnu.org/software/hello/manual/automake/Options.html#Options
 AM_INIT_AUTOMAKE
+AM_MISSING_PROG([YACC], [bison -y])
 
 # Useful information found here:
 #    http://www.gnu.org/software/libtool/manual/html_node/Invoking-libtoolize.html
@@ -105,6 +106,7 @@ esac
 # Checks for programs.
 AC_PROG_YACC
 AC_PROG_CC
+AC_PROG_LEX
 
 # Checks for libraries.
 # AC_CHECK_LIB (library, function, [action-if-found], [action-if-not-found], [other-libraries])
