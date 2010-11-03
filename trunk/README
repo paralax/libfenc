@@ -45,3 +45,6 @@ Currently, the library works well on 32-bit systems but we have a few notable bu
 If you have feature suggestions, bug reports, questions, or want to let us
 know how your using the library, you can reach us at waldoayo AT gmail DOT com or
 mgreen AT cs DOT jhu DOT edu.
+
+Please see the INSTALL text file for directions on how to install the library for varied
+*unix operating systems.
