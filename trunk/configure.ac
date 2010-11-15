@@ -75,6 +75,10 @@ esac
 ############################################################### 
 # Config for Windows DLLs.
 
+AC_SUBST(FENC_LDFLAGS)
+AC_SUBST(LIBFENC_LDFLAGS)
+AC_SUBST(LIBFENCXX_LDFLAGS)
+
 AC_LIBTOOL_WIN32_DLL
 AC_SUBST(LIBFENC_DLL,0)
 
@@ -93,10 +97,10 @@ case $host in
     # AC_LIBTOOL_WIN32_DLL.
 
     if test "$enable_shared" = yes; then
-      GMP_LDFLAGS="$GMP_LDFLAGS -no-undefined -Wl,--export-all-symbols"
-      LIBGMP_LDFLAGS="$LIBGMP_LDFLAGS -Wl,--output-def,.libs/libfenc-1.dll.def"
-      LIBGMPXX_LDFLAGS="$LIBGMP_LDFLAGS -Wl,--output-def,.libs/libfencxx-1.dll.def"
-      LIBGMP_DLL=1
+      FENC_LDFLAGS="$FENC_LDFLAGS -no-undefined -Wl,--export-all-symbols"
+      LIBFENC_LDFLAGS="$LIBFENC_LDFLAGS -Wl,--output-def,.libs/libfenc-1.dll.def"
+      LIBFENCXX_LDFLAGS="$LIBFENC_LDFLAGS -Wl,--output-def,.libs/libfencxx-1.dll.def"
+      LIBFENC_DLL=1
     fi
     ;;
 esac
