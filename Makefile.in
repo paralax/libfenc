@@ -185,6 +185,7 @@ ECHO_N = @ECHO_N@
 ECHO_T = @ECHO_T@
 EGREP = @EGREP@
 EXEEXT = @EXEEXT@
+FENC_LDFLAGS = @FENC_LDFLAGS@
 FGREP = @FGREP@
 GREP = @GREP@
 INSTALL = @INSTALL@
@@ -197,7 +198,9 @@ LDFLAGS = @LDFLAGS@
 LEX = @LEX@
 LEXLIB = @LEXLIB@
 LEX_OUTPUT_ROOT = @LEX_OUTPUT_ROOT@
+LIBFENCXX_LDFLAGS = @LIBFENCXX_LDFLAGS@
 LIBFENC_DLL = @LIBFENC_DLL@
+LIBFENC_LDFLAGS = @LIBFENC_LDFLAGS@
 LIBOBJS = @LIBOBJS@
 LIBS = @LIBS@
 LIBTOOL = @LIBTOOL@
@@ -282,7 +285,8 @@ top_builddir = @top_builddir@
 top_srcdir = @top_srcdir@
 
 # Have configure setup a Makefile in a subdirectory.
-SUBDIRS = . tools benchmark
+SUBDIRS = .
+#SUBDIRS = . tools benchmark
 
 # Set the lib version value.
 SO_VERSION = 1:0:0

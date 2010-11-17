@@ -5,7 +5,8 @@
 #-------------------------------------------------------------------------------------------
 
 # Have configure setup a Makefile in a subdirectory.
-SUBDIRS = . tools benchmark
+SUBDIRS = .
+#SUBDIRS = . tools benchmark
 
 # Set the lib version value.
 SO_VERSION = 1:0:0
