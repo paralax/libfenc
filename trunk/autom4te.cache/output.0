@@ -758,6 +758,8 @@ LEXLIB
 LEX_OUTPUT_ROOT
 LEX
 YFLAGS
+LIBFENC_LDFLAGS
+FENC_LDFLAGS
 LIBFENC_DLL
 DLLTOOL
 AS
@@ -10927,20 +10929,33 @@ case $host in
     fi
     # Don't allow both static and DLL.
     if test "$enable_shared" != no && test "$enable_static" != no; then
-      as_fn_error $? "You cannot build both static and DLL, since the header files are different for each.  Use \"--disable-static --enable-shared\" to build just a DLL." "$LINENO" 5 
+      as_fn_error $? "cannot build both static and DLL, since gmp.h is different for each.
+Use \"--disable-static --enable-shared\" to build just a DLL." "$LINENO" 5 
     fi
 
     # "-no-undefined" is required when building a DLL, see documentation on
     # AC_LIBTOOL_WIN32_DLL.
-
     if test "$enable_shared" = yes; then
-      GMP_LDFLAGS="$GMP_LDFLAGS -no-undefined -Wl,--export-all-symbols"
-      LIBGMP_LDFLAGS="$LIBGMP_LDFLAGS -Wl,--output-def,.libs/libfenc-1.dll.def"
-      LIBGMPXX_LDFLAGS="$LIBGMP_LDFLAGS -Wl,--output-def,.libs/libfencxx-1.dll.def"
-      LIBGMP_DLL=1
+      FENC_LDFLAGS="$FENC_LDFLAGS -no-undefined -Wl,--export-all-symbols"
+      LIBFENC_LDFLAGS="$LIBFENC_LDFLAGS -Wl,--output-def,.libs/libfenc.dll.def"
+      LIBFENC_DLL=1
     fi
     ;;
 esac
+# mingw can be built by the cygwin gcc if -mno-cygwin is added.  For
+# convenience add this automatically if it works.  Actual mingw gcc accepts
+# -mno-cygwin too, but of course is the default.  mingw only runs on the
+# x86s, but allow any CPU here so as to catch "none" too.
+#
+case $host in
+  *-*-mingw*)
+    gcc_cflags_optlist="$gcc_cflags_optlist nocygwin"
+    gcc_cflags_nocygwin="-mno-cygwin"
+    ;;
+esac
+
+
+
 #
 ############################################################### 
 
