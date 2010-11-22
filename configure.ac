@@ -16,7 +16,7 @@ AH_TOP(/*FENC_COPYRIGHT*/)
 
 
 # We require at least autoconf version 2.5 to configure.
-AC_PREREQ([2.5])
+AC_PREREQ([2.59])
 AC_INIT([fenc], [0.1.0], [mgreen at cs dot jhu dot edu])
 AC_CONFIG_HEADERS([config.h])
 # Identify source file in package directory that we can verify. 
@@ -75,10 +75,6 @@ esac
 ############################################################### 
 # Config for Windows DLLs.
 
-AC_SUBST(FENC_LDFLAGS)
-AC_SUBST(LIBFENC_LDFLAGS)
-AC_SUBST(LIBFENCXX_LDFLAGS)
-
 AC_LIBTOOL_WIN32_DLL
 AC_SUBST(LIBFENC_DLL,0)
 
@@ -90,20 +86,33 @@ case $host in
     fi
     # Don't allow both static and DLL.
     if test "$enable_shared" != no && test "$enable_static" != no; then
-      AC_MSG_ERROR([You cannot build both static and DLL, since the header files are different for each.  Use "--disable-static --enable-shared" to build just a DLL.])
+      AC_MSG_ERROR([cannot build both static and DLL, since gmp.h is different for each.
+Use "--disable-static --enable-shared" to build just a DLL.])
     fi
 
     # "-no-undefined" is required when building a DLL, see documentation on
     # AC_LIBTOOL_WIN32_DLL.
-
     if test "$enable_shared" = yes; then
       FENC_LDFLAGS="$FENC_LDFLAGS -no-undefined -Wl,--export-all-symbols"
-      LIBFENC_LDFLAGS="$LIBFENC_LDFLAGS -Wl,--output-def,.libs/libfenc-1.dll.def"
-      LIBFENCXX_LDFLAGS="$LIBFENC_LDFLAGS -Wl,--output-def,.libs/libfencxx-1.dll.def"
+      LIBFENC_LDFLAGS="$LIBFENC_LDFLAGS -Wl,--output-def,.libs/libfenc.dll.def"
       LIBFENC_DLL=1
     fi
     ;;
 esac
+# mingw can be built by the cygwin gcc if -mno-cygwin is added.  For
+# convenience add this automatically if it works.  Actual mingw gcc accepts
+# -mno-cygwin too, but of course is the default.  mingw only runs on the
+# x86s, but allow any CPU here so as to catch "none" too.
+#
+case $host in
+  *-*-mingw*)
+    gcc_cflags_optlist="$gcc_cflags_optlist nocygwin"
+    gcc_cflags_nocygwin="-mno-cygwin"
+    ;;
+esac
+
+AC_SUBST(FENC_LDFLAGS)
+AC_SUBST(LIBFENC_LDFLAGS)
 #
 ############################################################### 
 

@@ -42,7 +42,7 @@ libfenc_la_SOURCES = libfenc.c libfenc_LSW.c libfenc_WatersCP.c \
 	libfenc_ABE_common.c libfenc_LSSS.c libfenc_WatersSimpleCP.c \
 	libfenc_group_params.c libfenc_utils.c sha1.c abe_policy.tab.c
 
-libfenc_la_LDFLAGS =  -lgmp -lpbc -lm -version-info $(SO_VERSION)
+libfenc_la_LDFLAGS =  -lgmp -lpbc -lm -version-info $(SO_VERSION) $(FENC_LDFLAGS) $(LIBFENC_LDFLAGS)
 
 libfenc_la_LIBS = -lstdc++
 
