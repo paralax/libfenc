@@ -10617,6 +10617,8 @@ esac
 
 ############################################################### 
 # Config for Windows DLLs.
+# Framework for the below was extracted and
+# modeled after the libgmp configure script.
 
 enable_win32_dll=yes
 
@@ -10929,7 +10931,7 @@ case $host in
     fi
     # Don't allow both static and DLL.
     if test "$enable_shared" != no && test "$enable_static" != no; then
-      as_fn_error $? "cannot build both static and DLL, since gmp.h is different for each.
+      as_fn_error $? "cannot build both static and DLL.
 Use \"--disable-static --enable-shared\" to build just a DLL." "$LINENO" 5 
     fi
 
@@ -10942,11 +10944,6 @@ Use \"--disable-static --enable-shared\" to build just a DLL." "$LINENO" 5
     fi
     ;;
 esac
-# mingw can be built by the cygwin gcc if -mno-cygwin is added.  For
-# convenience add this automatically if it works.  Actual mingw gcc accepts
-# -mno-cygwin too, but of course is the default.  mingw only runs on the
-# x86s, but allow any CPU here so as to catch "none" too.
-#
 case $host in
   *-*-mingw*)
     gcc_cflags_optlist="$gcc_cflags_optlist nocygwin"
