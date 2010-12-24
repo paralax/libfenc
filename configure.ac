@@ -17,7 +17,7 @@ AH_TOP(/*FENC_COPYRIGHT*/)
 
 # We require at least autoconf version 2.5 to configure.
 AC_PREREQ([2.59])
-AC_INIT([fenc], [0.1.0], [mgreen at cs dot jhu dot edu])
+AC_INIT([fenc], [0.2.0], [mgreen at cs dot jhu dot edu])
 AC_CONFIG_HEADERS([config.h])
 # Identify source file in package directory that we can verify. 
 AC_CONFIG_SRCDIR([libfenc_utils.c])
@@ -118,6 +118,20 @@ AC_PROG_YACC
 AC_PROG_CC
 AC_PROG_LEX
 
+AC_ARG_VAR(ABI, Target CPU architecture for build: '32' '64' or default both)
+
+if test "$ABI" = "32"; then
+	echo "building for 32-bit architecture ONLY!"
+	CC="gcc -arch i386"
+	CXX="g++ -arch i386"
+elif test "$ABI" = "64"; then
+	echo "building for 64-bit architecture ONLY!"
+	CC="gcc -arch x86_64"
+	CXX="g++ -arch x86_64"
+else
+	echo "building for 32 and 64-bit architectures"
+fi
+
 # Checks for libraries.
 # AC_CHECK_LIB (library, function, [action-if-found], [action-if-not-found], [other-libraries])
 lib_err_msg="add its path to LDFLAGS\nsee ./configure --help"
@@ -196,6 +210,9 @@ echo "optimized build:  $with_enable_optimized"
 echo "LDFLAGS:          $LDFLAGS"
 echo "CPPFLAGS:         $CPPFLAGS"
 echo "CFLAGS:           $CFLAGS"
+echo "ABI:              $ABI"
+echo "CC:               $CC"
+echo "CXX:              $CXX"
 echo "-----------------------------------------"
 echo -ne "\n"
 
