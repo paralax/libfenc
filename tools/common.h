@@ -13,18 +13,25 @@
 #include <libfenc_WatersCP.h>
 #include <libfenc_LSW.h>
 #include <abe_policy.h>
-#include <pbc/pbc_test.h> 
+#include <pbc/pbc.h>
 #include <math.h>
 #include "base64.h"
 
 #define SCHEME_LSW "KP"
 #define SCHEME_WCP "CP"
 #define SCHEME_WSCP "SCP"
-#define LSW 0
-#define WCP 1
-#define SWCP 2
+enum Scheme {LSW, WCP, SWCP, NONE};
+typedef enum Scheme SchemeType;
 
-#define KEYSIZE_MAX 20480
+#ifdef DEBUG
+#define debug(...)	printf("DEBUG: "__VA_ARGS__)
+#define debug_e(...)	element_printf("DEBUG: "__VA_ARGS__)
+#else
+#define debug(...)
+#define debug_e(...)
+#endif
+
+#define KEYSIZE_MAX 15000
 #define SIZE 2048
 #define SIZE_MAX KEYSIZE_MAX
 #define MAX_ATTRIBUTES 100

@@ -78,13 +78,13 @@ int main (int argc, char *argv[]) {
 				break;
 			case 'm': 
 				if (strcmp(optarg, SCHEME_LSW) == 0) {
-					printf("Encrypting for Lewko-Sahai-Waters KP scheme...\n");
+					debug("Encrypting for Lewko-Sahai-Waters KP scheme...\n");
 					mode = FENC_SCHEME_LSW;
 					public_params = PUBLIC_FILE".kp";
 					ext = "kpabe";
 				}
 				else if(strcmp(optarg, SCHEME_WCP) == 0) {
-					printf("Encrypting for Waters CP scheme...\n");
+					debug("Encrypting for Waters CP scheme...\n");
 					mode = FENC_SCHEME_WATERSCP;
 					public_params = PUBLIC_FILE".cp";
 					ext = "cpabe";
@@ -165,8 +165,8 @@ void abe_encrypt(FENC_SCHEME_TYPE scheme, char *public_params, char *data, char 
 	pairing_t pairing;
 	FILE *fp;
 	char c;
-	int pub_len = 0;
-	ssize_t serialized_len = 0;
+	size_t pub_len = 0;
+	size_t serialized_len = 0;
 	uint8 public_params_buf[SIZE];
 	char session_key[SESSION_KEY_LEN];
 	// size_t session_key_len;
@@ -247,7 +247,7 @@ void abe_encrypt(FENC_SCHEME_TYPE scheme, char *public_params, char *data, char 
 	result = libfenc_kem_encrypt(&context, &func_object_input, SESSION_KEY_LEN, (uint8 *)session_key, &ciphertext);	
 	
 	/* generated PSK from policy string */
-	printf("\tSession key is: ");
+	debug("\tSession key is: ");
 	print_buffer_as_hex((uint8 *) session_key, SESSION_KEY_LEN);
 
 	/* encrypted blob that belongs in the <ABED></ABE> tags */
@@ -262,16 +262,15 @@ void abe_encrypt(FENC_SCHEME_TYPE scheme, char *public_params, char *data, char 
 	memset(iv, 0, AES_BLOCK_SIZE*4);
 	memset(aes_ciphertext, 0, data_len);
 	AES_set_encrypt_key((uint8 *) session_key, 8*SESSION_KEY_LEN, &key);
-	printf("\tPlaintext is => '%s'\n", data);
 	sprintf(data_magic, MAGIC"%s", data);
-	// printf("\tPlaintext is => '%s'\n", data_magic);
+	debug("\tPlaintext is => '%s'\n", data);
 	
 	AES_cbc_encrypt((uint8 *)data_magic, (uint8 *) aes_ciphertext, data_len, &key, (uint8 *) iv, AES_ENCRYPT);
 	// printf("\tAES Ciphertext base 64: ");
 	// print_buffer_as_hex((uint8 *) aes_ciphertext, data_len);
 	
-	char filename[strlen(enc_file)+10];
-	memset(filename, 0, strlen(enc_file)+9);
+	char filename[strlen(enc_file)+1];
+	memset(filename, 0, strlen(enc_file));
 	uint8 *rand_id[BYTES+1];
 	if(isXML) {
 		sprintf(filename, "%s.%s.xml", enc_file, ext);
@@ -279,17 +278,17 @@ void abe_encrypt(FENC_SCHEME_TYPE scheme, char *public_params, char *data, char 
 		/* generate the random unique id */
 		if(RAND_bytes((unsigned char *) rand_id, BYTES) == 0) {
 			perror("Unusual failure.\n");
-			strcpy((char *)rand_id, "0123");
+			strcpy((char *)rand_id, "123");
 		}
-		printf("Generated random id: %08x\n", (unsigned int) rand_id[0]);
+		debug("Generated random id: %08x\n", (unsigned int) rand_id[0]);
 	}
 	else {
 		sprintf(filename, "%s.%s", enc_file, ext);
 		fp = fopen(filename, "w");
 	}
-	printf("\tCiphertext stored in '%s'.\n", filename);
-	printf("\tABE Ciphertex size is: '%d'\n", ciphertext.data_len);
-	printf("\tAES Ciphertext size is: '%d'\n", data_len);
+	debug("\tCiphertext stored in '%s'.\n", filename);
+	debug("\tABE Ciphertex size is: '%zd'\n", ciphertext.data_len);
+	debug("\tAES Ciphertext size is: '%d'\n", data_len);
 
 	/* base-64 both ciphertexts and write to the stdout -- in XML? */
 	size_t abe_length, aes_length;

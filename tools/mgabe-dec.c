@@ -33,21 +33,21 @@ int main (int argc, char *argv[]) {
 			case 'f': // file that holds encrypted data
 				fflag = TRUE;
 				file = optarg;
-				printf("encrypted file = '%s'\n", file);
+				debug("Encrypted file = '%s'\n", file);
 				break;
 			case 'k': // input of private key 
 				kflag = TRUE;
 				key = optarg;
-				printf("private-key file = '%s'\n", key);
+				debug("Private-key file = '%s'\n", key);
 				break;
 			case 'm': 
 				if (strcmp(optarg, SCHEME_LSW) == 0) {
-					printf("Decrypting under Lewko-Sahai-Waters KP scheme...\n");
+					debug("Decrypting under Lewko-Sahai-Waters KP scheme...\n");
 					mode = FENC_SCHEME_LSW;
 					public_params = PUBLIC_FILE".kp";
 				}
 				else if(strcmp(optarg, SCHEME_WCP) == 0) {
-					printf("Decrypting under Waters CP scheme...\n");
+					debug("Decrypting under Waters CP scheme...\n");
 					mode = FENC_SCHEME_WATERSCP;
 					public_params = PUBLIC_FILE".cp";
 				}
@@ -162,12 +162,10 @@ Bool abe_decrypt(FENC_SCHEME_TYPE scheme, char *public_params, char *inputfile, 
 		if((input_len = read_file(fp, &input_buf)) > 0) {
 			// printf("Input file: %s\n", input_buf);
 			tokenize_inputfile(input_buf, &abe_blob64, &aes_blob64);
-#ifdef DEBUG 			
-			printf("abe_blob64 = '%s'\n", abe_blob64);
-			printf("aes_blob64 = '%s'\n", aes_blob64);
-#endif
+			debug("abe_blob64 = '%s'\n", abe_blob64);
+			debug("aes_blob64 = '%s'\n", aes_blob64);
 			free(input_buf);
-		}			
+		}
 	}
 	else {
 		fprintf(stderr, "Could not load input file: %s\n", inputfile);
@@ -191,7 +189,7 @@ Bool abe_decrypt(FENC_SCHEME_TYPE scheme, char *public_params, char *inputfile, 
 		libfenc_load_group_params_from_file(&group_params, fp);
 		libfenc_get_pbc_pairing(&group_params, pairing);
 	} else {
-		fprintf(stderr, "File does not exist: global parmeterers");
+		fprintf(stderr, "File does not exist: global parameters");
 		return FALSE;
 	}
 	fclose(fp);
@@ -201,7 +199,7 @@ Bool abe_decrypt(FENC_SCHEME_TYPE scheme, char *public_params, char *inputfile, 
 	report_error("Loading global parameters", result);
 	
 	result = libfenc_gen_params(&context, &global_params);
-	// report_error("Generating scheme parameters and secret key", result);
+	report_error("Generating scheme parameters and secret key", result);
 	
 	/* read file */
 	fp = fopen(public_params, "r");
@@ -233,7 +231,7 @@ Bool abe_decrypt(FENC_SCHEME_TYPE scheme, char *public_params, char *inputfile, 
 	report_error("Importing public parameters", result);
 	
 	/* read input key file */ // (PRIVATE KEY)
-	printf("keyfile => '%s'\n", keyfile);
+	debug("keyfile => '%s'\n", keyfile);
 	fp = fopen(keyfile, "r");
 	if(fp != NULL) {
 		if((key_len = read_file(fp, &keyfile_buf)) > 0) {
@@ -241,11 +239,10 @@ Bool abe_decrypt(FENC_SCHEME_TYPE scheme, char *public_params, char *inputfile, 
 			size_t keyLength;
 			uint8 *bin_keyfile_buf = NewBase64Decode((const char *) keyfile_buf, key_len, &keyLength);
 
-//#ifdef DEBUG			
 			/* base-64 decode user's private key */
-			printf("Base-64 decoded buffer:\t");
+			debug("Base-64 decoded buffer:\t");
 			print_buffer_as_hex(bin_keyfile_buf, keyLength);
-//#endif			
+
 			result = libfenc_import_secret_key(&context, &secret_key, bin_keyfile_buf, keyLength);
 			report_error("Importing secret key", result);
 			free(keyfile_buf);
@@ -267,7 +264,7 @@ Bool abe_decrypt(FENC_SCHEME_TYPE scheme, char *public_params, char *inputfile, 
 	result = libfenc_decrypt(&context, &ciphertext, &secret_key, &aes_session_key);
 	report_error("Decrypting the ciphertext", result);
 	
-	printf("\tDecrypted session key is: ");
+	debug("\tDecrypted session key is: ");
 	print_buffer_as_hex(aes_session_key.data, aes_session_key.data_len);
 
 	/* decode the aesblob64 */
@@ -289,8 +286,8 @@ Bool abe_decrypt(FENC_SCHEME_TYPE scheme, char *public_params, char *inputfile, 
 	strncpy(magic, aes_result, strlen(MAGIC));
 	
 	if(strcmp(magic, MAGIC) == 0) {
-		printf("Recovered magic: '%s'\n", magic);		
-		printf("Plaintext: %s\n", (char *) (aes_result + strlen(MAGIC)));
+		debug("Recovered magic: '%s'\n", magic);
+		debug("Plaintext: %s\n", (char *) (aes_result + strlen(MAGIC)));
 		magic_failed = FALSE;
 	}
 	else {
