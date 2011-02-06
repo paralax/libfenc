@@ -15,29 +15,33 @@ The install will also require that you install bison, a GNU parser generator fou
    http://www.gnu.org/software/bison/
 
 If you forget to install bison, your make will not complete and it will specifically 
-complain about not being able to find bison.  It's also very important to note that 
-prior to installing a new packages, if you have a package manager or software update
+complain about not being able to find bison.  
+Note that prior to installing new packages, if you have a package manager or software update
 application, run a software update on all of your current packages.  This will help
 eliminate possible confusion when dependancies don't link as they should.
-
 
 This library has been tested under Linux (ubuntu, crunchbang, fedora, opensuse) and Unix
 (Mac OS X w/ and w/out fink/macports installation, Open Solaris).  You may need to 
 appropriately assign library and include paths to satisfy the above dependancies if not 
 installed in the default /usr/ location.  See ./configure --help for more help.
 
-The common installation trial should look similar to:
-./configure LDFLAGS=-L"/path/to/library/above" CPPFLAGS=-I"/path/to/includes/above"
+The common installation procedure is as follows:
+./configure ABI=32 --enable-optimized
 make
 make install
 
+Note that if GMP, PBC, and OPENSSL were installed in non-standard paths then specify the
+following arguments when executing configure.
+./configure LDFLAGS=-L"/path/to/library/above" CPPFLAGS=-I"/path/to/includes/above"
+
+See ./configure --help for other options.
 
 BUILDING IN FEDORA 14
 ------------------------
 First, ensure that you have binutils-devel, a gcc compiler, etc.  A simple fix for a cleanly
 installed machine would be: yum groupinstall "Development Tools" "Development Libraries".
 
-Once this is done, you will need to install the above library dependancies: GMP, PBC, and
+Once this is done, you will need to install the above library dependencies: GMP, PBC, and
 OPENSSL (don't forget bison).  You can either use the Add/Remove Software package manager, 
 YUM, RPM if you have the packages, or build via the source from the links above.
 
@@ -55,19 +59,9 @@ build-essential.  Crunchbang <= 9.04 is based on Ubuntu, so the rest is the same
 are utilizing Crunchbang Statler, than you are dealing with a Debian Squeeze base.  Please
 reference dpkg for more help here.
 
-
-BUILDING IN OPENSUSE
---------------------
-
-
-
-BUILDING IN OPEN SOLARIS
----------------------------
-
-
 BUILDING IN MAC OS X 10.6
 ----------------------------
-
+Above installation procedure applies to the Mac OS X environment.
 
 KNOWN ISSUES
 ---------------

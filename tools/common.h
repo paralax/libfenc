@@ -24,7 +24,7 @@ enum Scheme {LSW, WCP, SWCP, NONE};
 typedef enum Scheme SchemeType;
 
 #ifdef DEBUG
-#define debug(...)	printf("DEBUG: "__VA_ARGS__)
+#define debug(...)	printf(__VA_ARGS__)
 #define debug_e(...)	element_printf("DEBUG: "__VA_ARGS__)
 #else
 #define debug(...)
