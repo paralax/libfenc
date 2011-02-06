@@ -5,9 +5,7 @@
 void gen_abe_scheme_params(FENC_SCHEME_TYPE scheme, char *secret_params, char *public_params);
 /* Description: mgabe-setup takes no arguments and simply reads in the global parameters from the filesystem,
  and generates the public parameters (or public key) and the master secret parameters (or master secret key).
- 
  It serializes and writes to disk the public parameters and the master secret key.
- 
  */
 int main(int argc, char * argv[]) {
 	int c;
@@ -20,19 +18,19 @@ int main(int argc, char * argv[]) {
 		{
 			case 'm': 
 				if (strcmp(optarg, SCHEME_LSW) == 0) {
-					printf("Generating Lewko-Sahai-Waters KP scheme parameters...\n");
+					debug("Generating Lewko-Sahai-Waters KP scheme parameters...\n");
 					mode = FENC_SCHEME_LSW;
 					secret_params = SECRET_FILE".kp";
 					public_params = PUBLIC_FILE".kp";
 				}
 				else if(strcmp(optarg, SCHEME_WCP) == 0) {
-					printf("Generating Waters CP scheme parameters...\n");
+					debug("Generating Waters CP scheme parameters...\n");
 					mode = FENC_SCHEME_WATERSCP;
 					secret_params = SECRET_FILE".cp";
 					public_params = PUBLIC_FILE".cp";
 				}
 				else if(strcmp(optarg, SCHEME_WSCP) == 0) {
-					printf("Generating Waters Simple CP scheme parameters...\n");
+					debug("Generating Waters Simple CP scheme parameters...\n");
 					mode = FENC_SCHEME_WATERSSIMPLECP;
 					secret_params = SECRET_FILE".scp";
 					public_params = PUBLIC_FILE".scp";					
@@ -82,6 +80,8 @@ void gen_abe_scheme_params(FENC_SCHEME_TYPE scheme, char *secret_params, char *p
 	size_t serialized_len = 0;
 	uint8* public_params_buf = NULL;
 	uint8* secret_params_buf = NULL;
+	char *publicBuffer = NULL;
+	char *secretBuffer = NULL;
 	
 	/* Clear data structures. */
 	memset(&context, 0, sizeof(fenc_context));
@@ -93,7 +93,7 @@ void gen_abe_scheme_params(FENC_SCHEME_TYPE scheme, char *secret_params, char *p
 	report_error("Initializing library", result);	
 	
 	// insert code here...
-    printf("Generating master ABE system parameters...\n");
+    debug("Generating master ABE system parameters...\n");
 	/* Create a Sahai-Waters context. */
 	result = libfenc_create_context(&context, scheme);	
 	
@@ -104,7 +104,7 @@ void gen_abe_scheme_params(FENC_SCHEME_TYPE scheme, char *secret_params, char *p
 		libfenc_get_pbc_pairing(&group_params, pairing);
 	} else {
 		perror("Could not open parameters file.\n");
-		exit(1);
+		goto cleanup;
 	}
 	fclose(fp);
 	
@@ -126,10 +126,10 @@ void gen_abe_scheme_params(FENC_SCHEME_TYPE scheme, char *secret_params, char *p
 	result = libfenc_export_public_params(&context, public_params_buf, serialized_len, &serialized_len, FALSE);
 	report_error("Exporting public parameters", result);
 
-	printf("Base-64 encoding public parameters...\n");
+	debug("Base-64 encoding public parameters...\n");
 	size_t publicLength;
-	char *publicBuffer = NewBase64Encode(public_params_buf, serialized_len, FALSE, &publicLength);
-	printf("'%s'\n", publicBuffer);
+	publicBuffer = NewBase64Encode(public_params_buf, serialized_len, FALSE, &publicLength);
+	debug("'%s'\n", publicBuffer);
 			
 	/* base-64 encode the pub params and write to disk */
 	fp = fopen(public_params, "w");
@@ -152,10 +152,10 @@ void gen_abe_scheme_params(FENC_SCHEME_TYPE scheme, char *secret_params, char *p
 	result = libfenc_export_secret_params(&context, secret_params_buf, serialized_len, &serialized_len, NULL, 0);
 	report_error("Exporting secret parameters", result);
 	
-	printf("Base-64 encoding secret parameters...\n");
+	debug("Base-64 encoding secret parameters...\n");
 	size_t secretLength;
-	char *secretBuffer = NewBase64Encode(secret_params_buf, serialized_len, FALSE, &secretLength);
-	printf("'%s'\n", secretBuffer);
+	secretBuffer = NewBase64Encode(secret_params_buf, serialized_len, FALSE, &secretLength);
+	debug("'%s'\n", secretBuffer);
 	
 	/* base-64 encode the pub params and write to disk */
 	fp = fopen(secret_params, "w");
@@ -163,7 +163,7 @@ void gen_abe_scheme_params(FENC_SCHEME_TYPE scheme, char *secret_params, char *p
 		fprintf(fp, "%s", secretBuffer);
 	}
 	fclose(fp);
-	
+cleanup:
 	/* Destroy the context. */
 	result = libfenc_destroy_context(&context);
 	report_error("Destroying context", result);

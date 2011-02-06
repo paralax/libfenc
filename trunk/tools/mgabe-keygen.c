@@ -15,7 +15,6 @@ int main (int argc, char* argv[]) {
 	int  c;
 	FENC_SCHEME_TYPE mode = FENC_SCHEME_NONE;
 	char *secret_params = NULL, *public_params = NULL;
-	// fenc_attribute_list *attr_list = (fenc_attribute_list *) malloc(sizeof(fenc_attribute_list));
 	char buf[SIZE];
 	memset(buf, 0, SIZE);
 
@@ -127,10 +126,8 @@ void generate_keys(char *outfile, FENC_SCHEME_TYPE scheme, char *secret_params, 
 	size_t serialized_len = 0;
 	uint8 public_params_buf[SIZE];
 	uint8 secret_params_buf[SIZE];
-	// char session_key[SESSION_KEY_LEN];
 	uint8 output_str[SIZE];
-
-	// size_t session_key_len;
+	uint8 *buffer = NULL;
 	
 	/* Clear data structures. */
 	memset(&context, 0, sizeof(fenc_context));
@@ -157,7 +154,7 @@ void generate_keys(char *outfile, FENC_SCHEME_TYPE scheme, char *secret_params, 
 		libfenc_get_pbc_pairing(&group_params, pairing);
 	} else {
 		perror("Could not open parameters file.\n");
-		return;
+		goto cleanup;
 	}
 	fclose(fp);
 	
@@ -206,12 +203,12 @@ void generate_keys(char *outfile, FENC_SCHEME_TYPE scheme, char *secret_params, 
 	}
 	else {
 		perror("File does not exist.\n");
-		return;
+		goto cleanup;
 	}	
 	fclose(fp);
 	
-	printf("public params input = '%s'\n", public_params_buf);
-	printf("secret params input = '%s'\n", secret_params_buf);
+	debug("public params input = '%s'\n", public_params_buf);
+	debug("secret params input = '%s'\n", secret_params_buf);
 	
 	/* base-64 decode */
 	uint8 *bin_public_buf = NewBase64Decode((const char *) public_params_buf, pub_len, &serialized_len);
@@ -237,7 +234,7 @@ void generate_keys(char *outfile, FENC_SCHEME_TYPE scheme, char *secret_params, 
 	result = libfenc_extract_key(&context, &func_object_input, &key);
 	report_error("Extracting a decryption key", result);
 
-	uint8 *buffer = malloc(KEYSIZE_MAX);
+	buffer = (uint8 *) malloc(KEYSIZE_MAX+1);
 	memset(buffer, 0, KEYSIZE_MAX);	
 	result = libfenc_export_secret_key(&context, &key, buffer, KEYSIZE_MAX, &serialized_len);
 	report_error("Exporting key", result);

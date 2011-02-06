@@ -2,17 +2,19 @@
 
 void report_error(char* action, FENC_ERROR result)
 {
-	printf("%s...\n\t%s (%d)\n", action, libfenc_error_to_string(result), result);
+	debug("%s...\n\t%s (%d)\n", action, libfenc_error_to_string(result), result);
 }
 
 void print_buffer_as_hex(uint8* data, size_t len)
 {
+#ifdef DEBUG
 	size_t i;
 	
 	for (i = 0; i < len; i++) {
 		printf("%02x ", data[i]);
 	}
 	printf("\n");
+#endif
 }
 
 ssize_t read_file(FILE *f, char** out) {
