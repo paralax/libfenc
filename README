@@ -31,7 +31,7 @@ contained in each directory:
  - misc         : sample scripts to build the PBC and GMP in Mac OS X environments for 
                   standard (Intel) and mobile platforms (ARM). 
 	
- - tools        : a tool chain that only uses the Ciphertext-policy ABE scheme implemented 
+ - tools        : a tool chain that uses the CP- and KP-ABE schemes implemented 
                   by libfenc. This directory contains abe-setup (initializes the scheme 
 		  parameters - master public and private parameters), abe-keygen (generates 
 		  ABE private-keys for users), abe-enc (performs encryption on files under 
@@ -43,8 +43,8 @@ Currently, the library works well on 32-bit systems but we have a few notable bu
 -------------------------------------------------------------------------------------------
 
 If you have feature suggestions, bug reports, questions, or want to let us
-know how your using the library, you can reach us at waldoayo AT gmail DOT com or
-mgreen AT cs DOT jhu DOT edu.
+know how your using the library, you can reach us at libfenc-devel at googlegroups dot com.
 
 Please see the INSTALL text file for directions on how to install the library for varied
 *unix operating systems.
+
