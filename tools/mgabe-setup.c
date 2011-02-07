@@ -138,10 +138,6 @@ void gen_abe_scheme_params(FENC_SCHEME_TYPE scheme, char *secret_params, char *p
 	}
 	fclose(fp);
 	
-	/*result = libfenc_import_public_params(&context, public_params_buf, serialized_len);
-	report_error("Re-importing public parameters", result); */
-
-	
 	/* Serialize the secret parameters into a buffer (not strictly necessary, just a test). */
 	result = libfenc_export_secret_params(&context, NULL, 0, &serialized_len, NULL, 0);
 	if (result != FENC_ERROR_NONE) { report_error("Computing secret parameter output size", result); }

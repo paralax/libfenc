@@ -24,7 +24,7 @@ ssize_t read_file(FILE *f, char** out) {
 		/* See how big the file is */
 		fseek(f, 0L, SEEK_END);
 		ssize_t out_len = ftell(f);
-		printf("DEBUG: out_len: %zd\n", out_len);
+		debug("out_len: %zd\n", out_len);
 		if(out_len <= MAX_LEN) {
 			/* allocate that amount of memory only */
 			if((*out = (char *) malloc(out_len+1)) != NULL) {
@@ -46,7 +46,7 @@ int ret_num_bits(int value1)
 			double x = (double)j;
 			// round to nearest multiple of 4
 			int newj = (int) ceil(x/4)*4;
-			printf("numberOfBits => '%d'\n", newj);
+			debug("numberOfBits => '%d'\n", newj);
 			return newj;
 		}
 	}

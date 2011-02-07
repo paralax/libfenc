@@ -198,12 +198,12 @@ void abe_encrypt(FENC_SCHEME_TYPE scheme, char *public_params, char *data, char 
 	
 	/* Set up the global parameters. */
 	result = context.generate_global_params(&global_params, &group_params);
-	// report_error("Loading global parameters", result);
+	report_error("Loading global parameters", result);
 	
 	result = libfenc_gen_params(&context, &global_params);
-	// report_error("Generating scheme parameters and secret key", result);
+	report_error("Generating scheme parameters and secret key", result);
 	
-	// printf("Reading the public parameters file = %s\n", public_params_file);	
+	debug("Reading the public parameters file = %s\n", public_params);
 	/* read file */
 	fp = fopen(public_params, "r");
 	if(fp != NULL) {
@@ -243,11 +243,11 @@ void abe_encrypt(FENC_SCHEME_TYPE scheme, char *public_params, char *data, char 
 	result = libfenc_import_public_params(&context, bin_public_buf, serialized_len);
 	// report_error("Importing public parameters", result);
 	
-	/*  */
+	/* key encapsulation to obtain session key from policy */
 	result = libfenc_kem_encrypt(&context, &func_object_input, SESSION_KEY_LEN, (uint8 *)session_key, &ciphertext);	
 	
 	/* generated PSK from policy string */
-	debug("\tSession key is: ");
+	debug("Generated session key: ");
 	print_buffer_as_hex((uint8 *) session_key, SESSION_KEY_LEN);
 
 	/* encrypted blob that belongs in the <ABED></ABE> tags */
@@ -255,15 +255,23 @@ void abe_encrypt(FENC_SCHEME_TYPE scheme, char *public_params, char *data, char 
 		
 	/* use the PSK to encrypt using openssl functions here */
 	AES_KEY key;
-	char iv[AES_BLOCK_SIZE*4];
-	int data_len = ceil((strlen(data) + strlen(MAGIC))/(double)(AES_BLOCK_SIZE)) * AES_BLOCK_SIZE; // round to nearest multiple of 16-bytes
+	size_t iv_length;
+	uint8 iv[AES_BLOCK_SIZE+1];
+	int data_len = (int) ceil((strlen(data) + strlen(MAGIC))/(double)(AES_BLOCK_SIZE)) * AES_BLOCK_SIZE; // round to nearest multiple of 16-bytes
 	char aes_ciphertext[data_len], data_magic[data_len];
 	
-	memset(iv, 0, AES_BLOCK_SIZE*4);
+	/* generate a random IV */
+	memset(iv, 0, AES_BLOCK_SIZE);
+	RAND_bytes((uint8 *) iv, AES_BLOCK_SIZE);
+	debug("IV: ");
+	print_buffer_as_hex((uint8 *) iv, AES_BLOCK_SIZE);
+	char *iv_base64 = NewBase64Encode(iv, AES_BLOCK_SIZE, FALSE, &iv_length);
+
 	memset(aes_ciphertext, 0, data_len);
 	AES_set_encrypt_key((uint8 *) session_key, 8*SESSION_KEY_LEN, &key);
 	sprintf(data_magic, MAGIC"%s", data);
-	debug("\tPlaintext is => '%s'\n", data);
+	debug("\nEncrypting data...\n");
+	debug("\tPlaintext is => '%s'.\n", data);
 	
 	AES_cbc_encrypt((uint8 *)data_magic, (uint8 *) aes_ciphertext, data_len, &key, (uint8 *) iv, AES_ENCRYPT);
 	// printf("\tAES Ciphertext base 64: ");
@@ -276,10 +284,7 @@ void abe_encrypt(FENC_SCHEME_TYPE scheme, char *public_params, char *data, char 
 		sprintf(filename, "%s.%s.xml", enc_file, ext);
 		fp = fopen(filename, "w");
 		/* generate the random unique id */
-		if(RAND_bytes((unsigned char *) rand_id, BYTES) == 0) {
-			perror("Unusual failure.\n");
-			strcpy((char *)rand_id, "123");
-		}
+		RAND_bytes((uint8 *) rand_id, BYTES);
 		debug("Generated random id: %08x\n", (unsigned int) rand_id[0]);
 	}
 	else {
@@ -287,32 +292,36 @@ void abe_encrypt(FENC_SCHEME_TYPE scheme, char *public_params, char *data, char 
 		fp = fopen(filename, "w");
 	}
 	debug("\tCiphertext stored in '%s'.\n", filename);
-	debug("\tABE Ciphertex size is: '%zd'\n", ciphertext.data_len);
-	debug("\tAES Ciphertext size is: '%d'\n", data_len);
+	debug("\tABE Ciphertex size is: '%zd'.\n", ciphertext.data_len);
+	debug("\tAES Ciphertext size is: '%d'.\n", data_len);
 
 	/* base-64 both ciphertexts and write to the stdout -- in XML? */
 	size_t abe_length, aes_length;
 	char *ABE_cipher_base64 = NewBase64Encode(ciphertext.data, ciphertext.data_len, FALSE, &abe_length);
-	char *AES_cipher_base64 = NewBase64Encode(aes_ciphertext, data_len, FALSE, &aes_length);	
+	char *AES_cipher_base64 = NewBase64Encode(aes_ciphertext, data_len, FALSE, &aes_length);
 	
 	/* output ciphertext to disk: either xml or custom format */
 	if(isXML) {
 		fprintf(fp,"<Encrypted id='");
 		fprintf(fp, "%08x", (unsigned int) rand_id[0]);
 		fprintf(fp,"'><ABE type='CP'>%s</ABE>", ABE_cipher_base64);
+		fprintf(fp,"<IV>%s</IV>", iv_base64);
 		fprintf(fp,"<EncryptedData>%s</EncryptedData></Encrypted>", AES_cipher_base64);
 		fclose(fp);
 	}
 	else {
 		fprintf(fp, ABE_TOKEN":%s:"ABE_TOKEN_END":", ABE_cipher_base64);
+		fprintf(fp, IV_TOKEN":%s:"IV_TOKEN_END":", iv_base64);
 		fprintf(fp, AES_TOKEN":%s:"AES_TOKEN_END, AES_cipher_base64);
-		fclose(fp);		
+		fclose(fp);
 	}
 		
 	if(ABE_cipher_base64 != NULL)
 		free(ABE_cipher_base64);
 	if(ABE_cipher_base64 != NULL)
 		free(AES_cipher_base64);
+	if(iv_base64 != NULL)
+		free(iv_base64);
 	
 	fenc_func_input_clear(&func_object_input);
 	

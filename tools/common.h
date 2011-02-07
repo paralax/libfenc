@@ -39,6 +39,8 @@ typedef enum Scheme SchemeType;
 
 #define PARAM "d224.param"
 #define MAGIC "ABE|"
+#define IV_TOKEN "IV"
+#define IV_TOKEN_END "IV_END"
 #define AES_TOKEN "AES"
 #define AES_TOKEN_END "AES_END"
 #define ABE_TOKEN "ABE_CP"
