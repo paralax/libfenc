@@ -6,4 +6,4 @@ The FENC toolkit requires that the FENC library is configured and installed to t
 make
 make install
 
-If you have any questions or concerns, please email us at libfenc-devel at googlegroups dot com.
+In order to run the tools, you will need the pbc elliptic curve parameters stored in the params dir (e.g. d224.param). Simply copy that file into the current or target directory. If you have any questions or concerns, please email us at libfenc-devel at googlegroups dot com.
