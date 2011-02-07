@@ -246,7 +246,9 @@ CLEANFILES = *~
 AM_LDFLAGS = -lgmp -lpbc
 AM_CPPFLAGS = -I/usr/local/include -I/usr/include -I../
 LDADD = ../libfenc.la
-benchmark_SOURCES = benchmark.c base64.c common.c
+benchmark_SOURCES = benchmark.c base64.c base64.h \
+ 		    common.c common.h
+
 all: all-recursive
 
 .SUFFIXES:

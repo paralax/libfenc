@@ -191,7 +191,7 @@ void abe_encrypt(FENC_SCHEME_TYPE scheme, char *public_params, char *data, char 
 		libfenc_load_group_params_from_file(&group_params, fp);
 		libfenc_get_pbc_pairing(&group_params, pairing);
 	} else {
-		perror("Could not open parameters file.\n");
+		perror("Could not open "PARAM" parameters file.\n");
 		return;
 	}
 	fclose(fp);
