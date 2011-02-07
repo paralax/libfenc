@@ -17,7 +17,7 @@ AH_TOP(/*FENC_COPYRIGHT*/)
 
 # We require at least autoconf version 2.5 to configure.
 AC_PREREQ([2.59])
-AC_INIT([fenc], [0.2.0], [mgreen at cs dot jhu dot edu])
+AC_INIT([fenc], [0.2.0], [libfenc-devel at googlegroups dot com])
 AC_CONFIG_HEADERS([config.h])
 # Identify source file in package directory that we can verify. 
 AC_CONFIG_SRCDIR([libfenc_utils.c])
@@ -118,7 +118,7 @@ AC_PROG_YACC
 AC_PROG_CC
 AC_PROG_LEX
 
-AC_ARG_VAR(ABI, Target CPU architecture for build: '32' '64' or default both)
+AC_ARG_VAR(ABI, Target CPU architecture for build: '32' '64' or default arch)
 
 if test "$ABI" = "32"; then
 	echo "building for 32-bit architecture ONLY!"
@@ -129,7 +129,7 @@ elif test "$ABI" = "64"; then
 	CC="gcc -arch x86_64"
 	CXX="g++ -arch x86_64"
 else
-	echo "building for 32 and 64-bit architectures"
+	echo "building for default system architecture"
 fi
 
 # Checks for libraries.
@@ -211,8 +211,8 @@ echo "LDFLAGS:          $LDFLAGS"
 echo "CPPFLAGS:         $CPPFLAGS"
 echo "CFLAGS:           $CFLAGS"
 echo "ABI:              $ABI"
-echo "CC:               $CC"
-echo "CXX:              $CXX"
+#echo "CC:               $CC"
+#echo "CXX:              $CXX"
 echo "-----------------------------------------"
 echo -ne "\n"
 
