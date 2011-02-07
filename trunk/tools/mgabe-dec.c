@@ -10,7 +10,7 @@
 /* test encryption of "hello world" under policy of "ONE or TWO" */
 #define MAX_ATTRIBUTES 100
 Bool abe_decrypt(FENC_SCHEME_TYPE scheme, char *public_params, char *inputfile, char *keyfile);
-void tokenize_inputfile(char* in, char** abe, char** aes);
+void tokenize_inputfile(char* in, char** abe, char** aes, char** iv);
 
 /* 
  Description: abe-dec takes two inputs: an encrypted file and a private key and
@@ -97,11 +97,12 @@ void print_help(void)
 }
 /* This function tokenizes the input file with the 
 expected format: "ABE_TOKEN : base-64 : ABE_TOKEN_END : 
+				  IV : base64 : IV :
   			      AES_TOKEN : base-64 : AES_TOKEN_END"
  */
-void tokenize_inputfile(char* in, char** abe, char** aes) 
+void tokenize_inputfile(char* in, char** abe, char** aes, char** iv)
 {	
-	ssize_t abe_len, aes_len;
+	ssize_t abe_len, aes_len, iv_len;
 	char delim[] = ":";
 	char *token = strtok(in, delim);
 	while (token != NULL) {
@@ -117,6 +118,13 @@ void tokenize_inputfile(char* in, char** abe, char** aes)
 			aes_len = strlen(token);
 			if((*aes = (char *) malloc(aes_len+1)) != NULL) {
 				strncpy(*aes, token, aes_len);
+			}
+		}
+		else if(strcmp(token, IV_TOKEN) == 0) {
+			token = strtok(NULL, delim);
+			iv_len = strlen(token);
+			if((*iv = (char *) malloc(iv_len+1)) != NULL) {
+				strncpy(*iv, token, iv_len);
 			}
 		}
 		token = strtok(NULL, delim);
@@ -137,23 +145,18 @@ Bool abe_decrypt(FENC_SCHEME_TYPE scheme, char *public_params, char *inputfile, 
 	char c;
 	int pub_len = 0;
 	size_t serialized_len = 0;
-	uint8 public_params_buf[SIZE];
-	char output_str[200];
-	int output_str_len = 200;
+	char public_params_buf[SIZE];
 	int magic_failed;
 	/* Clear data structures. */
 	memset(&context, 0, sizeof(fenc_context));
 	memset(&group_params, 0, sizeof(fenc_group_params));
 	memset(&global_params, 0, sizeof(fenc_global_params));	
-	memset(&public_params_buf, 0, SIZE);
 	memset(&ciphertext, 0, sizeof(fenc_ciphertext));
 	memset(&aes_session_key, 0, sizeof(fenc_plaintext));
-	memset(public_params_buf, 0, SIZE);
-	memset(output_str, 0, output_str_len);
 	memset(&secret_key, 0, sizeof(fenc_key));
 	// all this memory must be free'd 
 	char *input_buf = NULL,*keyfile_buf = NULL;
-	char *aes_blob64 = NULL, *abe_blob64 = NULL;
+	char *aes_blob64 = NULL, *abe_blob64 = NULL, *iv_blob64 = NULL;
 	ssize_t input_len, key_len;
 	
 	/* Load user's input file */
@@ -161,9 +164,10 @@ Bool abe_decrypt(FENC_SCHEME_TYPE scheme, char *public_params, char *inputfile, 
 	if(fp != NULL) {
 		if((input_len = read_file(fp, &input_buf)) > 0) {
 			// printf("Input file: %s\n", input_buf);
-			tokenize_inputfile(input_buf, &abe_blob64, &aes_blob64);
-			debug("abe_blob64 = '%s'\n", abe_blob64);
-			debug("aes_blob64 = '%s'\n", aes_blob64);
+			tokenize_inputfile(input_buf, &abe_blob64, &aes_blob64, &iv_blob64);
+			debug("abe ciphertext = '%s'\n", abe_blob64);
+			debug("init vector = '%s'\n", iv_blob64);
+			debug("aes ciphertext = '%s'\n", aes_blob64);
 			free(input_buf);
 		}
 	}
@@ -174,7 +178,7 @@ Bool abe_decrypt(FENC_SCHEME_TYPE scheme, char *public_params, char *inputfile, 
 	fclose(fp);
 	
 	/* make sure the abe and aes ptrs are set */
-	if(aes_blob64 == NULL || abe_blob64 == NULL) {
+	if(aes_blob64 == NULL || abe_blob64 == NULL || iv_blob64 == NULL) {
 		fprintf(stderr, "Input file either not well-formed or not encrypted.\n");
 		return FALSE;
 	}
@@ -201,12 +205,13 @@ Bool abe_decrypt(FENC_SCHEME_TYPE scheme, char *public_params, char *inputfile, 
 	result = libfenc_gen_params(&context, &global_params);
 	report_error("Generating scheme parameters and secret key", result);
 	
-	/* read file */
+	/* read public parameters file */
 	fp = fopen(public_params, "r");
 	if(fp != NULL) {
 		while (TRUE) {
 			c = fgetc(fp);
 			if(c != EOF) {
+				// statically allocated to prevent memory leaks
 				public_params_buf[pub_len] = c;
 				pub_len++;
 			}
@@ -216,11 +221,12 @@ Bool abe_decrypt(FENC_SCHEME_TYPE scheme, char *public_params, char *inputfile, 
 		}
 	}
 	else {
-		fprintf(stderr, "File does not exist: %s\n", public_params);
+		fprintf(stderr, "Could not load input file: %s\n", public_params);
 		return FALSE;
 	}
 	fclose(fp);
-	// printf("public params input = '%s'\n", public_params_buf);
+
+	debug("public params input = '%s'\n", public_params_buf);
 	
 	/* base-64 decode public parameters */
 	uint8 *bin_public_buf = NewBase64Decode((const char *) public_params_buf, pub_len, &serialized_len);
@@ -250,6 +256,7 @@ Bool abe_decrypt(FENC_SCHEME_TYPE scheme, char *public_params, char *inputfile, 
 	}
 	else {
 		fprintf(stderr, "Could not load input file: %s\n", keyfile);
+		/* clear allocated possibly allocated memory */
 		return FALSE;
 	}
 	fclose(fp);	
@@ -264,8 +271,14 @@ Bool abe_decrypt(FENC_SCHEME_TYPE scheme, char *public_params, char *inputfile, 
 	result = libfenc_decrypt(&context, &ciphertext, &secret_key, &aes_session_key);
 	report_error("Decrypting the ciphertext", result);
 	
-	debug("\tDecrypted session key is: ");
+	debug("Decrypted session key is: ");
 	print_buffer_as_hex(aes_session_key.data, aes_session_key.data_len);
+
+	/* decode the iv_blob64 */
+	size_t ivLength;
+	char *ivec = NewBase64Decode((const char *) iv_blob64, strlen(iv_blob64), &ivLength);
+	debug("IV: ");
+	print_buffer_as_hex((uint8 *) ivec, AES_BLOCK_SIZE);
 
 	/* decode the aesblob64 */
 	size_t aesLength;
@@ -273,12 +286,11 @@ Bool abe_decrypt(FENC_SCHEME_TYPE scheme, char *public_params, char *inputfile, 
 	
 	/* use the PSK to encrypt using openssl functions here */
 	AES_KEY sk;
-	char iv[SESSION_KEY_LEN*4];
 	char aes_result[aesLength+1];
 	AES_set_decrypt_key((uint8 *) aes_session_key.data, 8*SESSION_KEY_LEN, &sk);
-	memset(iv, 0, SESSION_KEY_LEN*4);
+
 	memset(aes_result, 0, aesLength+1);
-	AES_cbc_encrypt((uint8 *) aesblob, (uint8 *) aes_result, aesLength, &sk, (unsigned char *) iv, AES_DECRYPT);
+	AES_cbc_encrypt((uint8 *) aesblob, (uint8 *) aes_result, aesLength, &sk, (uint8 *) ivec, AES_DECRYPT);
 	/* base-64 both ciphertext and write to the stdout -- in XML? */
 	
 	char magic[strlen(MAGIC)+1];
@@ -291,10 +303,18 @@ Bool abe_decrypt(FENC_SCHEME_TYPE scheme, char *public_params, char *inputfile, 
 		magic_failed = FALSE;
 	}
 	else {
-		fprintf(stderr, "ERROR: ABE Decryption unsuccessful!!!\n");
+		fprintf(stderr, "ERROR: ABE decryption unsuccessful!!\n");
 		magic_failed = TRUE;
 	}
 	
+	/* free allocated memory */
+	free(aesblob);
+	free(aes_blob64);
+	free(ivec);
+	free(iv_blob64);
+	free(data);
+	free(abe_blob64);
+
 	/* Destroy the context. */
 	result = libfenc_destroy_context(&context);
 	report_error("Destroying the encryption context", result);	
