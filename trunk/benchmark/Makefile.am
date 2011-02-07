@@ -18,5 +18,6 @@ LDADD = ../libfenc.la
 # Doesn't install to */bin
 noinst_PROGRAMS = benchmark
 
-benchmark_SOURCES = benchmark.c base64.c common.c
+benchmark_SOURCES = benchmark.c base64.c base64.h \
+ 		    common.c common.h
 

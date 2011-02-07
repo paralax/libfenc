@@ -193,7 +193,7 @@ Bool abe_decrypt(FENC_SCHEME_TYPE scheme, char *public_params, char *inputfile, 
 		libfenc_load_group_params_from_file(&group_params, fp);
 		libfenc_get_pbc_pairing(&group_params, pairing);
 	} else {
-		fprintf(stderr, "File does not exist: global parameters");
+		perror("Could not open "PARAM" parameters file");
 		return FALSE;
 	}
 	fclose(fp);

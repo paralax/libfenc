@@ -153,7 +153,7 @@ void generate_keys(char *outfile, FENC_SCHEME_TYPE scheme, char *secret_params, 
 		libfenc_load_group_params_from_file(&group_params, fp);
 		libfenc_get_pbc_pairing(&group_params, pairing);
 	} else {
-		perror("Could not open parameters file.\n");
+		perror("Could not open "PARAM" parameters file.\n");
 		goto cleanup;
 	}
 	fclose(fp);
