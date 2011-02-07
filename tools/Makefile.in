@@ -44,7 +44,7 @@ bin_PROGRAMS = abe-setup$(EXEEXT) abe-keygen$(EXEEXT) abe-enc$(EXEEXT) \
 	abe-dec$(EXEEXT) policy-test$(EXEEXT)
 subdir = tools
 DIST_COMMON = $(srcdir)/Makefile.am $(srcdir)/Makefile.in ChangeLog \
-	config.sub depcomp install-sh missing
+	INSTALL config.sub depcomp install-sh missing
 ACLOCAL_M4 = $(top_srcdir)/aclocal.m4
 am__aclocal_m4_deps = $(top_srcdir)/m4/libtool.m4 \
 	$(top_srcdir)/m4/ltoptions.m4 $(top_srcdir)/m4/ltsugar.m4 \
@@ -275,7 +275,9 @@ CLEANFILES = *~
 AM_LDFLAGS = -lgmp -lpbc -lcrypto
 AM_CPPFLAGS = -I/usr/local/include -I/usr/include -I../
 LDADD = ../libfenc.la
-abe_setup_SOURCES = mgabe-setup.c base64.c common.c
+abe_setup_SOURCES = mgabe-setup.c base64.c base64.h \
+		    common.c common.h
+
 abe_keygen_SOURCES = mgabe-keygen.c base64.c common.c
 abe_enc_SOURCES = mgabe-enc.c base64.c common.c
 abe_dec_SOURCES = mgabe-dec.c base64.c common.c

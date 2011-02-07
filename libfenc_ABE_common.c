@@ -14,7 +14,7 @@
 #include "libfenc_group_params.h"
 #include "libfenc_ABE_common.h"
 #include "libfenc_LSW.h"
-#include "policy_lang.h"
+#include "abe_policy.h"
 
 /*!
  * Generate a set of global (elliptic curve) parameters.  Caller is responsible
