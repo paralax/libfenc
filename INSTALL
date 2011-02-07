@@ -36,6 +36,7 @@ following arguments when executing configure.
 
 See ./configure --help for other options.
 
+
 BUILDING IN FEDORA 14
 ------------------------
 First, ensure that you have binutils-devel, a gcc compiler, etc.  A simple fix for a cleanly
@@ -63,8 +64,22 @@ BUILDING IN MAC OS X 10.6
 ----------------------------
 Above installation procedure applies to the Mac OS X environment.
 
-KNOWN ISSUES
----------------
+BUILDING PBC IN MULTI-ARCHITECTURE CPUs
+---------------------------------------
+To specify a particular architecture, pass the following arguments to the configure script:
+./configure CC="gcc -arch i386" CXX="g++ -arch i386"
+OR
+./configure CC="gcc -arch x86_64" CXX="g++ -arch x86_64" 
+OR 
+./configure CC="gcc -arch i386 -arch x86_64" \
+            CXX="g++ -arch i386 -arch x86_64" \
+	    CPP="gcc -E" CXXCPP="g++ -E" \
+	    (for both 32-bit and 64-bit x86 architectures)
+
+Then, proceed with "make" and "make install".
+
+KNOWN ISSUES USING MAC PORTS
+----------------------------
 Under the 64-bit Linux environment, we noted a problem with linking libraries that
 were installed to /usr/local/lib/.  To mitigate this error, attempt a sudo ldconfig as your
 first step.  This should link your libraries in.
