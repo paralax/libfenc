@@ -9,7 +9,7 @@ SUBDIRS = .
 #SUBDIRS = . tools benchmark
 
 # Set the lib version value.
-SO_VERSION = 1:0:0
+SO_VERSION = 0:2:0
 
 ACLOCAL_AMFLAGS = -I m4
 # Something I picked up by copying PBC's git log.
