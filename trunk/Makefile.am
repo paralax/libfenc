@@ -5,8 +5,7 @@
 #-------------------------------------------------------------------------------------------
 
 # Have configure setup a Makefile in a subdirectory.
-SUBDIRS = .
-#SUBDIRS = . tools benchmark
+SUBDIRS = . tools benchmark
 
 # Set the lib version value.
 SO_VERSION = 0:2:0
@@ -27,6 +26,8 @@ maintainer-clean-local:
 lib_LTLIBRARIES = libfenc.la
 
 # Includes.
+include $(srcdir)/param
+
 library_includedir = $(includedir)/fenc
 library_include_HEADERS = libfenc_ABE_common.h \
 libfenc_group_params.h \
@@ -36,7 +37,9 @@ libfenc_LSW.h \
 libfenc_utils.h \
 libfenc_WatersCP.h \
 libfenc_WatersSimpleCP.h \
-abe_policy.h
+abe_policy.h \
+abe_policy.y \
+sha1.h
 
 libfenc_la_SOURCES = libfenc.c libfenc_LSW.c libfenc_WatersCP.c \
 	libfenc_ABE_common.c libfenc_LSSS.c libfenc_WatersSimpleCP.c \
